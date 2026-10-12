@@ -8,6 +8,8 @@ import { Client, GatewayIntentBits } from 'discord.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const app = express();
+const DISCORD_UA = 'DiscordBot (https://ms32-global-passport.onrender.com, 0.0.3)';
+
 app.set('trust proxy', 1);
 app.use(express.json());
 app.use(session({
@@ -35,7 +37,13 @@ function mustAuth(req,res,next){ if(!req.session.user) return res.status(401).js
 function key(userId,eventId){ return `${userId}:${eventId}`; }
 
 async function discordApi(endpoint, token, scheme='Bot') {
-  const r = await fetch(`https://discord.com/api/v10${endpoint}`, {headers:{Authorization:`${scheme} ${token}`}});
+  const r = await fetch(`https://discord.com/api/v10${endpoint}`, {
+    headers:{
+      Authorization:`${scheme} ${token}`,
+      'User-Agent': DISCORD_UA,
+      'Accept':'application/json'
+    }
+  });
   if(!r.ok) throw new Error(`Discord API ${r.status}: ${await r.text()}`);
   return r.status===204 ? null : r.json();
 }
@@ -66,7 +74,6 @@ bot.on('voiceStateUpdate',(oldState,newState)=>{
   const oldCh = oldState.channelId;
   const newCh = newState.channelId;
   if(oldCh===newCh) return;
-
   if(oldCh){
     const r = relevantEventForChannel(userId, oldCh);
     if(r){ const k=key(userId,r.eventId); const start=voiceStarts.get(k); addElapsed(r,start); voiceStarts.delete(k); }
@@ -90,9 +97,30 @@ app.get('/auth/discord',(req,res)=>{
 app.get('/auth/discord/callback',async(req,res)=>{
   try{
     if(!req.query.code || req.query.state!==req.session.oauthState) return res.status(400).send('Invalid OAuth state.');
-    const body=new URLSearchParams({client_id:cfg.clientId,client_secret:cfg.clientSecret,grant_type:'authorization_code',code:String(req.query.code),redirect_uri:cfg.redirectUri});
-    const tokenRes=await fetch('https://discord.com/api/v10/oauth2/token',{method:'POST',headers:{'Content-Type':'application/x-www-form-urlencoded'},body});
-    if(!tokenRes.ok) throw new Error(`OAuth token exchange failed: ${await tokenRes.text()}`);
+    const body=new URLSearchParams({
+      client_id:cfg.clientId,
+      client_secret:cfg.clientSecret,
+      grant_type:'authorization_code',
+      code:String(req.query.code),
+      redirect_uri:cfg.redirectUri
+    });
+    const tokenRes=await fetch('https://discord.com/api/oauth2/token',{
+      method:'POST',
+      headers:{
+        'Content-Type':'application/x-www-form-urlencoded',
+        'Accept':'application/json',
+        'User-Agent':DISCORD_UA
+      },
+      body
+    });
+    if(!tokenRes.ok){
+      const text=await tokenRes.text();
+      console.error(`Discord OAuth token error ${tokenRes.status}: ${text.slice(0,500)}`);
+      if(text.includes('Error 1015') || text.includes('temporarily from accessing')) {
+        return res.status(503).send('Discord temporarily rate-limited the Passport server. Please try again shortly.');
+      }
+      throw new Error(`OAuth token exchange failed with status ${tokenRes.status}`);
+    }
     const token=await tokenRes.json();
     const me=await discordApi('/users/@me',token.access_token,'Bearer');
     const guilds=await discordApi('/users/@me/guilds',token.access_token,'Bearer');
@@ -100,7 +128,7 @@ app.get('/auth/discord/callback',async(req,res)=>{
     req.session.user={id:me.id,username:me.global_name||me.username,avatar:me.avatar,member:true};
     delete req.session.oauthState;
     res.redirect('/?discord=connected');
-  }catch(e){ console.error(e); res.status(500).send('Discord sign-in failed. Check the server configuration and redirect URI.'); }
+  }catch(e){ console.error(e); res.status(500).send('Discord sign-in failed. Check the server configuration and Discord credentials.'); }
 });
 
 app.post('/auth/logout',(req,res)=>req.session.destroy(()=>res.json({ok:true})));
