@@ -93,9 +93,9 @@
   function tierFor(points){
     let current=tiers[0],next=tiers[1]||null;
     for(let i=0;i<tiers.length;i++) if(points>=tiers[i].min){current=tiers[i];next=tiers[i+1]||null}
-    const base=current.min;
-    const cap=next?next.min:Math.max(points,tiers[tiers.length-1].min);
-    const pct=next?Math.max(0,Math.min(100,((points-base)/(cap-base))*100)):100;
+    // Keep progress cumulative toward the next status so reaching a new tier
+    // does not visually reset the bar to zero. Example: 500/1500 = 33%.
+    const pct=next?Math.max(0,Math.min(100,(points/next.min)*100)):100;
     return {current,next,pct};
   }
 
