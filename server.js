@@ -24,6 +24,7 @@ const cfg = {
   clientId: process.env.DISCORD_CLIENT_ID,
   botToken: process.env.DISCORD_BOT_TOKEN,
   guildId: process.env.DISCORD_GUILD_ID,
+  linkChannelId: process.env.DISCORD_LINK_CHANNEL_ID || null,
   fallbackVoiceChannelId: process.env.DISCORD_VOICE_CHANNEL_ID || null,
   thresholdMs: Number(process.env.ATTENDANCE_MINUTES || 30) * 60_000
 };
@@ -89,6 +90,7 @@ bot.on('ready', async()=>{
       );
     await guild.commands.set([command.toJSON()]);
     console.log('Registered /passport link command');
+    if(cfg.linkChannelId) console.log(`Passport linking restricted to Discord channel ${cfg.linkChannelId}`);
     await refreshEvents();
   }catch(e){ console.error('Discord setup warning:',e.message); }
 });
@@ -97,6 +99,9 @@ bot.on('interactionCreate', async interaction=>{
   if(!interaction.isChatInputCommand() || interaction.commandName!=='passport') return;
   if(interaction.guildId!==cfg.guildId) return interaction.reply({content:'Please use this command inside the Massive Sim 32 Discord server.',ephemeral:true});
   if(interaction.options.getSubcommand()!=='link') return;
+  if(cfg.linkChannelId && interaction.channelId!==cfg.linkChannelId){
+    return interaction.reply({content:`Please use /passport link in <#${cfg.linkChannelId}>.`,ephemeral:true});
+  }
   cleanupCodes();
   const code=(interaction.options.getString('code')||'').trim().toUpperCase();
   const entry=linkCodes.get(code);
@@ -135,7 +140,7 @@ bot.on('voiceStateUpdate',(oldState,newState)=>{
 });
 if(cfg.botToken) bot.login(cfg.botToken).catch(e=>console.error('Bot login failed:',e.message));
 
-app.get('/health',(req,res)=>res.json({ok:true,bot:bot.isReady(),guildConfigured:!!cfg.guildId,loginMode:'discord-bot-link'}));
+app.get('/health',(req,res)=>res.json({ok:true,bot:bot.isReady(),guildConfigured:!!cfg.guildId,linkChannelConfigured:!!cfg.linkChannelId,loginMode:'discord-bot-link'}));
 
 app.get('/auth/discord',(req,res)=>{
   if(req.session.user) return res.redirect('/');
@@ -145,7 +150,9 @@ app.get('/auth/discord',(req,res)=>{
   linkCodes.set(code,{sessionId:req.sessionID,expiresAt:Date.now()+10*60_000});
   req.session.linkCode=code;
   req.session.save(()=>{});
-  res.type('html').send(`<!doctype html><html><head><meta name="viewport" content="width=device-width,initial-scale=1"><title>Connect Discord</title><style>body{margin:0;background:#06101b;color:#fff;font-family:system-ui;display:grid;place-items:center;min-height:100vh}.card{width:min(420px,90vw);background:#0d1b2b;border:1px solid #26435e;border-radius:24px;padding:28px;text-align:center;box-shadow:0 30px 80px #0008}.eyebrow{color:#4bb8ff;font-size:11px;font-weight:800;letter-spacing:.12em;text-transform:uppercase}.code{font-size:42px;letter-spacing:.16em;font-weight:900;color:#ff9f2f;margin:18px 0}.cmd{background:#07111d;border:1px solid #29465f;border-radius:14px;padding:14px;font-family:ui-monospace,monospace;color:#cfe9ff}.muted{color:#8ea7bb;line-height:1.5}.ok{color:#45d18e;font-weight:800}.btn{display:block;margin-top:18px;padding:13px;border-radius:14px;background:#5865f2;color:white;text-decoration:none;font-weight:800}</style></head><body><div class="card"><div class="eyebrow">Massive Sim 32 · Global Passport</div><h1>Connect your Discord</h1><p class="muted">This is a one-time link. In the Massive Sim 32 Discord, run:</p><div class="cmd">/passport link code:${code}</div><div class="code">${code}</div><p id="status" class="muted">Waiting for Discord…</p><a class="btn" href="https://discord.com/channels/${cfg.guildId}" target="_blank" rel="noopener">Open Massive Sim 32 Discord</a><p class="muted" style="font-size:12px">This code expires in 10 minutes. The bot never listens to or records voice audio.</p></div><script>const timer=setInterval(async()=>{try{const r=await fetch('/api/link/status');const j=await r.json();if(j.linked){clearInterval(timer);document.getElementById('status').className='ok';document.getElementById('status').textContent='Discord connected ✓ Returning to Passport…';setTimeout(()=>location.href='/',900)}}catch(e){}},1500)</script></body></html>`);
+  const discordLink = cfg.linkChannelId ? `https://discord.com/channels/${cfg.guildId}/${cfg.linkChannelId}` : `https://discord.com/channels/${cfg.guildId}`;
+  const channelText = cfg.linkChannelId ? 'Open the dedicated Passport link channel in the Massive Sim 32 Discord, then run:' : 'In the Massive Sim 32 Discord, run:';
+  res.type('html').send(`<!doctype html><html><head><meta name="viewport" content="width=device-width,initial-scale=1"><title>Connect Discord</title><style>body{margin:0;background:#06101b;color:#fff;font-family:system-ui;display:grid;place-items:center;min-height:100vh}.card{width:min(420px,90vw);background:#0d1b2b;border:1px solid #26435e;border-radius:24px;padding:28px;text-align:center;box-shadow:0 30px 80px #0008}.eyebrow{color:#4bb8ff;font-size:11px;font-weight:800;letter-spacing:.12em;text-transform:uppercase}.code{font-size:42px;letter-spacing:.16em;font-weight:900;color:#ff9f2f;margin:18px 0}.cmd{background:#07111d;border:1px solid #29465f;border-radius:14px;padding:14px;font-family:ui-monospace,monospace;color:#cfe9ff}.muted{color:#8ea7bb;line-height:1.5}.ok{color:#45d18e;font-weight:800}.btn{display:block;margin-top:18px;padding:13px;border-radius:14px;background:#5865f2;color:white;text-decoration:none;font-weight:800}</style></head><body><div class="card"><div class="eyebrow">Massive Sim 32 · Global Passport</div><h1>Connect your Discord</h1><p class="muted">This is a one-time link. ${channelText}</p><div class="cmd">/passport link code:${code}</div><div class="code">${code}</div><p id="status" class="muted">Waiting for Discord…</p><a class="btn" href="${discordLink}" target="_blank" rel="noopener">Open Passport Link Channel</a><p class="muted" style="font-size:12px">This code expires in 10 minutes. The bot never listens to or records voice audio.</p></div><script>const timer=setInterval(async()=>{try{const r=await fetch('/api/link/status');const j=await r.json();if(j.linked){clearInterval(timer);document.getElementById('status').className='ok';document.getElementById('status').textContent='Discord connected ✓ Returning to Passport…';setTimeout(()=>location.href='/',900)}}catch(e){}},1500)</script></body></html>`);
 });
 
 app.get('/api/link/status',(req,res)=>res.json({linked:!!req.session.user,user:req.session.user||null,botReady:bot.isReady()}));
