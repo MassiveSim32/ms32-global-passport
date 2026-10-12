@@ -140,7 +140,7 @@ app.post('/api/events/:id/claim',mustAuth,(req,res)=>{
 });
 
 app.use(express.static(path.join(__dirname,'public')));
-app.get('*',(req,res)=>res.sendFile(path.join(__dirname,'public','index.html')));
+app.use((req,res)=>res.sendFile(path.join(__dirname,'public','index.html')));
 
 const port=Number(process.env.PORT||3000);
 app.listen(port,()=>console.log(`MS32 Global Passport v0.0.3 listening on ${port}`));
