@@ -342,6 +342,14 @@ app.post('/api/events/:id/join',mustAuth,(req,res)=>{
   if(voiceChannelsByUser.get(r.userId)===r.channelId&&!voiceStarts.has(k)) voiceStarts.set(k,Date.now());
   res.json({ok:true,registration:r});
 });
+app.post('/api/events/:id/cancel',mustAuth,(req,res)=>{
+  const k=key(req.authUser.id,req.params.id), r=registrations.get(k);
+  if(!r) return res.json({ok:true,registered:false});
+  if(r.claimed) return res.status(409).json({error:'A stamped flight cannot be cancelled'});
+  voiceStarts.delete(k);
+  registrations.delete(k);
+  res.json({ok:true,registered:false});
+});
 app.get('/api/events/:id/status',mustAuth,(req,res)=>{
   const k=key(req.authUser.id,req.params.id), r=registrations.get(k);
   if(!r) return res.json({registered:false});
@@ -360,4 +368,4 @@ app.post('/api/events/:id/claim',mustAuth,(req,res)=>{
 app.use(express.static(path.join(__dirname,'public')));
 app.use((req,res)=>res.sendFile(path.join(__dirname,'public','index.html')));
 const port=Number(process.env.PORT||3000);
-app.listen(port,()=>console.log(`MS32 Global Passport v0.0.11 persistent-auth+gateway listening on ${port}`));
+app.listen(port,()=>console.log(`MS32 Global Passport v0.0.12 persistent-auth+gateway listening on ${port}`));
