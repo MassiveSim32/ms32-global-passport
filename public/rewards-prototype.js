@@ -1,6 +1,7 @@
 (()=>{
   const style=document.createElement('style');
   style.textContent=`
+    .beta-banner{display:none!important}
     .rewards-compact{position:relative;overflow:hidden;border:1px solid #6a5530;background:linear-gradient(145deg,#10283c,#091725);border-radius:18px;padding:12px 14px;margin:0 0 14px}
     .rewards-compact:after{content:'✈';position:absolute;right:-5px;top:-17px;font-size:70px;color:#ffffff07;transform:rotate(-18deg);pointer-events:none}
     .rewards-compact-head{display:flex;justify-content:space-between;align-items:center;gap:10px;position:relative;z-index:1}
@@ -68,6 +69,11 @@
     return min?`${h}h ${min}m`:`${h}h`;
   }
 
+  function ensureHeaderBuildLabel(){
+    const subtitle=document.querySelector('.top .brand small');
+    if(subtitle) subtitle.textContent='Global Passport · BETA v0.0.15';
+  }
+
   function ensureCards(){
     const home=document.getElementById('home');
     if(home&&!document.getElementById('rewardsHome')){
@@ -86,6 +92,7 @@
   }
 
   function render(){
+    ensureHeaderBuildLabel();
     ensureCards();
     const t=totals(),tier=tierFor(t.points);
     const remaining=tier.next?Math.max(0,tier.next.min-t.points):0;
