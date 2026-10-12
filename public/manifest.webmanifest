@@ -1,7 +1,7 @@
 {
-  "name": "Massive Sim 32 Global Passport",
+  "name": "Massive Simulations 32 Global Passport",
   "short_name": "MS32 Passport",
-  "description": "Your journey with Massive Sim 32 — community flights, attendance and passport stamps.",
+  "description": "Your interactive Massive Simulations 32 journey — community flights, attendance and passport stamps.",
   "start_url": "/",
   "scope": "/",
   "display": "standalone",
@@ -10,7 +10,7 @@
   "theme_color": "#06101b",
   "prefer_related_applications": false,
   "icons": [
-    {"src":"/icon-192.svg","sizes":"192x192","type":"image/svg+xml","purpose":"any maskable"},
+    {"src":"/icon-192.png","sizes":"192x192","type":"image/png","purpose":"any maskable"},
     {"src":"/icon-512.svg","sizes":"512x512","type":"image/svg+xml","purpose":"any maskable"}
   ]
 }
