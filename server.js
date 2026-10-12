@@ -21,10 +21,9 @@ app.use(session({
 
 const cfg = {
   clientId: process.env.DISCORD_CLIENT_ID,
-  clientSecret: process.env.DISCORD_CLIENT_SECRET,
-  redirectUri: process.env.NODE_ENV === 'production'
-    ? 'https://ms32-global-passport.onrender.com/auth/discord/callback'
-    : (process.env.DISCORD_REDIRECT_URI || 'http://localhost:3000/auth/discord/callback'),
+  browserRedirectUri: process.env.NODE_ENV === 'production'
+    ? 'https://ms32-global-passport.onrender.com/auth/discord/browser'
+    : 'http://localhost:3000/auth/discord/browser',
   botToken: process.env.DISCORD_BOT_TOKEN,
   guildId: process.env.DISCORD_GUILD_ID,
   fallbackVoiceChannelId: process.env.DISCORD_VOICE_CHANNEL_ID || null,
@@ -34,6 +33,7 @@ const cfg = {
 const registrations = new Map();
 const voiceStarts = new Map();
 const voiceChannelsByUser = new Map();
+const pendingVoiceProofs = new Map();
 let cachedEvents = [];
 let eventCachePrimed = false;
 let guildOnline = false;
@@ -48,6 +48,7 @@ function mustAuth(req,res,next){ if(!req.session.user) return res.status(401).js
 function key(userId,eventId){ return `${userId}:${eventId}`; }
 function eventChannel(event){ return event?.channel_id || cfg.fallbackVoiceChannelId; }
 function safeHtml(s=''){ return String(s).replace(/[&<>\"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','\"':'&quot;',"'":'&#39;'}[c])); }
+function cleanupProofs(){ const now=Date.now(); for(const [sid,p] of pendingVoiceProofs) if(p.expiresAt<=now) pendingVoiceProofs.delete(sid); }
 
 function normalizeEvent(e){
   return {
@@ -81,8 +82,27 @@ function addElapsed(record,start,end=Date.now()){
   record.attendanceMs += Math.max(0,end-start);
   record.verified = record.attendanceMs >= cfg.thresholdMs;
 }
+function completeVoiceProof(userId,newCh){
+  if(!newCh) return;
+  cleanupProofs();
+  for(const [sessionId,p] of pendingVoiceProofs){
+    if(p.user.id!==userId) continue;
+    sessionStore.get(sessionId,(err,sess)=>{
+      if(err||!sess) return;
+      sess.user={id:p.user.id,username:p.user.username,avatar:p.user.avatar||null,member:true};
+      sess.oauthState=null;
+      sessionStore.set(sessionId,sess,saveErr=>{
+        if(!saveErr){
+          pendingVoiceProofs.delete(sessionId);
+          console.log(`Discord browser sign-in verified through Gateway voice state for ${p.user.id}`);
+        }
+      });
+    });
+  }
+}
 function handleVoiceState(userId,oldCh,newCh){
   if(oldCh===newCh) return;
+  completeVoiceProof(userId,newCh);
   if(oldCh){
     const r=relevantEventForChannel(userId,oldCh);
     if(r){ const k=key(userId,r.eventId); addElapsed(r,voiceStarts.get(k)); voiceStarts.delete(k); }
@@ -136,7 +156,6 @@ function startGateway(){
     }
     if(p.op===7||p.op===9){ try{ws.close(4000,'gateway reconnect');}catch{} return; }
     if(p.op!==0) return;
-
     if(p.t==='READY'){
       gatewayReady=true; gatewayUser=p.d?.user||null;
       const name=gatewayUser?.global_name||gatewayUser?.username||gatewayUser?.id||'unknown';
@@ -161,8 +180,8 @@ function startGateway(){
 }
 startGateway();
 
-function oauthErrorPage(res,title,message){
-  res.status(503).type('html').send(`<!doctype html><html><head><meta name="viewport" content="width=device-width,initial-scale=1"><title>${safeHtml(title)}</title><style>body{margin:0;background:#06101b;color:#fff;font-family:system-ui;display:grid;place-items:center;min-height:100vh}.card{width:min(440px,90vw);background:#0d1b2b;border:1px solid #26435e;border-radius:24px;padding:28px;text-align:center}.eyebrow{color:#4bb8ff;font-size:11px;font-weight:800;letter-spacing:.12em;text-transform:uppercase}.muted{color:#8ea7bb;line-height:1.55}.warn{color:#ffbd66}.btn{display:block;padding:13px 16px;border-radius:14px;background:#5865f2;color:#fff;text-decoration:none;font-weight:800;margin-top:14px}</style></head><body><div class="card"><div class="eyebrow">Massive Sim 32 · Global Passport</div><h1>${safeHtml(title)}</h1><p class="muted">${safeHtml(message)}</p><a class="btn" href="/auth/discord">Try Discord Again</a><a class="btn" href="/" style="background:#102439">Back to Passport</a></div></body></html>`);
+function simplePage(res,title,message,status=200){
+  res.status(status).type('html').send(`<!doctype html><html><head><meta name="viewport" content="width=device-width,initial-scale=1"><title>${safeHtml(title)}</title><style>body{margin:0;background:#06101b;color:#fff;font-family:system-ui;display:grid;place-items:center;min-height:100vh}.card{width:min(440px,90vw);background:#0d1b2b;border:1px solid #26435e;border-radius:24px;padding:28px;text-align:center}.eyebrow{color:#4bb8ff;font-size:11px;font-weight:800;letter-spacing:.12em;text-transform:uppercase}.muted{color:#8ea7bb;line-height:1.55}.btn{display:block;padding:13px 16px;border-radius:14px;background:#5865f2;color:#fff;text-decoration:none;font-weight:800;margin-top:14px}</style></head><body><div class="card"><div class="eyebrow">Massive Sim 32 · Global Passport</div><h1>${safeHtml(title)}</h1><p class="muted">${safeHtml(message)}</p><a class="btn" href="/auth/discord">Try Discord Again</a><a class="btn" href="/" style="background:#102439">Back to Passport</a></div></body></html>`);
 }
 
 app.get('/health',(req,res)=>res.json({
@@ -174,8 +193,8 @@ app.get('/health',(req,res)=>res.json({
   eventCachePrimed,
   cachedEventCount:cachedEvents.length,
   voiceStateCount:voiceChannelsByUser.size,
-  oauthConfigured:!!(cfg.clientId&&cfg.clientSecret&&cfg.guildId),
-  loginMode:'discord-oauth'
+  oauthConfigured:!!(cfg.clientId&&cfg.guildId),
+  loginMode:'discord-browser-oauth-gateway-proof'
 }));
 
 app.get('/flights-preview',(req,res)=>{
@@ -185,109 +204,80 @@ app.get('/flights-preview',(req,res)=>{
     const voice=e.channel_id?'Voice channel linked':'No voice channel linked';
     return `<article class="event"><div class="source">Discord Scheduled Event</div><h2>${safeHtml(e.name)}</h2><div class="meta">${safeHtml(start)} · ${voice}</div>${desc?`<p>${desc}</p>`:''}<div class="row"><span>${Number(e.user_count||0)} interested</span><span>${e.channel_id?'Attendance ready':'Attendance mapping needed'}</span></div></article>`;
   }).join('');
-  res.type('html').send(`<!doctype html><html><head><meta name="viewport" content="width=device-width,initial-scale=1"><title>MS32 Upcoming Flights</title><style>:root{--bg:#06101b;--panel:#0d1b2b;--line:#26435e;--text:#f5f8fb;--muted:#8ea7bb;--orange:#ff9f2f;--blue:#4bb8ff;--green:#45d18e}*{box-sizing:border-box}body{margin:0;background:radial-gradient(circle at top,#12314c,#06101b 48%,#02070c);color:var(--text);font:14px system-ui;min-height:100vh}.wrap{max-width:760px;margin:auto;padding:28px 18px 60px}.eyebrow{color:var(--blue);font-size:11px;font-weight:800;letter-spacing:.12em;text-transform:uppercase}.hero{display:flex;justify-content:space-between;gap:16px;align-items:end;margin-bottom:18px}h1{font-size:34px;margin:6px 0}.pill{padding:8px 11px;border:1px solid var(--line);border-radius:999px;color:var(--green);font-weight:800;font-size:11px}.event{background:linear-gradient(145deg,#10283c,#091725);border:1px solid var(--line);border-radius:22px;padding:18px;margin:12px 0}.source{font-size:10px;color:#b8bdff;font-weight:800;text-transform:uppercase}.event h2{margin:5px 0 4px;font-size:19px}.meta,.event p{color:var(--muted);line-height:1.5}.row{display:flex;justify-content:space-between;gap:10px;border-top:1px solid #1c3549;margin-top:14px;padding-top:12px;font-size:11px;color:#bcd0df}.notice{margin-top:18px;padding:14px;border-radius:16px;background:#0b1725;border:1px solid #1d374e;color:var(--muted)}a{color:var(--orange)}</style></head><body><main class="wrap"><div class="hero"><div><div class="eyebrow">Massive Sim 32 · Global Passport</div><h1>Upcoming Flights</h1><div style="color:var(--muted)">Live from Discord Gateway cache</div></div><div class="pill">${gatewayReady?'BOT ONLINE':'BOT CONNECTING'}</div></div>${eventCachePrimed?(cards||'<div class="notice">No scheduled events are currently published in Discord.</div>'):'<div class="notice">Discord event cache is still loading. Refresh in a few seconds.</div>'}<div class="notice">Read-only preview from the same event cache used by Passport attendance.</div></main></body></html>`);
+  res.type('html').send(`<!doctype html><html><head><meta name="viewport" content="width=device-width,initial-scale=1"><title>MS32 Upcoming Flights</title><style>:root{--bg:#06101b;--panel:#0d1b2b;--line:#26435e;--text:#f5f8fb;--muted:#8ea7bb;--orange:#ff9f2f;--blue:#4bb8ff;--green:#45d18e}*{box-sizing:border-box}body{margin:0;background:radial-gradient(circle at top,#12314c,#06101b 48%,#02070c);color:var(--text);font:14px system-ui;min-height:100vh}.wrap{max-width:760px;margin:auto;padding:28px 18px 60px}.eyebrow{color:var(--blue);font-size:11px;font-weight:800;letter-spacing:.12em;text-transform:uppercase}.hero{display:flex;justify-content:space-between;gap:16px;align-items:end;margin-bottom:18px}h1{font-size:34px;margin:6px 0}.pill{padding:8px 11px;border:1px solid var(--line);border-radius:999px;color:var(--green);font-weight:800;font-size:11px}.event{background:linear-gradient(145deg,#10283c,#091725);border:1px solid var(--line);border-radius:22px;padding:18px;margin:12px 0}.source{font-size:10px;color:#b8bdff;font-weight:800;text-transform:uppercase}.event h2{margin:5px 0 4px;font-size:19px}.meta,.event p{color:var(--muted);line-height:1.5}.row{display:flex;justify-content:space-between;gap:10px;border-top:1px solid #1c3549;margin-top:14px;padding-top:12px;font-size:11px;color:#bcd0df}.notice{margin-top:18px;padding:14px;border-radius:16px;background:#0b1725;border:1px solid #1d374e;color:var(--muted)}</style></head><body><main class="wrap"><div class="hero"><div><div class="eyebrow">Massive Sim 32 · Global Passport</div><h1>Upcoming Flights</h1><div style="color:var(--muted)">Live from Discord Gateway cache</div></div><div class="pill">${gatewayReady?'BOT ONLINE':'BOT CONNECTING'}</div></div>${eventCachePrimed?(cards||'<div class="notice">No scheduled events are currently published in Discord.</div>'):'<div class="notice">Discord event cache is still loading. Refresh in a few seconds.</div>'}</main></body></html>`);
 });
 
 app.get('/auth/discord',(req,res)=>{
   if(req.session.user) return res.redirect('/');
-  if(!cfg.clientId||!cfg.clientSecret) return oauthErrorPage(res,'Discord sign-in is not configured','The Discord OAuth client ID or client secret is missing from the Singapore Render service.');
+  if(!cfg.clientId) return simplePage(res,'Discord sign-in is not configured','The Discord client ID is missing from the Passport service.',503);
   const state=crypto.randomBytes(24).toString('hex');
   req.session.oauthState=state;
   req.session.save(err=>{
-    if(err) return oauthErrorPage(res,'Could not start sign-in','Passport could not save the sign-in session. Please try again.');
+    if(err) return simplePage(res,'Could not start sign-in','Passport could not save the sign-in session. Please try again.',503);
     const u=new URL('https://discord.com/oauth2/authorize');
-    u.searchParams.set('response_type','code');
+    u.searchParams.set('response_type','token');
     u.searchParams.set('client_id',cfg.clientId);
-    u.searchParams.set('scope','identify guilds');
+    u.searchParams.set('scope','identify');
     u.searchParams.set('state',state);
-    u.searchParams.set('redirect_uri',cfg.redirectUri);
+    u.searchParams.set('redirect_uri',cfg.browserRedirectUri);
     res.redirect(u.toString());
   });
 });
 
-app.get('/auth/discord/callback',async(req,res)=>{
-  const {code,state,error,error_description:errorDescription}=req.query;
-  if(error) return oauthErrorPage(res,'Discord sign-in cancelled',errorDescription||String(error));
-  if(!code||!state||state!==req.session.oauthState){
-    return oauthErrorPage(res,'Discord sign-in could not be verified','The sign-in state did not match. Please start again from Passport.');
-  }
-  delete req.session.oauthState;
-
+app.get('/auth/discord/browser',(req,res)=>{
+  if(req.session.user) return res.redirect('/');
+  const expectedState=req.session.oauthState||'';
+  res.type('html').send(`<!doctype html><html><head><meta name="viewport" content="width=device-width,initial-scale=1"><title>Connect Discord</title><style>body{margin:0;background:#06101b;color:#fff;font-family:system-ui;display:grid;place-items:center;min-height:100vh}.card{width:min(460px,90vw);background:#0d1b2b;border:1px solid #26435e;border-radius:24px;padding:28px;text-align:center}.eyebrow{color:#4bb8ff;font-size:11px;font-weight:800;letter-spacing:.12em;text-transform:uppercase}.muted{color:#8ea7bb;line-height:1.55}.ok{color:#45d18e}.warn{color:#ffbd66}.spinner{width:34px;height:34px;border:4px solid #29465f;border-top-color:#5865f2;border-radius:50%;margin:18px auto;animation:s 1s linear infinite}@keyframes s{to{transform:rotate(360deg)}}.btn{display:block;padding:13px 16px;border-radius:14px;background:#5865f2;color:#fff;text-decoration:none;font-weight:800;margin-top:14px}</style></head><body><div class="card"><div class="eyebrow">Massive Sim 32 · Global Passport</div><h1 id="title">Finishing Discord sign-in</h1><div class="spinner" id="spin"></div><p id="msg" class="muted">Checking your Discord account…</p><a id="back" class="btn" href="/" style="display:none;background:#102439">Back to Passport</a></div><script>
+const expected=${JSON.stringify(expectedState)};
+const hash=new URLSearchParams(location.hash.slice(1));
+const token=hash.get('access_token');
+const state=hash.get('state');
+const title=document.getElementById('title'), msg=document.getElementById('msg'), spin=document.getElementById('spin'), back=document.getElementById('back');
+function fail(text){title.textContent='Discord sign-in could not finish';msg.textContent=text;msg.className='warn';spin.style.display='none';back.style.display='block';history.replaceState(null,'',location.pathname);}
+(async()=>{
+  if(!token||!state||state!==expected) return fail('The Discord sign-in response could not be verified. Please start again from Passport.');
+  history.replaceState(null,'',location.pathname);
   try{
-    const tokenResponse=await fetch('https://discord.com/api/oauth2/token',{
-      method:'POST',
-      headers:{'Content-Type':'application/x-www-form-urlencoded','Accept':'application/json'},
-      body:new URLSearchParams({
-        client_id:cfg.clientId,
-        client_secret:cfg.clientSecret,
-        grant_type:'authorization_code',
-        code:String(code),
-        redirect_uri:cfg.redirectUri
-      })
-    });
-    if(!tokenResponse.ok){
-      const body=await tokenResponse.text();
-      console.warn(`Discord OAuth token exchange failed: HTTP ${tokenResponse.status}`);
-      if(tokenResponse.status===429||/1015|rate.?limit|cloudflare/i.test(body)){
-        return oauthErrorPage(res,'Discord is temporarily rate-limiting sign-in','Passport reached Discord, but Discord is still blocking this Render server from completing OAuth. The bot and flights remain online. Please try again shortly.');
-      }
-      return oauthErrorPage(res,'Discord sign-in failed',`Discord returned HTTP ${tokenResponse.status} during sign-in.`);
-    }
-    const token=await tokenResponse.json();
-    if(!token.access_token) return oauthErrorPage(res,'Discord sign-in failed','Discord did not return an access token.');
-
-    const authHeaders={Authorization:`Bearer ${token.access_token}`,Accept:'application/json'};
-    const [userResponse,guildsResponse]=await Promise.all([
-      fetch('https://discord.com/api/v10/users/@me',{headers:authHeaders}),
-      fetch('https://discord.com/api/v10/users/@me/guilds',{headers:authHeaders})
-    ]);
-    if(!userResponse.ok||!guildsResponse.ok){
-      console.warn(`Discord OAuth profile lookup failed: user=${userResponse.status} guilds=${guildsResponse.status}`);
-      return oauthErrorPage(res,'Discord sign-in could not finish','Discord authorized the account, but Passport could not verify the profile and Massive Sim 32 membership. Please try again shortly.');
-    }
-    const user=await userResponse.json();
-    const guilds=await guildsResponse.json();
-    const member=Array.isArray(guilds)&&guilds.some(g=>g.id===cfg.guildId);
-    if(!member) return oauthErrorPage(res,'Massive Sim 32 membership required','This Discord account is not currently a member of the Massive Sim 32 server.');
-
-    req.session.user={
-      id:user.id,
-      username:user.global_name||user.username,
-      avatar:user.avatar||null,
-      member:true
-    };
-    req.session.save(err=>{
-      if(err) return oauthErrorPage(res,'Could not finish sign-in','Passport could not save the signed-in session. Please try again.');
-      console.log('Discord OAuth sign-in completed');
-      res.redirect('/');
-    });
-  }catch(e){
-    console.error('Discord OAuth callback error:',e?.message||String(e));
-    return oauthErrorPage(res,'Discord sign-in is temporarily unavailable','Passport could not complete the connection to Discord. The bot and live flights are still online. Please try again shortly.');
-  }
+    const r=await fetch('https://discord.com/api/v10/users/@me',{headers:{Authorization:'Bearer '+token}});
+    if(!r.ok) return fail('Discord could not confirm your account. Please try signing in again.');
+    const u=await r.json();
+    const username=u.global_name||u.username;
+    const b=await fetch('/auth/discord/browser-begin',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({state,user:{id:u.id,username,avatar:u.avatar||null}})});
+    const j=await b.json();
+    if(!b.ok) return fail(j.error||'Passport could not begin verification.');
+    title.textContent='One quick Discord check';
+    msg.innerHTML='To securely link <b>'+username.replace(/[&<>\"']/g,'')+'</b>, join <b>any voice channel</b> in the Massive Sim 32 Discord for a moment. No command is required.'+(j.alreadyInVoice?'<br><br>You are already in voice, so switch channels or leave and rejoin once.':'');
+    msg.className='muted'; spin.style.display='block';
+    const timer=setInterval(async()=>{try{const s=await (await fetch('/auth/discord/browser-status')).json();if(s.linked){clearInterval(timer);title.textContent='Discord connected';msg.textContent='Verified through Massive Sim 32 Discord. Returning to your Passport…';msg.className='ok';spin.style.display='none';setTimeout(()=>location.href='/',700)}else if(s.expired){clearInterval(timer);fail('Verification timed out. Start Discord sign-in again.')}}catch{}},1200);
+  }catch(e){ fail('Your browser could not complete Discord sign-in. Please try again.'); }
+})();
+</script></body></html>`);
 });
 
-app.post('/auth/logout',(req,res)=>req.session.destroy(()=>res.json({ok:true})));
+app.post('/auth/discord/browser-begin',(req,res)=>{
+  const {state,user}=req.body||{};
+  if(!state||state!==req.session.oauthState) return res.status(400).json({error:'Invalid sign-in state'});
+  if(!user?.id||!user?.username) return res.status(400).json({error:'Discord account details are missing'});
+  delete req.session.oauthState;
+  pendingVoiceProofs.set(req.sessionID,{user:{id:String(user.id),username:String(user.username).slice(0,80),avatar:user.avatar||null},expiresAt:Date.now()+3*60_000});
+  req.session.save(()=>res.json({ok:true,alreadyInVoice:voiceChannelsByUser.has(String(user.id))}));
+});
+
+app.get('/auth/discord/browser-status',(req,res)=>{
+  cleanupProofs();
+  const pending=pendingVoiceProofs.get(req.sessionID);
+  res.json({linked:!!req.session.user,user:req.session.user||null,expired:!req.session.user&&!pending});
+});
+
+app.post('/auth/logout',(req,res)=>{ pendingVoiceProofs.delete(req.sessionID); req.session.destroy(()=>res.json({ok:true})); });
 app.get('/api/me',(req,res)=>res.json({user:req.session.user||null,botReady:gatewayReady}));
+app.get('/api/events',(req,res)=>res.json(cachedEvents.map(normalizeEvent)));
 
-app.get('/api/events',(req,res)=>{
-  res.json(cachedEvents.map(normalizeEvent));
-});
 app.post('/api/events/:id/join',mustAuth,(req,res)=>{
   const e=cachedEvents.find(x=>x.id===req.params.id);
   if(!e) return res.status(404).json({error:eventCachePrimed?'Scheduled event not found':'Discord event cache is still starting. Try again shortly.'});
   const k=key(req.session.user.id,e.id);
-  const r=registrations.get(k)||{
-    userId:req.session.user.id,
-    eventId:e.id,
-    eventName:e.name,
-    start:e.scheduled_start_time,
-    end:e.scheduled_end_time,
-    channelId:eventChannel(e),
-    attendanceMs:0,
-    verified:false,
-    claimed:false
-  };
+  const r=registrations.get(k)||{userId:req.session.user.id,eventId:e.id,eventName:e.name,start:e.scheduled_start_time,end:e.scheduled_end_time,channelId:eventChannel(e),attendanceMs:0,verified:false,claimed:false};
   registrations.set(k,r);
   if(voiceChannelsByUser.get(r.userId)===r.channelId&&!voiceStarts.has(k)) voiceStarts.set(k,Date.now());
   res.json({ok:true,registration:r});
@@ -296,22 +286,12 @@ app.get('/api/events/:id/status',mustAuth,(req,res)=>{
   const k=key(req.session.user.id,req.params.id), r=registrations.get(k);
   if(!r) return res.json({registered:false});
   let ms=r.attendanceMs; const active=voiceStarts.get(k); if(active) ms+=Date.now()-active;
-  res.json({
-    registered:true,
-    inVoice:!!active,
-    attendanceMinutes:Math.floor(ms/60000),
-    thresholdMinutes:Math.ceil(cfg.thresholdMs/60000),
-    verified:ms>=cfg.thresholdMs,
-    eventName:r.eventName,
-    channelId:r.channelId,
-    claimed:r.claimed
-  });
+  res.json({registered:true,inVoice:!!active,attendanceMinutes:Math.floor(ms/60000),thresholdMinutes:Math.ceil(cfg.thresholdMs/60000),verified:ms>=cfg.thresholdMs,eventName:r.eventName,channelId:r.channelId,claimed:r.claimed});
 });
 app.post('/api/events/:id/claim',mustAuth,(req,res)=>{
   const k=key(req.session.user.id,req.params.id), r=registrations.get(k);
   if(!r) return res.status(404).json({error:'Not registered'});
-  let ms=r.attendanceMs; const active=voiceStarts.get(k);
-  if(active){ ms+=Date.now()-active; r.attendanceMs=ms; voiceStarts.delete(k); }
+  let ms=r.attendanceMs; const active=voiceStarts.get(k); if(active){ ms+=Date.now()-active; r.attendanceMs=ms; voiceStarts.delete(k); }
   if(ms<cfg.thresholdMs) return res.status(403).json({error:'Attendance threshold not met'});
   r.verified=true; r.claimed=true;
   res.json({ok:true,event:{id:r.eventId,name:r.eventName},attendanceMinutes:Math.floor(ms/60000)});
@@ -320,4 +300,4 @@ app.post('/api/events/:id/claim',mustAuth,(req,res)=>{
 app.use(express.static(path.join(__dirname,'public')));
 app.use((req,res)=>res.sendFile(path.join(__dirname,'public','index.html')));
 const port=Number(process.env.PORT||3000);
-app.listen(port,()=>console.log(`MS32 Global Passport v0.0.9 oauth+gateway listening on ${port}`));
+app.listen(port,()=>console.log(`MS32 Global Passport v0.0.10 browser-oauth+gateway listening on ${port}`));
