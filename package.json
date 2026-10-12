@@ -1,11 +1,11 @@
 {
   "name": "ms32-global-passport",
-  "version": "0.0.3",
+  "version": "0.0.5",
   "private": true,
   "type": "module",
   "scripts": {
-    "start": "node server.js",
-    "dev": "node --watch server.js"
+    "start": "node bootstrap.js",
+    "dev": "node --watch bootstrap.js"
   },
   "dependencies": {
     "discord.js": "^14.22.1",
