@@ -76,15 +76,26 @@
     return x;
   }
 
+  function parentheticalRoute(e){
+    const name=String(e?.name||'');
+    const match=name.match(/\(([^()]*)\)\s*$/);
+    if(!match)return null;
+    const route=match[1].match(/^\s*(.+?)\s+(?:to|→|->|–|—)\s+(.+?)\s*$/i);
+    if(!route)return null;
+    return {from:route[1].trim(),to:route[2].trim()};
+  }
+
   function explicitDestination(e){
+    const paren=parentheticalRoute(e);
+    if(paren)return paren.to;
     const name=String(e?.name||'');
     const match=name.match(/(?:to|→|->|–|—)\s*([^|:—–]+)$/i);
     if(!match)return'';
-    return match[1].trim();
+    return match[1].replace(/[()]+$/g,'').trim();
   }
 
   function cleanDestination(raw,country){
-    let s=String(raw||'').replace(/\([^)]*\)/g,' ').trim();
+    let s=String(raw||'').replace(/\([^)]*\)/g,' ').replace(/[()]/g,' ').trim();
     if(country){
       const variants=[country,country==='United States'?'USA':'',country==='United Arab Emirates'?'UAE':'',country==='United Kingdom'?'UK':''].filter(Boolean);
       for(const v of variants)s=s.replace(new RegExp(`(?:,|\\s)\\s*${v.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')}\\s*$`,'i'),'').trim();
@@ -97,6 +108,7 @@
     const series=typeof stampSeries==='function'?stampSeries(`${e?.name||''} ${e?.description||''}`):{label:'MASSIVE COMMUNITY FLIGHT'};
     const loc=typeof locationInfo==='function'?locationInfo(e):{country:'',route:''};
     const route=typeof routeInfo==='function'?routeInfo(e):{route:'',destination:'',icaos:[]};
+    const parenRoute=parentheticalRoute(e);
     let country=normalCountry(loc?.country||'');
     if(!country&&Array.isArray(route.icaos)&&route.icaos.length&&typeof countryFromIcao==='function')country=normalCountry(countryFromIcao(route.icaos[route.icaos.length-1]));
     const explicit=explicitDestination(e);
@@ -105,6 +117,7 @@
     if(!city&&country&&String(loc?.place||'').toLowerCase()!==country.toLowerCase())city=cleanDestination(loc.place,country);
     let displayRoute='';
     if(Array.isArray(route.icaos)&&route.icaos.length>=2)displayRoute=`${route.icaos[0]} → ${route.icaos[1]}`;
+    else if(parenRoute)displayRoute=`${parenRoute.from} → ${parenRoute.to}`;
     else displayRoute=route?.route||loc?.route||'COMMUNITY FLIGHT';
     const hero=country||'GLOBAL PASSPORT';
     const secondary=city||((!country&&loc?.place)?loc.place:'MS32 DESTINATION');
