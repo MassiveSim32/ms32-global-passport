@@ -1,4 +1,5 @@
 import express from 'express';
+import './persistence-bridge.js';
 
 // Runtime bridge while the beta still keeps attendance in memory.
 // Verified comms only count from the advertised Discord event start time
