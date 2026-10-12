@@ -103,20 +103,20 @@
     const home=document.getElementById('rewardsHome');
     if(home)home.innerHTML=`
       <div class="rewards-compact-head">
-        <div><div class="rewards-compact-title">Frequent Flyer</div><div class="rewards-compact-tier">${tier.current.name}</div></div>
-        <div class="rewards-compact-points">${t.points.toLocaleString()} pts</div>
+        <div><div class="rewards-compact-title">Massive Miles</div><div class="rewards-compact-tier">${tier.current.name}</div></div>
+        <div class="rewards-compact-points">${t.points.toLocaleString()} miles</div>
       </div>
       <div class="rewards-track"><i style="width:${tier.pct}%"></i></div>
-      <div class="rewards-compact-foot"><span>${tier.next?`Next: <strong>${tier.next.name}</strong>`:'Top tier achieved'}</span><span>${tier.next?`${remaining.toLocaleString()} pts to go`:'MAX STATUS'}</span></div>
+      <div class="rewards-compact-foot"><span>${tier.next?`Next: <strong>${tier.next.name}</strong>`:'Top tier achieved'}</span><span>${tier.next?`${remaining.toLocaleString()} miles to go`:'MAX STATUS'}</span></div>
     `;
     const profile=document.getElementById('rewardsProfile');
     if(profile)profile.innerHTML=`
       <div class="rewards-top">
-        <div><div class="rewards-title">Frequent Flyer Rewards <span class="prototype-pill">PROTOTYPE</span></div><div class="rewards-tier">${tier.current.name}</div></div>
-        <div class="rewards-points"><b>${t.points.toLocaleString()}</b><span>Passport Points</span></div>
+        <div><div class="rewards-title">Massive Miles <span class="prototype-pill">PROTOTYPE</span></div><div class="rewards-tier">${tier.current.name}</div></div>
+        <div class="rewards-points"><b>${t.points.toLocaleString()}</b><span>Massive Miles</span></div>
       </div>
       <div class="rewards-track"><i style="width:${tier.pct}%"></i></div>
-      <div class="rewards-next"><span>${tier.next?`Progress to <strong>${tier.next.name}</strong>`:'Top tier achieved'}</span><span>${tier.next?`${remaining.toLocaleString()} pts to go`:'MAX STATUS'}</span></div>
+      <div class="rewards-next"><span>${tier.next?`Progress to <strong>${tier.next.name}</strong>`:'Top tier achieved'}</span><span>${tier.next?`${remaining.toLocaleString()} miles to go`:'MAX STATUS'}</span></div>
       <div class="rewards-stats"><div class="rewards-mini"><b>${t.flights}</b><span>Verified flights</span></div><div class="rewards-mini"><b>${fmtMinutes(t.minutes)}</b><span>Verified comms</span></div></div>
       <button class="btn share-achievement" onclick="shareRewardsAchievement()">SHARE MY PROGRESS</button>
     `;
@@ -130,7 +130,7 @@
   window.shareRewardsAchievement=async function(){
     const t=totals(),tier=tierFor(t.points);
     const name=(typeof currentUser==='object'&&currentUser?.username)?currentUser.username:'A Massive Sim 32 pilot';
-    const text=`✈️ MS32 GLOBAL PASSPORT ACHIEVEMENT\n${name} · ${tier.current.name.toUpperCase()} STATUS\n🏆 ${t.points.toLocaleString()} Passport Points\n✈️ ${t.flights} Verified Community Flight${t.flights===1?'':'s'}\n🎙️ ${fmtMinutes(t.minutes)} Verified Comms\n\nMassive Simulations 32 Global Passport`;
+    const text=`✈️ MS32 GLOBAL PASSPORT ACHIEVEMENT\n${name} · ${tier.current.name.toUpperCase()} STATUS\n🏆 ${t.points.toLocaleString()} Massive Miles\n✈️ ${t.flights} Verified Community Flight${t.flights===1?'':'s'}\n🎙️ ${fmtMinutes(t.minutes)} Verified Comms\n\nMassive Simulations 32 Global Passport`;
     try{
       if(navigator.share){await navigator.share({title:'MS32 Global Passport Achievement',text});return}
       await navigator.clipboard.writeText(text);toast('Achievement copied — paste it into Discord');
