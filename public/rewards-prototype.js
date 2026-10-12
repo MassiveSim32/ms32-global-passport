@@ -2,6 +2,10 @@
   const style=document.createElement('style');
   style.textContent=`
     .beta-banner{display:none!important}
+    .utc-clock{padding:10px 12px;gap:8px;border-radius:14px}
+    .utc-clock span{font-size:9px}
+    .utc-clock strong{font-size:21px}
+    .utc-clock small{font-size:8px}
     .rewards-compact{position:relative;overflow:hidden;border:1px solid #6a5530;background:linear-gradient(145deg,#10283c,#091725);border-radius:18px;padding:12px 14px;margin:0 0 14px}
     .rewards-compact:after{content:'✈';position:absolute;right:-5px;top:-17px;font-size:70px;color:#ffffff07;transform:rotate(-18deg);pointer-events:none}
     .rewards-compact-head{display:flex;justify-content:space-between;align-items:center;gap:10px;position:relative;z-index:1}
