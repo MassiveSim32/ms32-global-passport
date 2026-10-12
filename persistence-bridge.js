@@ -89,7 +89,7 @@ function hydrate(map) {
   registrationsMap = map;
   for (const row of persistedRows) {
     const record = rowToRecord(row);
-    nativeSet.call(map, key(record.userId, record.eventId), record);
+    map.set(key(record.userId, record.eventId), record);
   }
   hydrated = true;
 }
@@ -147,7 +147,7 @@ Map.prototype.get = function persistentGet(mapKey) {
       const record = nativeGet.call(registrationsMap, mapKey);
       if (record?.channelId && voiceChannelsMap && nativeGet.call(voiceChannelsMap, String(record.userId)) === record.channelId && !nativeGet.call(this, mapKey)) {
         const window = eventWindow(record);
-        if (!window || Date.now() < window.end) nativeSet.call(this, mapKey, window ? Math.max(Date.now(), window.start) : Date.now());
+        if (!window || Date.now() < window.end) this.set(mapKey, window ? Math.max(Date.now(), window.start) : Date.now());
       }
     }
   }
