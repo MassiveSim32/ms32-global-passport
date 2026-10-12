@@ -171,6 +171,17 @@ app.get('/health',(req,res)=>res.json({
   loginMode:'discord-bot-link'
 }));
 
+app.get('/flights-preview',(req,res)=>{
+  const safe=(s='')=>String(s).replace(/[&<>\"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','\"':'&quot;',"'":'&#39;'}[c]));
+  const cards=cachedEvents.map(e=>{
+    const start=e.scheduled_start_time?new Date(e.scheduled_start_time).toLocaleString('en-AU',{dateStyle:'medium',timeStyle:'short',timeZone:'Australia/Hobart'}):'TBA';
+    const desc=safe(e.description||'').replace(/\n/g,'<br>');
+    const voice=e.channel_id?'Voice channel linked':'No voice channel linked';
+    return `<article class="event"><div class="source">Discord Scheduled Event</div><h2>${safe(e.name)}</h2><div class="meta">${safe(start)} · ${voice}</div>${desc?`<p>${desc}</p>`:''}<div class="row"><span>${Number(e.user_count||0)} interested</span><span>${e.channel_id?'Attendance ready':'Attendance mapping needed'}</span></div></article>`;
+  }).join('');
+  res.type('html').send(`<!doctype html><html><head><meta name="viewport" content="width=device-width,initial-scale=1"><title>MS32 Upcoming Flights</title><style>:root{--bg:#06101b;--panel:#0d1b2b;--line:#26435e;--text:#f5f8fb;--muted:#8ea7bb;--orange:#ff9f2f;--blue:#4bb8ff;--green:#45d18e}*{box-sizing:border-box}body{margin:0;background:radial-gradient(circle at top,#12314c,#06101b 48%,#02070c);color:var(--text);font:14px system-ui;min-height:100vh}.wrap{max-width:760px;margin:auto;padding:28px 18px 60px}.eyebrow{color:var(--blue);font-size:11px;font-weight:800;letter-spacing:.12em;text-transform:uppercase}.hero{display:flex;justify-content:space-between;gap:16px;align-items:end;margin-bottom:18px}h1{font-size:34px;margin:6px 0}.pill{padding:8px 11px;border:1px solid var(--line);border-radius:999px;color:var(--green);font-weight:800;font-size:11px}.event{background:linear-gradient(145deg,#10283c,#091725);border:1px solid var(--line);border-radius:22px;padding:18px;margin:12px 0}.source{font-size:10px;color:#b8bdff;font-weight:800;text-transform:uppercase}.event h2{margin:5px 0 4px;font-size:19px}.meta,.event p{color:var(--muted);line-height:1.5}.row{display:flex;justify-content:space-between;gap:10px;border-top:1px solid #1c3549;margin-top:14px;padding-top:12px;font-size:11px;color:#bcd0df}.notice{margin-top:18px;padding:14px;border-radius:16px;background:#0b1725;border:1px solid #1d374e;color:var(--muted)}a{color:var(--orange)}</style></head><body><main class="wrap"><div class="hero"><div><div class="eyebrow">Massive Sim 32 · Global Passport</div><h1>Upcoming Flights</h1><div style="color:var(--muted)">Live from Discord Gateway cache</div></div><div class="pill">${gatewayReady?'BOT ONLINE':'BOT CONNECTING'}</div></div>${eventCachePrimed?(cards||'<div class="notice">No scheduled events are currently published in Discord.</div>'):'<div class="notice">Discord event cache is still loading. Refresh in a few seconds.</div>'}<div class="notice">Read-only preview is enabled so we can verify live Discord events before restoring pilot sign-in and attendance registration.</div></main></body></html>`);
+});
+
 app.get('/auth/discord',(req,res)=>{
   if(req.session.user) return res.redirect('/');
   cleanupCodes(); let code=makeCode(); while(linkCodes.has(code)) code=makeCode();
@@ -185,7 +196,7 @@ app.get('/api/link/status',(req,res)=>res.json({linked:!!req.session.user,user:r
 app.post('/auth/logout',(req,res)=>req.session.destroy(()=>res.json({ok:true})));
 app.get('/api/me',(req,res)=>res.json({user:req.session.user||null,botReady:gatewayReady}));
 
-app.get('/api/events',mustAuth,(req,res)=>{
+app.get('/api/events',(req,res)=>{
   res.json(cachedEvents.map(normalizeEvent));
 });
 app.post('/api/events/:id/join',mustAuth,(req,res)=>{
@@ -215,4 +226,4 @@ app.post('/api/events/:id/claim',mustAuth,(req,res)=>{
 app.use(express.static(path.join(__dirname,'public')));
 app.use((req,res)=>res.sendFile(path.join(__dirname,'public','index.html')));
 const port=Number(process.env.PORT||3000);
-app.listen(port,()=>console.log(`MS32 Global Passport v0.0.7 gateway-cache listening on ${port}`));
+app.listen(port,()=>console.log(`MS32 Global Passport v0.0.8 flights-preview listening on ${port}`));
