@@ -10,4 +10,4 @@ express.response.send = function patchedSend(body) {
   return originalSend.call(this, body);
 };
 
-await import('./server-old.js');
+await import('./server.js');
