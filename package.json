@@ -1,0 +1,17 @@
+{
+  "name": "ms32-global-passport",
+  "version": "0.0.3",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node --watch server.js"
+  },
+  "dependencies": {
+    "discord.js": "^14.22.1",
+    "dotenv": "^16.6.1",
+    "express": "^5.1.0",
+    "express-session": "^1.18.2"
+  },
+  "engines": {"node": ">=20"}
+}
