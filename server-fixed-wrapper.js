@@ -1,50 +1,111 @@
 import express from 'express';
 
 // Runtime bridge while the beta still keeps attendance in memory.
-// It keeps verified event voice time running after a pilot has claimed a stamp,
-// so the full comms session can feed Frequent Flyer rewards.
+// Verified comms only count from the advertised Discord event start time
+// until three hours after that start time. Time before/after that window
+// never contributes to attendance or Frequent Flyer rewards.
 const originalMapSet = Map.prototype.set;
 const originalMapDelete = Map.prototype.delete;
 let registrationsMap = null;
 let voiceStartsMap = null;
 let voiceChannelsMap = null;
 let claimRequestDepth = 0;
+const cutoffTimers = new Map();
+const EVENT_WINDOW_MS = 3 * 60 * 60 * 1000;
 
 function isSnowflake(value) {
   return /^\d{16,20}$/.test(String(value || ''));
 }
 
+function eventWindow(record) {
+  const start = new Date(record?.start || 0).getTime();
+  if (!Number.isFinite(start) || start <= 0) return null;
+  return { start, end: start + EVENT_WINDOW_MS };
+}
+
+function clearCutoffTimer(key) {
+  const t = cutoffTimers.get(key);
+  if (t) clearTimeout(t);
+  cutoffTimers.delete(key);
+}
+
+function bankWindowedVoice(record, key, endTime = Date.now()) {
+  if (!record || !voiceStartsMap) return;
+  const started = voiceStartsMap.get(key);
+  if (!started) return;
+  const window = eventWindow(record);
+  let elapsed = 0;
+  if (window) {
+    const from = Math.max(Number(started), window.start);
+    const to = Math.min(Number(endTime), window.end);
+    elapsed = Math.max(0, to - from);
+  } else {
+    elapsed = Math.max(0, Number(endTime) - Number(started));
+  }
+  record.attendanceMs = Number(record.attendanceMs || 0) + elapsed;
+  record.verified = record.attendanceMs >= (30 * 60 * 1000);
+  originalMapDelete.call(voiceStartsMap, key);
+  clearCutoffTimer(key);
+}
+
+function scheduleCutoff(record, key) {
+  clearCutoffTimer(key);
+  const window = eventWindow(record);
+  if (!window) return;
+  const delay = window.end - Date.now();
+  if (delay <= 0) {
+    bankWindowedVoice(record, key, window.end);
+    return;
+  }
+  cutoffTimers.set(key, setTimeout(() => {
+    bankWindowedVoice(record, key, window.end);
+  }, delay));
+}
+
+function startWindowedVoice(record, key, requestedStart = Date.now()) {
+  if (!record || !voiceStartsMap) return false;
+  const window = eventWindow(record);
+  const now = Date.now();
+  if (window && now >= window.end) return false;
+  const startAt = window ? Math.max(Number(requestedStart), window.start) : Number(requestedStart);
+  originalMapSet.call(voiceStartsMap, key, startAt);
+  scheduleCutoff(record, key);
+  return true;
+}
+
 function bankClaimedVoice(userId, channelId) {
   if (!registrationsMap || !voiceStartsMap || !channelId) return;
-  const now = Date.now();
   for (const r of registrationsMap.values()) {
     if (!r?.claimed || String(r.userId) !== String(userId) || r.channelId !== channelId) continue;
-    const k = `${r.userId}:${r.eventId}`;
-    const started = voiceStartsMap.get(k);
-    if (!started) continue;
-    r.attendanceMs = Number(r.attendanceMs || 0) + Math.max(0, now - started);
-    r.verified = true;
-    originalMapDelete.call(voiceStartsMap, k);
+    const key = `${r.userId}:${r.eventId}`;
+    if (voiceStartsMap.has(key)) bankWindowedVoice(r, key);
   }
 }
 
 function restartClaimedVoiceIfNeeded(userId, channelId) {
   if (!registrationsMap || !voiceStartsMap || !channelId) return;
   const matches = [...registrationsMap.values()].filter(r => String(r?.userId) === String(userId) && r.channelId === channelId);
-  if (matches.some(r => !r.claimed)) return; // server.js will track the active unstamped registration itself
+  if (matches.some(r => !r.claimed)) return; // server.js tracks the active unstamped registration itself
   const claimed = matches.filter(r => r.claimed).sort((a, b) => Math.abs(new Date(a.start || 0).getTime() - Date.now()) - Math.abs(new Date(b.start || 0).getTime() - Date.now()))[0];
   if (!claimed) return;
-  const k = `${claimed.userId}:${claimed.eventId}`;
-  if (!voiceStartsMap.has(k)) originalMapSet.call(voiceStartsMap, k, Date.now());
+  const key = `${claimed.userId}:${claimed.eventId}`;
+  if (!voiceStartsMap.has(key)) startWindowedVoice(claimed, key, Date.now());
 }
 
 Map.prototype.set = function patchedMapSet(key, value) {
   if (typeof key === 'string' && key.includes(':') && value && typeof value === 'object' && 'userId' in value && 'eventId' in value) {
     registrationsMap = this;
   }
+
   if (typeof key === 'string' && key.includes(':') && typeof value === 'number') {
     voiceStartsMap = this;
+    const record = registrationsMap?.get(key);
+    if (record) {
+      startWindowedVoice(record, key, value);
+      return this;
+    }
   }
+
   if (isSnowflake(key) && isSnowflake(value)) {
     voiceChannelsMap = this;
     const oldChannel = this.get(key);
@@ -53,6 +114,7 @@ Map.prototype.set = function patchedMapSet(key, value) {
     restartClaimedVoiceIfNeeded(key, value);
     return result;
   }
+
   return originalMapSet.call(this, key, value);
 };
 
@@ -64,17 +126,21 @@ Map.prototype.delete = function patchedMapDelete(key) {
     if (oldChannel) bankClaimedVoice(key, oldChannel);
   }
 
-  // Claiming a stamp used to stop the active timer. Instead, bank the first
-  // 30+ minutes and immediately restart from now while the pilot remains in voice.
+  // Claiming a stamp must not stop the timer. Bank the qualifying time and
+  // restart while the pilot remains in the event voice channel, but never
+  // outside the event's advertised start + three-hour window.
   if (this === voiceStartsMap && typeof key === 'string' && key.includes(':')) {
-    const [userId, eventId] = key.split(':');
-    const r = registrationsMap?.get(key);
-    const stillInEventVoice = !!(r?.channelId && voiceChannelsMap?.get(String(userId)) === r.channelId);
-    if (stillInEventVoice && (claimRequestDepth > 0 || r?.claimed)) {
-      originalMapSet.call(this, key, Date.now());
+    const [userId] = key.split(':');
+    const record = registrationsMap?.get(key);
+    const stillInEventVoice = !!(record?.channelId && voiceChannelsMap?.get(String(userId)) === record.channelId);
+    if (stillInEventVoice && (claimRequestDepth > 0 || record?.claimed)) {
+      clearCutoffTimer(key);
+      startWindowedVoice(record, key, Date.now());
       return true;
     }
+    clearCutoffTimer(key);
   }
+
   return originalMapDelete.call(this, key);
 };
 
