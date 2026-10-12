@@ -3,11 +3,15 @@
   style.textContent=`
     .passport-stamp.arrival-stamp{
       --stamp-accent:#62d68a;
+      --stamp-ink:#f5f8fb;
+      --stamp-bg1:#0b4c93;
+      --stamp-bg2:#073870;
+      --stamp-bg3:#052d5d;
       position:relative;
       min-height:152px;
       border:3px solid rgba(245,248,251,.92);
       border-radius:18px;
-      color:#f5f8fb;
+      color:var(--stamp-ink);
       display:flex;
       flex-direction:column;
       align-items:center;
@@ -19,7 +23,7 @@
       text-transform:uppercase;
       background:
         radial-gradient(circle at 20% 20%,rgba(255,255,255,.05) 0 1px,transparent 1.5px),
-        linear-gradient(145deg,#0b4c93,#073870 52%,#052d5d);
+        linear-gradient(145deg,var(--stamp-bg1),var(--stamp-bg2) 52%,var(--stamp-bg3));
       background-size:11px 11px,auto;
       box-shadow:inset 0 0 0 2px rgba(245,248,251,.25),0 5px 12px rgba(0,0,0,.14);
       overflow:hidden;
@@ -42,9 +46,59 @@
       pointer-events:none;
     }
     .passport-stamp.arrival-stamp:nth-child(even){transform:rotate(2deg)}
+
+    /* Airliner: clean international arrival / customs stamp */
+    .passport-stamp.stamp-airliner{
+      --stamp-bg1:#123f67;--stamp-bg2:#0a2b49;--stamp-bg3:#061f36;
+      border-radius:14px;
+      border-style:double;
+      letter-spacing:.01em;
+    }
+    .passport-stamp.stamp-airliner:before{border-radius:9px;border-style:solid}
+    .passport-stamp.stamp-airliner .stamp-family{letter-spacing:.28em;color:#9fd7ff}
+
+    /* Warbirds: squadron / sortie feel */
+    .passport-stamp.stamp-warbirds{
+      --stamp-accent:#e0c174;--stamp-bg1:#53583d;--stamp-bg2:#353a2b;--stamp-bg3:#22271d;
+      border-radius:8px;
+      border-style:double;
+      transform:rotate(-1deg);
+      box-shadow:inset 0 0 0 2px rgba(231,220,181,.22),0 5px 12px rgba(0,0,0,.18);
+    }
+    .passport-stamp.stamp-warbirds:nth-child(even){transform:rotate(1deg)}
+    .passport-stamp.stamp-warbirds:before{border-radius:4px;border-style:dashed}
+    .passport-stamp.stamp-warbirds .stamp-family{font-weight:1000;letter-spacing:.2em;color:#f0d889}
+    .passport-stamp.stamp-warbirds .stamp-country{font-family:Impact,Haettenschweiler,'Arial Narrow Bold',sans-serif;letter-spacing:.05em}
+
+    /* Helicopter: technical rotor-ops badge */
+    .passport-stamp.stamp-helicopter{
+      --stamp-accent:#ffad59;--stamp-bg1:#134b52;--stamp-bg2:#0b343a;--stamp-bg3:#062429;
+      border-radius:32px 10px 32px 10px;
+      border-color:#79d7d2;
+    }
+    .passport-stamp.stamp-helicopter:before{border-radius:25px 7px 25px 7px;border-style:dashed}
+    .passport-stamp.stamp-helicopter .stamp-family{color:#8ee7df;letter-spacing:.24em}
+
+    /* Bush: rugged expedition / remote-strip stamp */
+    .passport-stamp.stamp-bush{
+      --stamp-accent:#f0bf63;--stamp-bg1:#5d6037;--stamp-bg2:#414526;--stamp-bg3:#2d311b;
+      border-color:#e5d39b;
+      border-radius:22% 9% 20% 10%;
+      transform:rotate(-3deg);
+      background:
+        repeating-linear-gradient(17deg,rgba(255,255,255,.025) 0 1px,transparent 1px 7px),
+        linear-gradient(145deg,var(--stamp-bg1),var(--stamp-bg2) 52%,var(--stamp-bg3));
+    }
+    .passport-stamp.stamp-bush:nth-child(even){transform:rotate(3deg)}
+    .passport-stamp.stamp-bush:before{border-radius:18% 7% 17% 8%;border-style:dashed}
+    .passport-stamp.stamp-bush .stamp-family{color:#f1d38a;letter-spacing:.18em}
+
+    /* Default community stamp keeps the established blue Passport style */
+    .passport-stamp.stamp-community .stamp-family{color:#a9d9ff}
+
     .stamp-brand{position:relative;z-index:1;display:flex;align-items:center;justify-content:center;gap:5px;font-size:6px;font-weight:900;letter-spacing:.09em;color:#fff;opacity:.95}
     .stamp-brand img{width:16px;height:16px;border-radius:50%}
-    .stamp-arrived{position:relative;z-index:1;margin-top:5px;font-size:6px;font-weight:900;letter-spacing:.34em;color:#fff;opacity:.92}
+    .stamp-family{position:relative;z-index:1;margin-top:5px;font-size:6px;font-weight:900;letter-spacing:.3em;color:#fff;opacity:.96}
     .stamp-country{position:relative;z-index:1;color:var(--stamp-accent);font-size:19px;line-height:1;font-weight:1000;letter-spacing:.03em;margin-top:7px;max-width:100%;overflow-wrap:anywhere;text-shadow:0 1px 0 rgba(0,0,0,.2)}
     .stamp-city{position:relative;z-index:1;color:#fff;font-size:10px;font-weight:1000;letter-spacing:.2em;margin-top:5px;max-width:100%;overflow-wrap:anywhere}
     .stamp-route{position:relative;z-index:1;width:100%;margin-top:8px;padding-top:7px;border-top:1px solid rgba(245,248,251,.55);font-size:7px;font-weight:900;letter-spacing:.08em;color:#fff}
@@ -53,7 +107,7 @@
     .stamp-modal-card{background:#e9e1cf}
     .stamp-modal-card .passport-stamp.arrival-stamp{width:280px;min-height:205px;margin:14px auto;padding:19px 18px 16px;border-width:4px;transform:rotate(-1deg)}
     .stamp-modal-card .passport-stamp.arrival-stamp .stamp-brand{font-size:8px}.stamp-modal-card .passport-stamp.arrival-stamp .stamp-brand img{width:24px;height:24px}
-    .stamp-modal-card .passport-stamp.arrival-stamp .stamp-arrived{font-size:9px;margin-top:7px}
+    .stamp-modal-card .passport-stamp.arrival-stamp .stamp-family{font-size:9px;margin-top:7px}
     .stamp-modal-card .passport-stamp.arrival-stamp .stamp-country{font-size:31px;margin-top:9px}
     .stamp-modal-card .passport-stamp.arrival-stamp .stamp-city{font-size:15px;margin-top:7px}
     .stamp-modal-card .passport-stamp.arrival-stamp .stamp-route{font-size:10px;margin-top:11px;padding-top:9px}
@@ -66,6 +120,21 @@
   const accentByCountry={
     'Ireland':'#75dd84','Australia':'#f3bf44','New Zealand':'#78c7ff','Japan':'#ff7d83','United States':'#ff8d6f','United Kingdom':'#86baff','France':'#72a9ff','Germany':'#f0c95b','Italy':'#72d69d','Spain':'#f5c94d','Portugal':'#73d19b','Netherlands':'#ff9f66','Canada':'#ff7777','Singapore':'#ff7f8e','South Korea':'#86c8ff','United Arab Emirates':'#72d4a2','South Africa':'#e2c76d','Brazil':'#7bd47c','Argentina':'#8ecfff','Chile':'#ff8a83','Mexico':'#77d18b'
   };
+
+  const familyRules=[
+    {family:'warbirds',label:'WARBIRDS · SORTIE VERIFIED',keywords:['warbird','warbirds','sortie','heritage flight','memorial flight','squadron']},
+    {family:'helicopter',label:'HELICOPTER · ROTOR OPS',keywords:['helicopter','heli club','heli ','rotor','rotorcraft','chopper','rescue']},
+    {family:'airliner',label:'AIRLINER · VERIFIED ARRIVAL',keywords:['airliner','world tour','airline','jetliner','commercial jet','awt']},
+    {family:'bush',label:'BUSH FLIGHT · EXPEDITION VERIFIED',keywords:['bush','backcountry','outback','scenic','general aviation','ga flight','remote strip','island hop']}
+  ];
+
+  function stampFamily(e){
+    const hay=`${e?.name||''} ${e?.description||''}`.toLowerCase();
+    for(const rule of familyRules){
+      if(rule.keywords.some(k=>hay.includes(k)))return rule;
+    }
+    return {family:'community',label:'COMMUNITY FLIGHT · MS32 VERIFIED'};
+  }
 
   function normalCountry(c){
     const x=String(c||'').trim();
@@ -106,6 +175,7 @@
 
   function arrivalStampData(e){
     const series=typeof stampSeries==='function'?stampSeries(`${e?.name||''} ${e?.description||''}`):{label:'MASSIVE COMMUNITY FLIGHT'};
+    const family=stampFamily(e);
     const loc=typeof locationInfo==='function'?locationInfo(e):{country:'',route:''};
     const route=typeof routeInfo==='function'?routeInfo(e):{route:'',destination:'',icaos:[]};
     const parenRoute=parentheticalRoute(e);
@@ -122,13 +192,29 @@
     const hero=country||'GLOBAL PASSPORT';
     const secondary=city||((!country&&loc?.place)?loc.place:'MS32 DESTINATION');
     const accent=accentByCountry[country]||'#63d6c4';
-    return{hero:String(hero).toUpperCase(),city:String(secondary).toUpperCase(),route:String(displayRoute).toUpperCase(),date:typeof stampDate==='function'?stampDate(e?.start):'',series:series?.label||'MASSIVE COMMUNITY FLIGHT',accent};
+    return{
+      hero:String(hero).toUpperCase(),
+      city:String(secondary).toUpperCase(),
+      route:String(displayRoute).toUpperCase(),
+      date:typeof stampDate==='function'?stampDate(e?.start):'',
+      series:series?.label||'MASSIVE COMMUNITY FLIGHT',
+      accent,
+      family:family.family,
+      familyLabel:family.label
+    };
   }
 
   window.stampData=function(e){return arrivalStampData(e)};
   window.stampMarkup=function(e){
     const s=arrivalStampData(e);
-    return `<div class="passport-stamp arrival-stamp" style="--stamp-accent:${s.accent}"><div class="stamp-brand"><img src="/icon-192.png" alt=""><span>MS32 GLOBAL PASSPORT</span></div><div class="stamp-arrived">ARRIVED</div><div class="stamp-country">${esc(s.hero)}</div><div class="stamp-city">${esc(s.city)}</div><div class="stamp-route">${esc(s.route)}</div><div class="stamp-date">${esc(s.date)}</div><div class="stamp-series">${esc(s.series)} · MS32 VERIFIED</div></div>`;
+    const familyText={
+      airliner:'AIRLINER · ARRIVED',
+      warbirds:'WARBIRDS · SORTIE',
+      helicopter:'HELICOPTER · ROTOR OPS',
+      bush:'BUSH FLIGHT · EXPEDITION',
+      community:'COMMUNITY FLIGHT'
+    }[s.family]||'COMMUNITY FLIGHT';
+    return `<div class="passport-stamp arrival-stamp stamp-${s.family}" style="--stamp-accent:${s.accent}"><div class="stamp-brand"><img src="/icon-192.png" alt=""><span>MS32 GLOBAL PASSPORT</span></div><div class="stamp-family">${esc(familyText)}</div><div class="stamp-country">${esc(s.hero)}</div><div class="stamp-city">${esc(s.city)}</div><div class="stamp-route">${esc(s.route)}</div><div class="stamp-date">${esc(s.date)}</div><div class="stamp-series">${esc(s.series)} · ${esc(s.familyLabel)}</div></div>`;
   };
 
   try{if(typeof renderStampBook==='function')renderStampBook()}catch{}
