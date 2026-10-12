@@ -8,15 +8,20 @@ import session from 'express-session';
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const app = express();
 const sessionStore = new session.MemoryStore();
+const authSecret = process.env.SESSION_SECRET || crypto.randomBytes(32).toString('hex');
+const AUTH_COOKIE = 'ms32_auth';
+const AUTH_MAX_AGE_MS = 1000 * 60 * 60 * 24 * 30;
+
+if(!process.env.SESSION_SECRET) console.warn('SESSION_SECRET is missing; persistent sign-in will not survive restarts.');
 
 app.set('trust proxy', 1);
 app.use(express.json());
 app.use(session({
   store: sessionStore,
-  secret: process.env.SESSION_SECRET || crypto.randomBytes(32).toString('hex'),
+  secret: authSecret,
   resave: false,
   saveUninitialized: true,
-  cookie: { httpOnly:true, sameSite:'lax', secure:process.env.NODE_ENV==='production', maxAge:1000*60*60*24*30 }
+  cookie: { httpOnly:true, sameSite:'lax', secure:process.env.NODE_ENV==='production', maxAge:AUTH_MAX_AGE_MS }
 }));
 
 const cfg = {
@@ -44,7 +49,50 @@ let heartbeatTimer = null;
 let reconnectTimer = null;
 let gatewaySequence = null;
 
-function mustAuth(req,res,next){ if(!req.session.user) return res.status(401).json({error:'Not signed in'}); next(); }
+function parseCookies(header=''){
+  const out={};
+  for(const part of String(header).split(';')){
+    const i=part.indexOf('=');
+    if(i<0) continue;
+    const k=part.slice(0,i).trim(), v=part.slice(i+1).trim();
+    if(k) out[k]=decodeURIComponent(v);
+  }
+  return out;
+}
+function signAuthUser(user){
+  const clean={id:String(user.id),username:String(user.username).slice(0,80),avatar:user.avatar||null,member:true,exp:Date.now()+AUTH_MAX_AGE_MS};
+  const payload=Buffer.from(JSON.stringify(clean)).toString('base64url');
+  const sig=crypto.createHmac('sha256',authSecret).update(payload).digest('base64url');
+  return `${payload}.${sig}`;
+}
+function readPersistentAuth(req){
+  try{
+    const raw=parseCookies(req.headers.cookie||'')[AUTH_COOKIE];
+    if(!raw) return null;
+    const [payload,sig]=raw.split('.');
+    if(!payload||!sig) return null;
+    const expected=crypto.createHmac('sha256',authSecret).update(payload).digest('base64url');
+    const a=Buffer.from(sig), b=Buffer.from(expected);
+    if(a.length!==b.length||!crypto.timingSafeEqual(a,b)) return null;
+    const user=JSON.parse(Buffer.from(payload,'base64url').toString('utf8'));
+    if(!user?.id||!user?.username||!user?.member||Number(user.exp||0)<=Date.now()) return null;
+    return {id:String(user.id),username:String(user.username),avatar:user.avatar||null,member:true};
+  }catch{return null;}
+}
+function getAuthUser(req){ return req.session?.user || readPersistentAuth(req); }
+function setPersistentAuth(res,user){
+  res.cookie(AUTH_COOKIE,signAuthUser(user),{httpOnly:true,sameSite:'lax',secure:process.env.NODE_ENV==='production',maxAge:AUTH_MAX_AGE_MS,path:'/'});
+}
+function clearPersistentAuth(res){
+  res.clearCookie(AUTH_COOKIE,{httpOnly:true,sameSite:'lax',secure:process.env.NODE_ENV==='production',path:'/'});
+}
+function mustAuth(req,res,next){
+  const user=getAuthUser(req);
+  if(!user) return res.status(401).json({error:'Not signed in'});
+  req.authUser=user;
+  setPersistentAuth(res,user);
+  next();
+}
 function key(userId,eventId){ return `${userId}:${eventId}`; }
 function eventChannel(event){ return event?.channel_id || cfg.fallbackVoiceChannelId; }
 function safeHtml(s=''){ return String(s).replace(/[&<>\"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','\"':'&quot;',"'":'&#39;'}[c])); }
@@ -194,7 +242,7 @@ app.get('/health',(req,res)=>res.json({
   cachedEventCount:cachedEvents.length,
   voiceStateCount:voiceChannelsByUser.size,
   oauthConfigured:!!(cfg.clientId&&cfg.guildId),
-  loginMode:'discord-browser-oauth-gateway-proof'
+  loginMode:'discord-browser-oauth-gateway-proof+persistent-signed-cookie'
 }));
 
 app.get('/flights-preview',(req,res)=>{
@@ -208,7 +256,8 @@ app.get('/flights-preview',(req,res)=>{
 });
 
 app.get('/auth/discord',(req,res)=>{
-  if(req.session.user) return res.redirect('/');
+  const existing=getAuthUser(req);
+  if(existing){ setPersistentAuth(res,existing); return res.redirect('/'); }
   if(!cfg.clientId) return simplePage(res,'Discord sign-in is not configured','The Discord client ID is missing from the Passport service.',503);
   const state=crypto.randomBytes(24).toString('hex');
   req.session.oauthState=state;
@@ -225,7 +274,8 @@ app.get('/auth/discord',(req,res)=>{
 });
 
 app.get('/auth/discord/browser',(req,res)=>{
-  if(req.session.user) return res.redirect('/');
+  const existing=getAuthUser(req);
+  if(existing){ setPersistentAuth(res,existing); return res.redirect('/'); }
   const expectedState=req.session.oauthState||'';
   res.type('html').send(`<!doctype html><html><head><meta name="viewport" content="width=device-width,initial-scale=1"><title>Connect Discord</title><style>body{margin:0;background:#06101b;color:#fff;font-family:system-ui;display:grid;place-items:center;min-height:100vh}.card{width:min(460px,90vw);background:#0d1b2b;border:1px solid #26435e;border-radius:24px;padding:28px;text-align:center}.eyebrow{color:#4bb8ff;font-size:11px;font-weight:800;letter-spacing:.12em;text-transform:uppercase}.muted{color:#8ea7bb;line-height:1.55}.ok{color:#45d18e}.warn{color:#ffbd66}.spinner{width:34px;height:34px;border:4px solid #29465f;border-top-color:#5865f2;border-radius:50%;margin:18px auto;animation:s 1s linear infinite}@keyframes s{to{transform:rotate(360deg)}}.btn{display:block;padding:13px 16px;border-radius:14px;background:#5865f2;color:#fff;text-decoration:none;font-weight:800;margin-top:14px}</style></head><body><div class="card"><div class="eyebrow">Massive Sim 32 · Global Passport</div><h1 id="title">Finishing Discord sign-in</h1><div class="spinner" id="spin"></div><p id="msg" class="muted">Checking your Discord account…</p><a id="back" class="btn" href="/" style="display:none;background:#102439">Back to Passport</a></div><script>
 const expected=${JSON.stringify(expectedState)};
@@ -266,30 +316,40 @@ app.post('/auth/discord/browser-begin',(req,res)=>{
 app.get('/auth/discord/browser-status',(req,res)=>{
   cleanupProofs();
   const pending=pendingVoiceProofs.get(req.sessionID);
-  res.json({linked:!!req.session.user,user:req.session.user||null,expired:!req.session.user&&!pending});
+  const user=getAuthUser(req);
+  if(user) setPersistentAuth(res,user);
+  res.json({linked:!!user,user:user||null,expired:!user&&!pending});
 });
 
-app.post('/auth/logout',(req,res)=>{ pendingVoiceProofs.delete(req.sessionID); req.session.destroy(()=>res.json({ok:true})); });
-app.get('/api/me',(req,res)=>res.json({user:req.session.user||null,botReady:gatewayReady}));
+app.post('/auth/logout',(req,res)=>{
+  pendingVoiceProofs.delete(req.sessionID);
+  clearPersistentAuth(res);
+  req.session.destroy(()=>res.json({ok:true}));
+});
+app.get('/api/me',(req,res)=>{
+  const user=getAuthUser(req);
+  if(user) setPersistentAuth(res,user);
+  res.json({user:user||null,botReady:gatewayReady});
+});
 app.get('/api/events',(req,res)=>res.json(cachedEvents.map(normalizeEvent)));
 
 app.post('/api/events/:id/join',mustAuth,(req,res)=>{
   const e=cachedEvents.find(x=>x.id===req.params.id);
   if(!e) return res.status(404).json({error:eventCachePrimed?'Scheduled event not found':'Discord event cache is still starting. Try again shortly.'});
-  const k=key(req.session.user.id,e.id);
-  const r=registrations.get(k)||{userId:req.session.user.id,eventId:e.id,eventName:e.name,start:e.scheduled_start_time,end:e.scheduled_end_time,channelId:eventChannel(e),attendanceMs:0,verified:false,claimed:false};
+  const k=key(req.authUser.id,e.id);
+  const r=registrations.get(k)||{userId:req.authUser.id,eventId:e.id,eventName:e.name,start:e.scheduled_start_time,end:e.scheduled_end_time,channelId:eventChannel(e),attendanceMs:0,verified:false,claimed:false};
   registrations.set(k,r);
   if(voiceChannelsByUser.get(r.userId)===r.channelId&&!voiceStarts.has(k)) voiceStarts.set(k,Date.now());
   res.json({ok:true,registration:r});
 });
 app.get('/api/events/:id/status',mustAuth,(req,res)=>{
-  const k=key(req.session.user.id,req.params.id), r=registrations.get(k);
+  const k=key(req.authUser.id,req.params.id), r=registrations.get(k);
   if(!r) return res.json({registered:false});
   let ms=r.attendanceMs; const active=voiceStarts.get(k); if(active) ms+=Date.now()-active;
   res.json({registered:true,inVoice:!!active,attendanceMinutes:Math.floor(ms/60000),thresholdMinutes:Math.ceil(cfg.thresholdMs/60000),verified:ms>=cfg.thresholdMs,eventName:r.eventName,channelId:r.channelId,claimed:r.claimed});
 });
 app.post('/api/events/:id/claim',mustAuth,(req,res)=>{
-  const k=key(req.session.user.id,req.params.id), r=registrations.get(k);
+  const k=key(req.authUser.id,req.params.id), r=registrations.get(k);
   if(!r) return res.status(404).json({error:'Not registered'});
   let ms=r.attendanceMs; const active=voiceStarts.get(k); if(active){ ms+=Date.now()-active; r.attendanceMs=ms; voiceStarts.delete(k); }
   if(ms<cfg.thresholdMs) return res.status(403).json({error:'Attendance threshold not met'});
@@ -300,4 +360,4 @@ app.post('/api/events/:id/claim',mustAuth,(req,res)=>{
 app.use(express.static(path.join(__dirname,'public')));
 app.use((req,res)=>res.sendFile(path.join(__dirname,'public','index.html')));
 const port=Number(process.env.PORT||3000);
-app.listen(port,()=>console.log(`MS32 Global Passport v0.0.10 browser-oauth+gateway listening on ${port}`));
+app.listen(port,()=>console.log(`MS32 Global Passport v0.0.11 persistent-auth+gateway listening on ${port}`));
