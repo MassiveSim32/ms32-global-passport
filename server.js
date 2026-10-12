@@ -111,6 +111,7 @@ function addAudit(admin,action,details={}){
 }
 function key(userId,eventId){ return `${userId}:${eventId}`; }
 function eventChannel(event){ return event?.channel_id || cfg.fallbackVoiceChannelId; }
+function isUserInRegistrationVoice(r){ return !!(r?.channelId && voiceChannelsByUser.get(String(r.userId))===r.channelId); }
 function safeHtml(s=''){ return String(s).replace(/[&<>\"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','\"':'&quot;',"'":'&#39;'}[c])); }
 function cleanupProofs(){ const now=Date.now(); for(const [sid,p] of pendingVoiceProofs) if(p.expiresAt<=now) pendingVoiceProofs.delete(sid); }
 function registrationMs(r){
@@ -132,7 +133,7 @@ function registrationView(r){
     thresholdMinutes:Math.ceil(cfg.thresholdMs/60000),
     verified:ms>=cfg.thresholdMs,
     claimed:!!r.claimed,
-    inVoice:voiceStarts.has(key(r.userId,r.eventId))
+    inVoice:isUserInRegistrationVoice(r)
   };
 }
 
@@ -394,7 +395,7 @@ app.get('/api/events/:id/status',mustAuth,(req,res)=>{
   const k=key(req.authUser.id,req.params.id), r=registrations.get(k);
   if(!r) return res.json({registered:false});
   const ms=registrationMs(r);
-  res.json({registered:true,inVoice:voiceStarts.has(k),attendanceMinutes:Math.floor(ms/60000),thresholdMinutes:Math.ceil(cfg.thresholdMs/60000),verified:ms>=cfg.thresholdMs,eventName:r.eventName,channelId:r.channelId,claimed:r.claimed});
+  res.json({registered:true,inVoice:isUserInRegistrationVoice(r),attendanceMinutes:Math.floor(ms/60000),thresholdMinutes:Math.ceil(cfg.thresholdMs/60000),verified:ms>=cfg.thresholdMs,eventName:r.eventName,channelId:r.channelId,claimed:r.claimed});
 });
 app.post('/api/events/:id/claim',mustAuth,(req,res)=>{
   const k=key(req.authUser.id,req.params.id), r=registrations.get(k);
@@ -502,6 +503,6 @@ app.get('/',async(req,res,next)=>{
 });
 
 app.use(express.static(path.join(__dirname,'public')));
-app.use((req,res)=>res.sendFile(path.join(__dirname,'public','index.html')));
-const port=Number(process.env.PORT||3000);
+
+const port=process.env.PORT||3000;
 app.listen(port,()=>console.log(`MS32 Global Passport v0.0.15 admin+gateway listening on ${port}`));
