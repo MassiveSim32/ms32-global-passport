@@ -1,14 +1,22 @@
 (()=>{
   const style=document.createElement('style');
   style.textContent=`
-    .rewards-card{position:relative;overflow:hidden;border:1px solid #6a5530;background:radial-gradient(circle at top right,#5b421c55,#10283c 42%,#091725);border-radius:22px;padding:16px;margin:14px 0;box-shadow:inset 0 0 28px #ff9f2f0b}
-    .rewards-card:after{content:'✈';position:absolute;right:-8px;top:-18px;font-size:86px;color:#ffffff08;transform:rotate(-18deg);pointer-events:none}
+    .rewards-compact{position:relative;overflow:hidden;border:1px solid #6a5530;background:linear-gradient(145deg,#10283c,#091725);border-radius:18px;padding:12px 14px;margin:0 0 14px}
+    .rewards-compact:after{content:'✈';position:absolute;right:-5px;top:-17px;font-size:70px;color:#ffffff07;transform:rotate(-18deg);pointer-events:none}
+    .rewards-compact-head{display:flex;justify-content:space-between;align-items:center;gap:10px;position:relative;z-index:1}
+    .rewards-compact-title{font-size:9px;color:#ffbd66;font-weight:900;letter-spacing:.1em;text-transform:uppercase}
+    .rewards-compact-tier{font-size:14px;font-weight:900;color:#fff;margin-top:2px}
+    .rewards-compact-points{text-align:right;font-size:13px;font-weight:900;color:var(--orange)}
+    .rewards-track{height:9px;background:#142536;border-radius:99px;overflow:hidden;margin:9px 0 5px;border:1px solid #2b4355;position:relative;z-index:1}
+    .rewards-track i{display:block;height:100%;width:0;background:linear-gradient(90deg,#ff9f2f,#ffd27a);border-radius:99px;transition:width .45s ease}
+    .rewards-compact-foot{display:flex;justify-content:space-between;gap:10px;color:var(--muted);font-size:9px;position:relative;z-index:1}
+    .rewards-compact-foot strong{color:#fff}
+    .rewards-profile{position:relative;overflow:hidden;border:1px solid #6a5530;background:radial-gradient(circle at top right,#5b421c55,#10283c 42%,#091725);border-radius:22px;padding:16px;margin:14px 0;box-shadow:inset 0 0 28px #ff9f2f0b}
+    .rewards-profile:after{content:'✈';position:absolute;right:-8px;top:-18px;font-size:86px;color:#ffffff08;transform:rotate(-18deg);pointer-events:none}
     .rewards-top{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;position:relative;z-index:1}
     .rewards-title{font-size:10px;color:#ffbd66;font-weight:900;letter-spacing:.12em;text-transform:uppercase}
     .rewards-tier{font-size:22px;font-weight:1000;margin-top:3px;letter-spacing:.02em}
     .rewards-points{text-align:right}.rewards-points b{display:block;font-size:22px;color:var(--orange)}.rewards-points span{font-size:9px;color:var(--muted);letter-spacing:.08em;text-transform:uppercase}
-    .rewards-track{height:11px;background:#142536;border-radius:99px;overflow:hidden;margin:14px 0 7px;border:1px solid #2b4355}
-    .rewards-track i{display:block;height:100%;width:0;background:linear-gradient(90deg,#ff9f2f,#ffd27a);border-radius:99px;transition:width .45s ease}
     .rewards-next{display:flex;justify-content:space-between;gap:10px;color:var(--muted);font-size:10px}
     .rewards-next strong{color:#fff}
     .rewards-stats{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:12px}
@@ -47,9 +55,7 @@
 
   function tierFor(points){
     let current=tiers[0],next=tiers[1]||null;
-    for(let i=0;i<tiers.length;i++){
-      if(points>=tiers[i].min){current=tiers[i];next=tiers[i+1]||null}
-    }
+    for(let i=0;i<tiers.length;i++) if(points>=tiers[i].min){current=tiers[i];next=tiers[i+1]||null}
     const base=current.min;
     const cap=next?next.min:Math.max(points,tiers[tiers.length-1].min);
     const pct=next?Math.max(0,Math.min(100,((points-base)/(cap-base))*100)):100;
@@ -62,23 +68,38 @@
     return min?`${h}h ${min}m`:`${h}h`;
   }
 
-  function ensureCard(){
+  function ensureCards(){
     const home=document.getElementById('home');
-    if(!home||document.getElementById('rewardsCard'))return;
-    const stats=home.querySelector('.stats');
-    if(!stats)return;
-    const card=document.createElement('div');
-    card.id='rewardsCard';card.className='rewards-card';
-    stats.insertAdjacentElement('afterend',card);
+    if(home&&!document.getElementById('rewardsHome')){
+      const anchor=home.querySelector('.beta-banner')||home.firstElementChild;
+      const card=document.createElement('div');
+      card.id='rewardsHome';card.className='rewards-compact';
+      anchor?.insertAdjacentElement('afterend',card);
+    }
+    const profile=document.getElementById('profile');
+    if(profile&&!document.getElementById('rewardsProfile')){
+      const stats=profile.querySelector('.stats');
+      const card=document.createElement('div');
+      card.id='rewardsProfile';card.className='rewards-profile';
+      if(stats)stats.insertAdjacentElement('afterend',card);else profile.appendChild(card);
+    }
   }
 
   function render(){
-    ensureCard();
-    const card=document.getElementById('rewardsCard');
-    if(!card)return;
+    ensureCards();
     const t=totals(),tier=tierFor(t.points);
     const remaining=tier.next?Math.max(0,tier.next.min-t.points):0;
-    card.innerHTML=`
+    const home=document.getElementById('rewardsHome');
+    if(home)home.innerHTML=`
+      <div class="rewards-compact-head">
+        <div><div class="rewards-compact-title">Frequent Flyer</div><div class="rewards-compact-tier">${tier.current.name}</div></div>
+        <div class="rewards-compact-points">${t.points.toLocaleString()} pts</div>
+      </div>
+      <div class="rewards-track"><i style="width:${tier.pct}%"></i></div>
+      <div class="rewards-compact-foot"><span>${tier.next?`Next: <strong>${tier.next.name}</strong>`:'Top tier achieved'}</span><span>${tier.next?`${remaining.toLocaleString()} pts to go`:'MAX STATUS'}</span></div>
+    `;
+    const profile=document.getElementById('rewardsProfile');
+    if(profile)profile.innerHTML=`
       <div class="rewards-top">
         <div><div class="rewards-title">Frequent Flyer Rewards <span class="prototype-pill">PROTOTYPE</span></div><div class="rewards-tier">${tier.current.name}</div></div>
         <div class="rewards-points"><b>${t.points.toLocaleString()}</b><span>Passport Points</span></div>
@@ -88,8 +109,6 @@
       <div class="rewards-stats"><div class="rewards-mini"><b>${t.flights}</b><span>Verified flights</span></div><div class="rewards-mini"><b>${fmtMinutes(t.minutes)}</b><span>Verified comms</span></div></div>
       <button class="btn share-achievement" onclick="shareRewardsAchievement()">SHARE MY PROGRESS</button>
     `;
-    const beta=document.querySelector('.beta-banner strong');
-    if(beta&&beta.textContent.trim()==='v0.0.14')beta.textContent='v0.0.15';
   }
 
   function toast(message){
@@ -108,9 +127,7 @@
   };
 
   const oldUpdate=typeof updateDashboard==='function'?updateDashboard:null;
-  if(oldUpdate){
-    updateDashboard=function(){const r=oldUpdate.apply(this,arguments);setTimeout(render,0);return r};
-  }
+  if(oldUpdate){updateDashboard=function(){const r=oldUpdate.apply(this,arguments);setTimeout(render,0);return r};}
   render();
   setInterval(render,5000);
 })();
