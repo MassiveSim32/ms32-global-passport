@@ -1,0 +1,20 @@
+{
+  "name": "Massive Sim 32 Global Passport",
+  "short_name": "MS32 Passport",
+  "description": "Your journey with Massive Sim 32 — community flights, attendance and passport stamps.",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#06101b",
+  "theme_color": "#06101b",
+  "categories": ["travel", "entertainment", "social"],
+  "icons": [
+    {
+      "src": "/icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}
