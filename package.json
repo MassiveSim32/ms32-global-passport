@@ -4,8 +4,8 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "start": "FLYING_NOW_VOICE_CHANNEL_ID=1395185791709483049 node discord-message-retry.js",
-    "dev": "FLYING_NOW_VOICE_CHANNEL_ID=1395185791709483049 node --watch discord-message-retry.js"
+    "start": "node patch-app-shell.js && FLYING_NOW_VOICE_CHANNEL_ID=1395185791709483049 node discord-message-retry.js",
+    "dev": "node patch-app-shell.js && FLYING_NOW_VOICE_CHANNEL_ID=1395185791709483049 node --watch discord-message-retry.js"
   },
   "dependencies": {
     "discord.js": "^14.22.1",
