@@ -11,6 +11,16 @@ html = html.replaceAll('v0.0.14','v1.0.0-rc.1');
 html = html.replaceAll('v0.0.15','v1.0.0-rc.1');
 html = html.replaceAll('<span class="beta-pill">BETA</span>','<span class="beta-pill">RC</span>');
 
+// Personalise the Home headline as one concise journey message.
+html = html.replace(
+  '<h1 id="hello">Welcome aboard.</h1><p class="sub">Your interactive Massive Simulations 32 Journey starts here</p>',
+  '<h1 id="hello">Your MS32 interactive journey starts here.</h1>'
+);
+html = html.replace(
+  "el('hello').textContent=`Welcome, ${me.user.username}.`;",
+  "el('hello').textContent=`${me.user.username}, your MS32 interactive journey starts here`;"
+);
+
 if (!html.includes('http-equiv="Cache-Control"')) {
   html = html.replace(
     '<head>',
