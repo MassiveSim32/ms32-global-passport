@@ -66,13 +66,31 @@ async function enqueue(url, options, delayMs = 60_000) {
   return true;
 }
 
-async function tryBot(url, options={}) {
+function plainTextBody(bodyText) {
+  try {
+    const payload = JSON.parse(String(bodyText || '{}'));
+    const lines = [];
+    if (payload.content) lines.push(String(payload.content));
+    const embed = Array.isArray(payload.embeds) ? payload.embeds[0] : null;
+    if (embed?.title) lines.push(`**${embed.title}**`);
+    if (embed?.description) lines.push(String(embed.description));
+    for (const field of (embed?.fields || [])) {
+      if (field?.name || field?.value) lines.push(`**${field?.name || ''}** ${field?.value || ''}`.trim());
+    }
+    if (embed?.footer?.text) lines.push(String(embed.footer.text));
+    return JSON.stringify({content:lines.filter(Boolean).join('\n'),allowed_mentions:{parse:[]}});
+  } catch {
+    return String(bodyText || '');
+  }
+}
+
+async function tryBot(url, options={}, bodyOverride=null) {
   if (!process.env.DISCORD_BOT_TOKEN) return null;
   try {
     return await originalFetch(url, {
       method:'POST',
       headers:{authorization:`Bot ${process.env.DISCORD_BOT_TOKEN}`,'content-type':'application/json'},
-      body:String(options?.body || '')
+      body:bodyOverride ?? String(options?.body || '')
     });
   } catch {
     return null;
@@ -98,6 +116,18 @@ async function tryDiscordDelivery(url, options={}) {
   if (botResponse?.ok) {
     console.log('Flying Now Discord post delivered by bot');
     return botResponse;
+  }
+
+  // If Discord rejects the rich embed, retry the same post as plain text.
+  // This only needs basic Send Messages permission and keeps Flying Now usable
+  // even when Embed Links is not granted on the channel.
+  const textBody = plainTextBody(options?.body);
+  if (textBody && textBody !== String(options?.body || '')) {
+    const textResponse = await tryBot(url, options, textBody);
+    if (textResponse?.ok) {
+      console.log('Flying Now Discord post delivered by bot as plain text');
+      return textResponse;
+    }
   }
 
   const webhookResponse = await tryWebhook(options);
