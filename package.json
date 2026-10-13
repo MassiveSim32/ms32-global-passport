@@ -1,6 +1,6 @@
 {
   "name": "ms32-global-passport",
-  "version": "0.0.15",
+  "version": "1.0.0-rc.1",
   "private": true,
   "type": "module",
   "scripts": {
