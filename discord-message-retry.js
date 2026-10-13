@@ -198,4 +198,5 @@ console.log(`Flying Now webhook configuration: ${webhookAtBoot ? (validWebhookUr
 setInterval(flushOutbox, 60_000).unref?.();
 setTimeout(flushOutbox, 15_000);
 
+await import('./flying-now-lifecycle.js');
 await import('./server-fixed-wrapper.js');
