@@ -15,6 +15,10 @@
     .flying-now-card.is-active .flying-now-active-line{display:block}
     .flying-now-auto-finish{display:none;margin-top:7px;font-size:9px;line-height:1.4;color:#a8cbb8;text-transform:uppercase;letter-spacing:.04em}
     .flying-now-card.is-active .flying-now-auto-finish{display:block}
+    #nextFlight.pilot-flight-active{border-color:#2d7a50;background:radial-gradient(circle at top right,#19452e,#11271e 58%,#0b1725);box-shadow:0 0 0 1px #51d58a33,0 12px 30px #0e6a3d33}
+    #nextFlight.pilot-flight-active .eyebrow{color:#8ee7b3}
+    #nextFlight.pilot-flight-active .route{color:#8ee7b3}
+    .pilot-home-live{display:inline-block;margin:4px 0 7px;padding:6px 9px;border-radius:999px;background:#153326;border:1px solid #28563f;color:#8ee7b3;font-size:9px;font-weight:900;letter-spacing:.07em;text-transform:uppercase}
     .flying-now-modal{position:fixed;inset:0;background:#02070ddd;display:grid;place-items:center;padding:20px;z-index:120}
     .flying-now-panel{width:min(390px,95vw);background:#0c1a28;border:1px solid #31506a;border-radius:24px;padding:20px;box-shadow:0 24px 70px #000b}
     .flying-now-panel h2{margin:4px 0 6px;font-size:22px}
@@ -56,6 +60,48 @@
   });
 
   let lastServerState='idle';
+  let lastFlyingNowData={state:'idle'};
+  let baseUpdateDashboard=null;
+
+  function safeText(v){
+    if(typeof esc==='function')return esc(String(v??''));
+    return String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+  }
+
+  function activeScheduledFlight(){
+    try{
+      return (Array.isArray(allEvents)?allEvents:[]).find(e=>
+        !String(e?.id||'').startsWith('flying-now:')&&statuses?.[e.id]?.registered&&statuses?.[e.id]?.inVoice
+      )||null;
+    }catch{return null}
+  }
+
+  function renderHomeFlight(data=lastFlyingNowData,restore=true){
+    const host=document.getElementById('nextFlight');
+    if(!host)return false;
+
+    if(data?.state==='active'){
+      host.classList.add('pilot-flight-active');
+      const mins=Number(data.attendanceMinutes||0);
+      const pts=Number(data.points||0);
+      host.innerHTML=`<div class="eyebrow">Active flight</div><div class="pilot-home-live">● PILOT ACTIVE · IN CHAMPAGNE VOICE</div><h2>Flying Now</h2><div class="route">${safeText(data.departure||'')} → ${safeText(data.destination||'')}</div><div class="sub">${safeText(data.aircraft||'Aircraft')} · ${mins} min comms · ${pts} Journey Points</div>`;
+      return true;
+    }
+
+    const scheduled=activeScheduledFlight();
+    if(scheduled){
+      const s=statuses[scheduled.id]||{};
+      host.classList.add('pilot-flight-active');
+      host.innerHTML=`<div class="eyebrow">Active community flight</div><div class="pilot-home-live">● PILOT ACTIVE · IN EVENT COMMS</div><h2>${safeText(scheduled.name)}</h2>${typeof eventTimes==='function'?eventTimes(scheduled.start):''}<div class="sub" style="margin-top:8px">${Number(s.attendanceMinutes||0)}/${Number(s.thresholdMinutes||30)} min verified comms · Journey Points tracking active</div><button class="btn ready" onclick="showPage('flights')">VIEW ACTIVE FLIGHT</button>`;
+      return true;
+    }
+
+    const wasActive=host.classList.contains('pilot-flight-active');
+    host.classList.remove('pilot-flight-active');
+    if(wasActive&&restore&&baseUpdateDashboard)baseUpdateDashboard();
+    return false;
+  }
+
   function close(){modal.classList.add('hidden')}
   function open(){
     if(lastServerState==='pending'||lastServerState==='active')return;
@@ -67,6 +113,7 @@
     const btn=$('flyingNowOpen');
     const meta=$('flyingNowMeta');
     if(!btn||!meta)return;
+    lastFlyingNowData=data||{state:'idle'};
     const state=data?.state||'idle';
     lastServerState=state;
     card.classList.toggle('is-pending',state==='pending');
@@ -95,14 +142,7 @@
     if(typeof statuses!=='object'||!statuses)return;
     for(const x of (Array.isArray(data?.history)?data.history:[])){
       if(!x?.eventId)continue;
-      statuses[x.eventId]={
-        registered:true,
-        attendanceMinutes:Number(x.attendanceMinutes||0),
-        thresholdMinutes:30,
-        verified:!!x.verified,
-        claimed:!!x.claimed,
-        inVoice:!!x.inVoice
-      };
+      statuses[x.eventId]={registered:true,attendanceMinutes:Number(x.attendanceMinutes||0),thresholdMinutes:30,verified:!!x.verified,claimed:!!x.claimed,inVoice:!!x.inVoice};
     }
   }
 
@@ -116,16 +156,10 @@
       for(const x of d.stamps){
         const journey=statuses[x.event.id];
         const existing=allEvents.findIndex(e=>e.id===x.event.id);
-
-        // Flying Now only becomes a Passport stamp after the normal
-        // 30-minute verified-comms threshold. Before that it remains Journey
-        // Points progress only. Removing any legacy early stamp also prevents
-        // the Passport from alternating between two competing render states.
         if(journey?.registered&&!journey.verified){
           if(existing>=0){allEvents.splice(existing,1);changed=true}
           continue;
         }
-
         if(existing<0){allEvents.push(x.event);changed=true}
         if(!journey?.registered)statuses[x.event.id]=x.status;
       }
@@ -142,9 +176,11 @@
       const r=await fetch('/api/flying-now/status',{credentials:'same-origin',cache:'no-store'});
       if(!r.ok)return;
       const d=await r.json();
+      lastFlyingNowData=d;
       mergeJourneyStatuses(d);
       renderState(d);
       await mergeBonusStamps();
+      renderHomeFlight(d);
     }catch{}
   }
 
@@ -158,16 +194,16 @@
     const aircraft=String($('flyingNowAircraft')?.value||'').trim().toUpperCase();
     const status=$('flyingNowStatus');
     const btn=$('flyingNowSubmit');
-    if(!departure||!destination||!aircraft){
-      status.className='flying-now-status err';status.textContent='Please enter departure, destination and aircraft type.';return;
-    }
+    if(!departure||!destination||!aircraft){status.className='flying-now-status err';status.textContent='Please enter departure, destination and aircraft type.';return}
     btn.disabled=true;btn.textContent='POSTING…';
     status.className='flying-now-status';status.textContent='Posting your flight to #champagne-chat…';
     try{
       const r=await fetch('/api/flying-now',{method:'POST',headers:{'content-type':'application/json'},credentials:'same-origin',body:JSON.stringify({departure,destination,aircraft})});
       const d=await r.json().catch(()=>({}));
       if(!r.ok)throw new Error(d.error||'Could not post flight');
-      renderState({state:d.voiceEligible?'active':'pending',departure,destination,aircraft,attendanceMinutes:0,points:0});
+      const immediate={state:d.voiceEligible?'active':'pending',departure,destination,aircraft,attendanceMinutes:0,points:0};
+      renderState(immediate);
+      renderHomeFlight(immediate);
       status.className=d.voiceEligible?'flying-now-status ok':'flying-now-status waiting';
       status.textContent=d.voiceEligible?'Flight active — Journey Points are earning now. Your flight will finish automatically when you leave Champagne Voice.':'Join the Champagne Voice Channel to start earning Journey Points.';
       btn.textContent=d.voiceEligible?'ACTIVE ✓':'POSTED ✓';
@@ -178,13 +214,11 @@
     }
   });
 
-  // The main dashboard refresh can replace its event list from Discord. Re-merge
-  // verified Flying Now stamps immediately after that refresh so a legitimate
-  // Passport stamp never flickers out between polls.
-  const baseUpdateDashboard=typeof updateDashboard==='function'?updateDashboard:null;
+  baseUpdateDashboard=typeof updateDashboard==='function'?updateDashboard:null;
   if(baseUpdateDashboard){
     updateDashboard=async function(){
       const result=await baseUpdateDashboard.apply(this,arguments);
+      renderHomeFlight(lastFlyingNowData,false);
       await syncStatus();
       return result;
     };
