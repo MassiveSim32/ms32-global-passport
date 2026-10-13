@@ -36,18 +36,19 @@ if (!html.includes('/journey-banner-colours.css?v=20261014-1')) {
 }
 
 // Normal pilots receive index.html via express.static(), while the admin root
-// can receive an already-enhanced page. The loader now fills only missing parts
-// so both paths get the same Companion App features and interactive Home stats.
+// can receive an already-enhanced page. The loader fills only missing parts so
+// both paths get the same Companion App features, including the Home feature tiles.
 const oldLoaders = [
   '<script src="/full-app-loader.js?v=20261013-15"></script>',
   '<script src="/full-app-loader.js?v=20261014-1"></script>',
-  '<script src="/full-app-loader.js?v=20261014-2"></script>'
+  '<script src="/full-app-loader.js?v=20261014-2"></script>',
+  '<script src="/full-app-loader.js?v=20261014-3"></script>'
 ];
-const loader = '<script src="/full-app-loader.js?v=20261014-3"></script>';
+const loader = '<script src="/full-app-loader.js?v=20261014-4"></script>';
 for (const oldLoader of oldLoaders) {
   if (html.includes(oldLoader)) html = html.replace(oldLoader, loader);
 }
-if (!html.includes('/full-app-loader.js?v=20261014-3')) html = html.replace('</html>', loader + '</html>');
+if (!html.includes('/full-app-loader.js?v=20261014-4')) html = html.replace('</html>', loader + '</html>');
 
 await fs.writeFile(file,html,'utf8');
 console.log('App shell patched to full v0.0.15 Companion App loader');
