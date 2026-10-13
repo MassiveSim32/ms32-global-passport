@@ -24,7 +24,14 @@
   let scrollTimer=null;
 
   function claimedEvents(){
-    try{return allEvents.filter(e=>statuses[e.id]?.claimed)}catch{return[]}
+    try{
+      const merged=[...(Array.isArray(window.passportHistoryEvents)?window.passportHistoryEvents:[]),...(Array.isArray(allEvents)?allEvents:[])];
+      const seen=new Set();
+      return merged.filter(e=>{
+        if(!e?.id||seen.has(e.id)||!statuses[e.id]?.claimed)return false;
+        seen.add(e.id);return true;
+      }).sort((a,b)=>new Date(a.start||0)-new Date(b.start||0));
+    }catch{return[]}
   }
 
   function chunks(items,size){
