@@ -39,7 +39,8 @@ function rowToRecord(row) {
     channelId: row.channel_id || null,
     attendanceMs: Number(row.attendance_ms || 0),
     verified: !!row.verified,
-    claimed: !!row.claimed
+    claimed: !!row.claimed,
+    active: !!row.active
   };
 }
 
@@ -64,6 +65,19 @@ function durableAttendance(record) {
   return Math.max(0, Number(record?.attendanceMs || 0) + activeElapsed(record));
 }
 
+function resumeActiveVoiceRecords() {
+  if (!registrationsMap || !voiceStartsMap || !voiceChannelsMap) return;
+  for (const record of nativeValues.call(registrationsMap)) {
+    if (!record?.active || record.claimed || !record.channelId) continue;
+    if (nativeGet.call(voiceChannelsMap, String(record.userId)) !== record.channelId) continue;
+    const k = key(record.userId, record.eventId);
+    if (nativeGet.call(voiceStartsMap, k)) continue;
+    const window = eventWindow(record);
+    if (window && Date.now() >= window.end) continue;
+    nativeSet.call(voiceStartsMap, k, window ? Math.max(Date.now(), window.start) : Date.now());
+  }
+}
+
 async function loadRows() {
   if (!db) {
     console.warn('DATABASE_URL is missing; Global Passport progress is not persistent.');
@@ -72,7 +86,7 @@ async function loadRows() {
   try {
     const result = await db.query(`
       SELECT user_id,event_id,username,event_name,event_start,channel_id,
-             attendance_ms,verified,claimed
+             attendance_ms,verified,claimed,active
       FROM passport_registrations
       WHERE active = TRUE OR claimed = TRUE
       ORDER BY event_start NULLS LAST
@@ -89,19 +103,21 @@ function hydrate(map) {
   registrationsMap = map;
   for (const row of persistedRows) {
     const record = rowToRecord(row);
-    map.set(key(record.userId, record.eventId), record);
+    nativeSet.call(map, key(record.userId, record.eventId), record);
   }
   hydrated = true;
+  resumeActiveVoiceRecords();
 }
 
 async function saveRecord(record) {
   if (!db || !record?.userId || !record?.eventId) return;
   const attendanceMs = durableAttendance(record);
   const verified = !!record.verified || attendanceMs >= 30 * 60 * 1000;
+  const active = record.active !== false;
   await db.query(`
     INSERT INTO passport_registrations
       (user_id,event_id,username,event_name,event_start,channel_id,attendance_ms,verified,claimed,active,updated_at)
-    VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,TRUE,NOW())
+    VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,NOW())
     ON CONFLICT (user_id,event_id) DO UPDATE SET
       username=EXCLUDED.username,
       event_name=EXCLUDED.event_name,
@@ -110,12 +126,12 @@ async function saveRecord(record) {
       attendance_ms=EXCLUDED.attendance_ms,
       verified=EXCLUDED.verified,
       claimed=EXCLUDED.claimed,
-      active=TRUE,
+      active=EXCLUDED.active,
       updated_at=NOW()
   `, [
     String(record.userId), String(record.eventId), record.username || null,
     record.eventName || null, record.start || null, record.channelId || null,
-    attendanceMs, verified, !!record.claimed
+    attendanceMs, verified, !!record.claimed, active
   ]);
 }
 
@@ -144,10 +160,11 @@ Map.prototype.get = function persistentGet(mapKey) {
       hydrate(this);
     } else if (this !== registrationsMap && !voiceStartsMap) {
       voiceStartsMap = this;
+      resumeActiveVoiceRecords();
       const record = nativeGet.call(registrationsMap, mapKey);
-      if (record?.channelId && voiceChannelsMap && nativeGet.call(voiceChannelsMap, String(record.userId)) === record.channelId && !nativeGet.call(this, mapKey)) {
+      if (record?.active && !record.claimed && record?.channelId && voiceChannelsMap && nativeGet.call(voiceChannelsMap, String(record.userId)) === record.channelId && !nativeGet.call(this, mapKey)) {
         const window = eventWindow(record);
-        if (!window || Date.now() < window.end) this.set(mapKey, window ? Math.max(Date.now(), window.start) : Date.now());
+        if (!window || Date.now() < window.end) nativeSet.call(this, mapKey, window ? Math.max(Date.now(), window.start) : Date.now());
       }
     }
   }
@@ -163,12 +180,23 @@ Map.prototype.set = function persistentSet(mapKey, value) {
   if (typeof mapKey === 'string' && mapKey.includes(':') && value && typeof value === 'object' && 'userId' in value && 'eventId' in value) {
     registrationsMap = this;
     hydrated = true;
+    if (!('active' in value)) value.active = true;
     const result = nativeSet.call(this, mapKey, value);
+    resumeActiveVoiceRecords();
     scheduleSync();
     return result;
   }
-  if (typeof mapKey === 'string' && mapKey.includes(':') && typeof value === 'number') voiceStartsMap = this;
-  if (isSnowflake(mapKey) && isSnowflake(value)) voiceChannelsMap = this;
+  if (typeof mapKey === 'string' && mapKey.includes(':') && typeof value === 'number') {
+    voiceStartsMap = this;
+    const result = nativeSet.call(this, mapKey, value);
+    return result;
+  }
+  if (isSnowflake(mapKey) && isSnowflake(value)) {
+    voiceChannelsMap = this;
+    const result = nativeSet.call(this, mapKey, value);
+    resumeActiveVoiceRecords();
+    return result;
+  }
   return nativeSet.call(this, mapKey, value);
 };
 
@@ -176,6 +204,7 @@ Map.prototype.delete = function persistentDelete(mapKey) {
   if (this === registrationsMap && typeof mapKey === 'string' && mapKey.includes(':') && db) {
     const record = nativeGet.call(this, mapKey);
     if (record && !record.claimed) {
+      record.active = false;
       db.query('UPDATE passport_registrations SET active=FALSE,updated_at=NOW() WHERE user_id=$1 AND event_id=$2', [String(record.userId), String(record.eventId)])
         .catch(error => console.error('Passport persistence cancel update failed:', error.message));
     }
