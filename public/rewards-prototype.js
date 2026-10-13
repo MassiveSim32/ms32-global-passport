@@ -32,7 +32,7 @@
     .utc-clock strong{font-size:20px}
     .utc-clock small{font-size:8px}
 
-    .rewards-compact{position:relative;overflow:hidden;border:1px solid #6a5530;background:linear-gradient(145deg,#10283c,#091725);border-radius:17px;padding:10px 12px;margin:0 0 10px}
+    .rewards-compact{position:relative;overflow:hidden;border:1px solid #6a5530;background:linear-gradient(145deg,#10283c,#091725);border-radius:17px;padding:10px 12px;margin:0 0 10px;min-height:77px}
     .rewards-compact:after{content:'✈';position:absolute;right:-5px;top:-17px;font-size:70px;color:#ffffff07;transform:rotate(-18deg);pointer-events:none}
     .rewards-compact-head{display:flex;justify-content:space-between;align-items:center;gap:10px;position:relative;z-index:1}
     .rewards-compact-title{font-size:9px;color:#ffbd66;font-weight:900;letter-spacing:.1em;text-transform:uppercase}
@@ -71,6 +71,9 @@
     {name:'Captain',min:3000},
     {name:'Global Elite',min:5000}
   ];
+
+  let lastHomeSignature='';
+  let lastProfileSignature='';
 
   function pointsForStatus(s){
     if(!s?.registered) return 0;
@@ -130,26 +133,34 @@
     ensureCards();
     const t=totals(),tier=tierFor(t.points);
     const remaining=tier.next?Math.max(0,tier.next.min-t.points):0;
+    const homeSignature=[t.points,tier.current.name,tier.next?.name||'',Math.round(tier.pct*1000),remaining].join('|');
+    const profileSignature=[homeSignature,t.flights,t.minutes].join('|');
     const home=document.getElementById('rewardsHome');
-    if(home)home.innerHTML=`
-      <div class="rewards-compact-head">
-        <div><div class="rewards-compact-title">Journey Points</div><div class="rewards-compact-tier">${tier.current.name}</div></div>
-        <div class="rewards-compact-points">${t.points.toLocaleString()} points</div>
-      </div>
-      <div class="rewards-track"><i style="width:${tier.pct}%"></i></div>
-      <div class="rewards-compact-foot"><span>${tier.next?`Next: <strong>${tier.next.name}</strong>`:'Top tier achieved'}</span><span>${tier.next?`${remaining.toLocaleString()} points to go`:'MAX STATUS'}</span></div>
-    `;
+    if(home&&homeSignature!==lastHomeSignature){
+      home.innerHTML=`
+        <div class="rewards-compact-head">
+          <div><div class="rewards-compact-title">Journey Points</div><div class="rewards-compact-tier">${tier.current.name}</div></div>
+          <div class="rewards-compact-points">${t.points.toLocaleString()} points</div>
+        </div>
+        <div class="rewards-track"><i style="width:${tier.pct}%"></i></div>
+        <div class="rewards-compact-foot"><span>${tier.next?`Next: <strong>${tier.next.name}</strong>`:'Top tier achieved'}</span><span>${tier.next?`${remaining.toLocaleString()} points to go`:'MAX STATUS'}</span></div>
+      `;
+      lastHomeSignature=homeSignature;
+    }
     const profile=document.getElementById('rewardsProfile');
-    if(profile)profile.innerHTML=`
-      <div class="rewards-top">
-        <div><div class="rewards-title">Journey Points <span class="prototype-pill">RC</span></div><div class="rewards-tier">${tier.current.name}</div></div>
-        <div class="rewards-points"><b>${t.points.toLocaleString()}</b><span>Journey Points</span></div>
-      </div>
-      <div class="rewards-track"><i style="width:${tier.pct}%"></i></div>
-      <div class="rewards-next"><span>${tier.next?`Progress to <strong>${tier.next.name}</strong>`:'Top tier achieved'}</span><span>${tier.next?`${remaining.toLocaleString()} points to go`:'MAX STATUS'}</span></div>
-      <div class="rewards-stats"><div class="rewards-mini"><b>${t.flights}</b><span>Verified flights</span></div><div class="rewards-mini"><b>${fmtMinutes(t.minutes)}</b><span>Verified comms</span></div></div>
-      <button class="btn share-achievement" onclick="shareRewardsAchievement()">SHARE MY PROGRESS</button>
-    `;
+    if(profile&&profileSignature!==lastProfileSignature){
+      profile.innerHTML=`
+        <div class="rewards-top">
+          <div><div class="rewards-title">Journey Points <span class="prototype-pill">RC</span></div><div class="rewards-tier">${tier.current.name}</div></div>
+          <div class="rewards-points"><b>${t.points.toLocaleString()}</b><span>Journey Points</span></div>
+        </div>
+        <div class="rewards-track"><i style="width:${tier.pct}%"></i></div>
+        <div class="rewards-next"><span>${tier.next?`Progress to <strong>${tier.next.name}</strong>`:'Top tier achieved'}</span><span>${tier.next?`${remaining.toLocaleString()} points to go`:'MAX STATUS'}</span></div>
+        <div class="rewards-stats"><div class="rewards-mini"><b>${t.flights}</b><span>Verified flights</span></div><div class="rewards-mini"><b>${fmtMinutes(t.minutes)}</b><span>Verified comms</span></div></div>
+        <button class="btn share-achievement" onclick="shareRewardsAchievement()">SHARE MY PROGRESS</button>
+      `;
+      lastProfileSignature=profileSignature;
+    }
   }
 
   function toast(message){
