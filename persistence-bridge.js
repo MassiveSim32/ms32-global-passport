@@ -74,11 +74,11 @@ async function loadRows() {
       SELECT user_id,event_id,username,event_name,event_start,channel_id,
              attendance_ms,verified,claimed
       FROM passport_registrations
-      WHERE active = TRUE
+      WHERE active = TRUE OR claimed = TRUE
       ORDER BY event_start NULLS LAST
     `);
     persistedRows = result.rows;
-    console.log(`Loaded ${persistedRows.length} persistent Passport registration(s) from Neon`);
+    console.log(`Loaded ${persistedRows.length} persistent Passport registration(s) and claimed stamp(s) from Neon`);
   } catch (error) {
     console.error('Could not load persistent Passport data from Neon:', error.message);
   }
