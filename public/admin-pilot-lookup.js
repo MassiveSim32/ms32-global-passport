@@ -1,4 +1,50 @@
 (()=>{
+  const overviewBase=typeof showOverview==='function'?showOverview:null;
+
+  function openAdminTab(tab,preset=''){
+    window.adminPilotPreset=preset;
+    const button=document.querySelector(`.tabs button[data-tab="${tab}"]`);
+    if(button)button.click();
+  }
+
+  if(overviewBase){
+    showOverview=function(o){
+      overviewBase(o);
+      if(!document.getElementById('adminMetricLinkStyle')){
+        const style=document.createElement('style');
+        style.id='adminMetricLinkStyle';
+        style.textContent=`
+          .metric.admin-metric-link{cursor:pointer;position:relative;overflow:hidden;transition:transform .16s ease,border-color .16s ease,box-shadow .16s ease,background .16s ease}
+          .metric.admin-metric-link:hover,.metric.admin-metric-link:focus-visible{transform:translateY(-2px);outline:none;box-shadow:0 10px 24px #0005}
+          .metric.admin-metric-link:active{transform:translateY(0)}
+          .metric.admin-metric-link:after{content:'VIEW →';display:block;margin-top:8px;font-size:8px;font-weight:900;letter-spacing:.1em;color:#7898ae}
+          .metric.admin-metric-link[data-kind="events"]{background:radial-gradient(circle at top right,#17486d,#10283c 48%,#0b1725);border-color:#2e6f9b}
+          .metric.admin-metric-link[data-kind="registered"]{background:radial-gradient(circle at top right,#45305f,#28213c 48%,#0b1725);border-color:#6d5790}
+          .metric.admin-metric-link[data-kind="voice"]{background:radial-gradient(circle at top right,#174f49,#102f31 48%,#0b1725);border-color:#2d756b}
+          .metric.admin-metric-link[data-kind="stamps"]{background:radial-gradient(circle at top right,#5a3417,#2b1e17 48%,#0b1725);border-color:#8b5a2b}
+        `;
+        document.head.appendChild(style);
+      }
+      const cards=[...content.querySelectorAll('.grid .metric')];
+      const actions=[
+        {kind:'events',label:'View upcoming events',run:()=>openAdminTab('events')},
+        {kind:'registered',label:'View registered pilots',run:()=>openAdminTab('pilots','registered')},
+        {kind:'voice',label:'View pilots in verified voice',run:()=>openAdminTab('pilots','voice')},
+        {kind:'stamps',label:'View claimed passport stamps',run:()=>openAdminTab('pilots','stamps')}
+      ];
+      cards.forEach((card,i)=>{
+        const a=actions[i];if(!a)return;
+        card.classList.add('admin-metric-link');
+        card.dataset.kind=a.kind;
+        card.setAttribute('role','button');
+        card.setAttribute('tabindex','0');
+        card.setAttribute('aria-label',a.label);
+        card.addEventListener('click',a.run);
+        card.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();a.run();}});
+      });
+    };
+  }
+
   function renderPilotCard(p){
     const remaining=p.tier.next?Math.max(0,p.tier.next.min-p.points):0;
     const historyId=`history-${p.userId}`;
@@ -49,6 +95,24 @@
       </div>`;
   }
 
+  function stampedPilotCard(p){
+    const claimed=p.rows.filter(r=>r.claimed).sort((a,b)=>new Date(b.start||0)-new Date(a.start||0));
+    return `
+      <div class="card item">
+        <div style="display:flex;justify-content:space-between;gap:10px;align-items:flex-start">
+          <div><h3 style="margin-bottom:2px">${esc(p.username)}</h3><p style="margin-top:0">Discord ${esc(p.userId)}</p></div>
+          <strong class="ok">${claimed.length} STAMP${claimed.length===1?'':'S'}</strong>
+        </div>
+        ${claimed.map(r=>`<div style="border-top:1px solid #193247;padding:10px 0 2px">
+          <strong>${esc(r.eventName)}</strong>
+          <p style="margin:4px 0">${esc(fmt(r.start))}</p>
+          <div class="row"><span>Attendance</span><strong>${Number(r.attendanceMinutes||0)} min</strong></div>
+          <div class="row"><span>Passport</span><strong class="ok">STAMPED ✓</strong></div>
+          <div class="actions"><button data-stamp data-user="${esc(r.userId)}" data-event="${esc(r.eventId)}" data-action="revoke" class="revoke">Revoke stamp</button></div>
+        </div>`).join('')}
+      </div>`;
+  }
+
   showPilots=function(rows){
     const pilots=groupPilots(rows);
     content.innerHTML=`
@@ -91,7 +155,7 @@
       bindResultActions();
     };
 
-    currentButton.addEventListener('click',async()=>{
+    const showRegistered=async()=>{
       currentButton.disabled=true;
       currentButton.textContent='LOADING CURRENT REGISTRATIONS…';
       search.value='';
@@ -110,9 +174,30 @@
         currentButton.disabled=false;
         currentButton.textContent='SHOW CURRENTLY REGISTERED PILOTS';
       }
-    });
+    };
 
+    currentButton.addEventListener('click',showRegistered);
     search.addEventListener('input',render);
-    setTimeout(()=>search.focus(),50);
+
+    const preset=String(window.adminPilotPreset||'');
+    window.adminPilotPreset='';
+    if(preset==='registered'){
+      setTimeout(showRegistered,0);
+    }else if(preset==='voice'){
+      const active=pilots.filter(p=>p.inVoice);
+      box.innerHTML=active.length
+        ? `<div class="card" style="padding:10px 14px"><div class="row"><span>Pilots in verified voice</span><strong class="ok">${active.length}</strong></div></div>${active.map(renderPilotCard).join('')}`
+        : '<div class="empty">No pilots are currently in verified voice.</div>';
+      bindResultActions();
+    }else if(preset==='stamps'){
+      const stamped=pilots.filter(p=>p.stamps>0);
+      const total=stamped.reduce((n,p)=>n+p.stamps,0);
+      box.innerHTML=stamped.length
+        ? `<div class="card" style="padding:10px 14px"><div class="row"><span>Claimed passport stamps</span><strong class="ok">${total}</strong></div></div>${stamped.map(stampedPilotCard).join('')}`
+        : '<div class="empty">No passport stamps have been claimed yet.</div>';
+      bindResultActions();
+    }else{
+      setTimeout(()=>search.focus(),50);
+    }
   };
 })();
