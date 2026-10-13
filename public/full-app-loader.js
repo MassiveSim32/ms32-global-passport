@@ -4,15 +4,15 @@
   // the server wrapper, so skip individual files that are already present rather
   // than aborting the whole loader.
   const files=[
-    '/rewards-prototype.js?v=20261014-2',
-    '/dual-clock.js?v=20261014-2',
-    '/stamp-style-v2.js?v=20261014-2',
-    '/bush-location-fix.js?v=20261014-2',
-    '/airliner-location-fix.js?v=20261014-2',
-    '/flying-now.js?v=20261014-2',
-    '/passport-pages.js?v=20261014-2',
-    '/home-quick-colors.js?v=20261014-2',
-    '/home-stat-links.js?v=20261014-2'
+    '/rewards-prototype.js?v=20261014-3',
+    '/dual-clock.js?v=20261014-3',
+    '/stamp-style-v2.js?v=20261014-3',
+    '/bush-location-fix.js?v=20261014-3',
+    '/airliner-location-fix.js?v=20261014-3',
+    '/flying-now.js?v=20261014-3',
+    '/passport-pages.js?v=20261014-3',
+    '/home-quick-colors.js?v=20261014-3',
+    '/home-stat-links.js?v=20261014-3'
   ];
 
   const pathname=src=>String(src).split('?')[0];
