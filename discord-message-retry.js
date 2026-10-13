@@ -40,7 +40,24 @@ async function enqueue(url, options) {
   await p.query(`INSERT INTO discord_outbox (id,url,body,next_attempt_at,attempts)
     VALUES ($1,$2,$3,NOW() + INTERVAL '60 seconds',0)
     ON CONFLICT (id) DO NOTHING`, [id, String(url), body]);
+  console.log('Flying Now Discord post queued for later delivery');
   return true;
+}
+
+async function tryWebhook(options) {
+  const webhook = String(process.env.FLYING_NOW_WEBHOOK_URL || '').trim();
+  if (!/^https:\/\/(?:canary\.|ptb\.)?discord(?:app)?\.com\/api\/webhooks\/\d+\/[A-Za-z0-9._-]+/.test(webhook)) return null;
+  try {
+    const response = await originalFetch(webhook, {
+      method:'POST',
+      headers:{'content-type':'application/json'},
+      body:String(options?.body || '')
+    });
+    if (response.ok) console.log('Flying Now Discord post delivered through channel webhook');
+    return response;
+  } catch {
+    return null;
+  }
 }
 
 async function trySend(url, options) {
@@ -62,11 +79,14 @@ async function flushOutbox() {
       WHERE next_attempt_at <= NOW() ORDER BY created_at ASC LIMIT 5`);
     for (const row of q.rows) {
       try {
-        const response = await originalFetch(row.url, {
-          method:'POST',
-          headers:{authorization:`Bot ${process.env.DISCORD_BOT_TOKEN}`,'content-type':'application/json'},
-          body:row.body
-        });
+        let response = await tryWebhook({body:row.body});
+        if (!response?.ok) {
+          response = await originalFetch(row.url, {
+            method:'POST',
+            headers:{authorization:`Bot ${process.env.DISCORD_BOT_TOKEN}`,'content-type':'application/json'},
+            body:row.body
+          });
+        }
         if (response.ok) {
           await p.query('DELETE FROM discord_outbox WHERE id=$1', [row.id]);
           console.log('Queued Flying Now Discord post delivered');
@@ -91,6 +111,9 @@ async function flushOutbox() {
 globalThis.fetch = async function ms32Fetch(url, options={}) {
   if (!isDiscordMessagePost(url, options)) return originalFetch(url, options);
 
+  const webhookResponse = await tryWebhook(options);
+  if (webhookResponse?.ok) return webhookResponse;
+
   let response;
   try {
     response = await trySend(url, options);
@@ -104,8 +127,8 @@ globalThis.fetch = async function ms32Fetch(url, options={}) {
     const queued = await enqueue(url, options);
     if (queued) {
       setTimeout(flushOutbox, 1000);
-      return new Response(JSON.stringify({queued:true}), {
-        status:202,
+      return new Response(JSON.stringify({queued:true,message:'Discord delivery is pending'}), {
+        status:503,
         headers:{'content-type':'application/json','x-ms32-discord-queued':'1'}
       });
     }
