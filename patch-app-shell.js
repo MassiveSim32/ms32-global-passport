@@ -16,6 +16,12 @@ if (!html.includes('http-equiv="Cache-Control"')) {
   );
 }
 
+// Give the four Home quick-access buttons distinct MS32-tinted shading.
+const quickColours = '<link rel="stylesheet" href="/home-quick-colours.css?v=20261014-1">';
+if (!html.includes('/home-quick-colours.css?v=20261014-1')) {
+  html = html.replace('</head>', quickColours + '\n</head>');
+}
+
 // Normal pilots receive index.html via express.static(), which bypasses the
 // server response.send() enhancement hook used by the admin account. Add one
 // small loader to the static shell so every beta pilot receives the same full
