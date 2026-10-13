@@ -32,6 +32,23 @@
       </div>`;
   }
 
+  function currentRegistrationCard(p){
+    const rows=p.rows.slice().sort((a,b)=>new Date(a.start||0)-new Date(b.start||0));
+    return `
+      <div class="card item">
+        <div style="display:flex;justify-content:space-between;gap:10px;align-items:flex-start">
+          <div><h3 style="margin-bottom:2px">${esc(p.username)}</h3><p style="margin-top:0">Discord ${esc(p.userId)}</p></div>
+          <strong class="${p.inVoice?'ok':''}">${p.inVoice?'IN VOICE ✓':'REGISTERED'}</strong>
+        </div>
+        ${rows.map(r=>`<div style="border-top:1px solid #193247;padding:10px 0 2px">
+          <strong>${esc(r.eventName)}</strong>
+          <p style="margin:4px 0">${esc(fmt(r.start))}</p>
+          <div class="row"><span>Attendance</span><strong>${Number(r.attendanceMinutes||0)} min</strong></div>
+          <div class="row"><span>Status</span><strong class="${r.inVoice?'ok':r.verified?'warn':''}">${r.inVoice?'IN VOICE ✓':r.verified?'STAMP READY':'REGISTERED'}</strong></div>
+        </div>`).join('')}
+      </div>`;
+  }
+
   showPilots=function(rows){
     const pilots=groupPilots(rows);
     content.innerHTML=`
@@ -39,12 +56,14 @@
         <div class="eyebrow">Pilot Lookup</div>
         <h3 style="margin:5px 0 4px">Check a pilot's current status</h3>
         <p style="margin:0 0 10px;color:var(--muted);font-size:11px">Search by Discord display name or Discord user ID.</p>
+        <button id="showCurrentRegistrations" class="full" style="margin:0 0 10px">SHOW CURRENTLY REGISTERED PILOTS</button>
         <input id="pilotSearch" class="search" placeholder="Enter pilot name or Discord ID…" autocomplete="off" style="margin-bottom:0">
       </div>
-      <div id="pilotRows"><div class="empty">Enter a pilot name or Discord ID to look them up.</div></div>`;
+      <div id="pilotRows"><div class="empty">Enter a pilot name or Discord ID to look them up, or show current flight registrations.</div></div>`;
 
     const box=document.getElementById('pilotRows');
     const search=document.getElementById('pilotSearch');
+    const currentButton=document.getElementById('showCurrentRegistrations');
 
     const bindResultActions=()=>{
       box.querySelectorAll('[data-history]').forEach((b)=>b.addEventListener('click',()=>{
@@ -60,7 +79,7 @@
     const render=()=>{
       const q=search.value.trim().toLowerCase();
       if(!q){
-        box.innerHTML='<div class="empty">Enter a pilot name or Discord ID to look them up.</div>';
+        box.innerHTML='<div class="empty">Enter a pilot name or Discord ID to look them up, or show current flight registrations.</div>';
         return;
       }
       const filtered=pilots.filter((p)=>`${p.username} ${p.userId}`.toLowerCase().includes(q));
@@ -71,6 +90,27 @@
       box.innerHTML=filtered.map(renderPilotCard).join('');
       bindResultActions();
     };
+
+    currentButton.addEventListener('click',async()=>{
+      currentButton.disabled=true;
+      currentButton.textContent='LOADING CURRENT REGISTRATIONS…';
+      search.value='';
+      try{
+        const events=await api('/api/admin/events');
+        const ids=new Set(events.map(e=>String(e.id||e.eventId||'')).filter(Boolean));
+        const names=new Set(events.map(e=>String(e.name||'')).filter(Boolean));
+        const currentRows=rows.filter(r=>ids.has(String(r.eventId))||names.has(String(r.eventName||'')));
+        const currentPilots=groupPilots(currentRows);
+        box.innerHTML=currentPilots.length
+          ? `<div class="card" style="padding:10px 14px"><div class="row"><span>Currently registered pilots</span><strong class="ok">${currentPilots.length}</strong></div></div>${currentPilots.map(currentRegistrationCard).join('')}`
+          : '<div class="empty">No pilots are currently registered for upcoming flights.</div>';
+      }catch(e){
+        box.innerHTML=`<div class="card bad">${esc(e.message)}</div>`;
+      }finally{
+        currentButton.disabled=false;
+        currentButton.textContent='SHOW CURRENTLY REGISTERED PILOTS';
+      }
+    });
 
     search.addEventListener('input',render);
     setTimeout(()=>search.focus(),50);
