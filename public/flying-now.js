@@ -106,21 +106,6 @@
     }
   }
 
-  async function syncStatus(){
-    try{
-      const r=await fetch('/api/flying-now/status',{credentials:'same-origin',cache:'no-store'});
-      if(!r.ok)return;
-      const d=await r.json();
-      mergeJourneyStatuses(d);
-      renderState(d);
-      if(d.state==='active')await mergeBonusStamps();
-    }catch{}
-  }
-
-  $('flyingNowOpen')?.addEventListener('click',open);
-  $('flyingNowClose')?.addEventListener('click',close);
-  modal.addEventListener('click',e=>{if(e.target===modal)close()});
-
   async function mergeBonusStamps(){
     try{
       const r=await fetch('/api/flying-now/stamps',{credentials:'same-origin',cache:'no-store'});
@@ -129,8 +114,20 @@
       if(!Array.isArray(d.stamps)||typeof allEvents==='undefined'||typeof statuses==='undefined')return;
       let changed=false;
       for(const x of d.stamps){
-        if(!allEvents.some(e=>e.id===x.event.id)){allEvents.push(x.event);changed=true}
-        if(!statuses[x.event.id]?.registered)statuses[x.event.id]=x.status;
+        const journey=statuses[x.event.id];
+        const existing=allEvents.findIndex(e=>e.id===x.event.id);
+
+        // Flying Now only becomes a Passport stamp after the normal
+        // 30-minute verified-comms threshold. Before that it remains Journey
+        // Points progress only. Removing any legacy early stamp also prevents
+        // the Passport from alternating between two competing render states.
+        if(journey?.registered&&!journey.verified){
+          if(existing>=0){allEvents.splice(existing,1);changed=true}
+          continue;
+        }
+
+        if(existing<0){allEvents.push(x.event);changed=true}
+        if(!journey?.registered)statuses[x.event.id]=x.status;
       }
       if(changed||d.stamps.length){
         try{if(typeof renderStampBook==='function')renderStampBook()}catch{}
@@ -139,6 +136,21 @@
       }
     }catch{}
   }
+
+  async function syncStatus(){
+    try{
+      const r=await fetch('/api/flying-now/status',{credentials:'same-origin',cache:'no-store'});
+      if(!r.ok)return;
+      const d=await r.json();
+      mergeJourneyStatuses(d);
+      renderState(d);
+      await mergeBonusStamps();
+    }catch{}
+  }
+
+  $('flyingNowOpen')?.addEventListener('click',open);
+  $('flyingNowClose')?.addEventListener('click',close);
+  modal.addEventListener('click',e=>{if(e.target===modal)close()});
 
   $('flyingNowSubmit')?.addEventListener('click',async()=>{
     const departure=String($('flyingNowDeparture')?.value||'').trim().toUpperCase();
@@ -166,7 +178,19 @@
     }
   });
 
+  // The main dashboard refresh can replace its event list from Discord. Re-merge
+  // verified Flying Now stamps immediately after that refresh so a legitimate
+  // Passport stamp never flickers out between polls.
+  const baseUpdateDashboard=typeof updateDashboard==='function'?updateDashboard:null;
+  if(baseUpdateDashboard){
+    updateDashboard=async function(){
+      const result=await baseUpdateDashboard.apply(this,arguments);
+      await syncStatus();
+      return result;
+    };
+  }
+
   renderState({state:'idle'});
-  setTimeout(()=>{mergeBonusStamps();syncStatus()},800);
+  setTimeout(()=>{syncStatus()},800);
   setInterval(syncStatus,3000);
 })();
