@@ -44,18 +44,37 @@ async function enqueue(url, options) {
   return true;
 }
 
+function getWebhookUrl() {
+  let webhook = String(process.env.FLYING_NOW_WEBHOOK_URL || '').trim();
+  if ((webhook.startsWith('"') && webhook.endsWith('"')) || (webhook.startsWith("'") && webhook.endsWith("'"))) webhook = webhook.slice(1,-1).trim();
+  return webhook;
+}
+
+function validWebhookUrl(webhook) {
+  return /^https:\/\/(?:canary\.|ptb\.)?(?:discord\.com|discordapp\.com)\/api\/webhooks\/\d+\/[A-Za-z0-9._-]+(?:\?.*)?$/.test(webhook);
+}
+
 async function tryWebhook(options) {
-  const webhook = String(process.env.FLYING_NOW_WEBHOOK_URL || '').trim();
-  if (!/^https:\/\/(?:canary\.|ptb\.)?discord(?:app)?\.com\/api\/webhooks\/\d+\/[A-Za-z0-9._-]+/.test(webhook)) return null;
+  const webhook = getWebhookUrl();
+  if (!webhook) {
+    console.log('Flying Now webhook is not configured');
+    return null;
+  }
+  if (!validWebhookUrl(webhook)) {
+    console.log('Flying Now webhook is configured but its URL format is invalid');
+    return null;
+  }
   try {
     const response = await originalFetch(webhook, {
       method:'POST',
       headers:{'content-type':'application/json'},
       body:String(options?.body || '')
     });
-    if (response.ok) console.log('Flying Now Discord post delivered through channel webhook');
+    if (response.ok) console.log('Flying Now Discord post delivered through champagne-chat webhook');
+    else console.log(`Flying Now champagne-chat webhook delivery failed with status ${response.status}`);
     return response;
-  } catch {
+  } catch (e) {
+    console.log(`Flying Now champagne-chat webhook request failed: ${e?.name || 'network error'}`);
     return null;
   }
 }
@@ -139,6 +158,8 @@ globalThis.fetch = async function ms32Fetch(url, options={}) {
   return response || new Response(JSON.stringify({message:'Discord delivery unavailable'}), {status:503, headers:{'content-type':'application/json'}});
 };
 
+const webhookAtBoot = getWebhookUrl();
+console.log(`Flying Now webhook configuration: ${webhookAtBoot ? (validWebhookUrl(webhookAtBoot) ? 'present and valid' : 'present but invalid format') : 'missing'}`);
 setInterval(flushOutbox, 60_000).unref?.();
 setTimeout(flushOutbox, 5000);
 
