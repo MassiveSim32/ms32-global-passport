@@ -173,12 +173,23 @@
     return s;
   }
 
+  function detectedRegion(e){
+    const lower=`${e?.name||''} ${e?.description||''}`.toLowerCase();
+    if(typeof REGION_COUNTRY!=='object'||!REGION_COUNTRY)return'';
+    const keys=Object.keys(REGION_COUNTRY).sort((a,b)=>b.length-a.length);
+    const hit=keys.find(region=>lower.includes(region));
+    if(!hit)return'';
+    if(hit==='act')return'ACT';
+    return hit.replace(/\b\w/g,c=>c.toUpperCase());
+  }
+
   function arrivalStampData(e){
     const series=typeof stampSeries==='function'?stampSeries(`${e?.name||''} ${e?.description||''}`):{label:'MASSIVE COMMUNITY FLIGHT'};
     const family=stampFamily(e);
     const loc=typeof locationInfo==='function'?locationInfo(e):{country:'',route:''};
     const route=typeof routeInfo==='function'?routeInfo(e):{route:'',destination:'',icaos:[]};
     const parenRoute=parentheticalRoute(e);
+    const region=detectedRegion(e);
     let country=normalCountry(loc?.country||'');
     if(!country&&Array.isArray(route.icaos)&&route.icaos.length&&typeof countryFromIcao==='function')country=normalCountry(countryFromIcao(route.icaos[route.icaos.length-1]));
     const explicit=explicitDestination(e);
@@ -190,7 +201,11 @@
     else if(parenRoute)displayRoute=`${parenRoute.from} → ${parenRoute.to}`;
     else displayRoute=route?.route||loc?.route||'COMMUNITY FLIGHT';
     const hero=country||'GLOBAL PASSPORT';
-    const secondary=city||((!country&&loc?.place)?loc.place:'MS32 DESTINATION');
+    // Bush stamps should always show the country plus the most useful local area.
+    // Prefer a readable destination/city, then a detected state/region, and never
+    // fall back to a generic MS32 destination label when a region is available.
+    const bushPlace=city||region||((!country&&loc?.place)?loc.place:'BUSH DESTINATION');
+    const secondary=family.family==='bush'?bushPlace:(city||((!country&&loc?.place)?loc.place:'MS32 DESTINATION'));
     const accent=accentByCountry[country]||'#63d6c4';
     return{
       hero:String(hero).toUpperCase(),
