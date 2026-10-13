@@ -13,8 +13,8 @@
     .flying-now-card.is-active #flyingNowOpen{background:#218c58!important;border-color:#36b974!important;color:#fff!important;box-shadow:0 0 0 1px #51d58a44,0 8px 24px #0e6a3d44}
     .flying-now-active-line{display:none;margin-top:7px;font-size:10px;font-weight:800;color:#8ee7b3;letter-spacing:.03em}
     .flying-now-card.is-active .flying-now-active-line{display:block}
-    .flying-now-finish{display:none;background:#301a18!important;border-color:#71403a!important;color:#ffc0b8!important}
-    .flying-now-card.is-active .flying-now-finish{display:block}
+    .flying-now-auto-finish{display:none;margin-top:7px;font-size:9px;line-height:1.4;color:#a8cbb8;text-transform:uppercase;letter-spacing:.04em}
+    .flying-now-card.is-active .flying-now-auto-finish{display:block}
     .flying-now-modal{position:fixed;inset:0;background:#02070ddd;display:grid;place-items:center;padding:20px;z-index:120}
     .flying-now-panel{width:min(390px,95vw);background:#0c1a28;border:1px solid #31506a;border-radius:24px;padding:20px;box-shadow:0 24px 70px #000b}
     .flying-now-panel h2{margin:4px 0 6px;font-size:22px}
@@ -35,7 +35,7 @@
   const next=document.getElementById('nextFlight');
   const card=document.createElement('div');
   card.className='card flying-now-card';
-  card.innerHTML=`<div class="eyebrow">Spontaneous flying</div><h3>Flying Now</h3><p>Heading up outside a scheduled event? Let other MS32 pilots know where you're going and what you're flying.</p><button class="btn primary" id="flyingNowOpen">✈ I'M FLYING NOW</button><div class="flying-now-active-line" id="flyingNowActiveLine">● PILOT ACTIVE · EARNING JOURNEY POINTS</div><button class="btn flying-now-finish" id="flyingNowFinish">FLIGHT FINISHED</button><div class="flying-now-meta" id="flyingNowMeta">Posts to #champagne-chat · join Champagne Voice to earn Journey Points</div>`;
+  card.innerHTML=`<div class="eyebrow">Spontaneous flying</div><h3>Flying Now</h3><p>Heading up outside a scheduled event? Let other MS32 pilots know where you're going and what you're flying.</p><button class="btn primary" id="flyingNowOpen">✈ I'M FLYING NOW</button><div class="flying-now-active-line" id="flyingNowActiveLine">● PILOT ACTIVE · EARNING JOURNEY POINTS</div><div class="flying-now-auto-finish">Your flight will finish automatically when you leave Champagne Voice.</div><div class="flying-now-meta" id="flyingNowMeta">Posts to #champagne-chat · join Champagne Voice to earn Journey Points</div>`;
   if(next?.parentNode)next.insertAdjacentElement('afterend',card); else home.appendChild(card);
 
   const modal=document.createElement('div');
@@ -130,7 +130,6 @@
       let changed=false;
       for(const x of d.stamps){
         if(!allEvents.some(e=>e.id===x.event.id)){allEvents.push(x.event);changed=true}
-        // Do not let the legacy Flying Now stamp status overwrite Journey Points attendance.
         if(!statuses[x.event.id]?.registered)statuses[x.event.id]=x.status;
       }
       if(changed||d.stamps.length){
@@ -158,28 +157,13 @@
       if(!r.ok)throw new Error(d.error||'Could not post flight');
       renderState({state:d.voiceEligible?'active':'pending',departure,destination,aircraft,attendanceMinutes:0,points:0});
       status.className=d.voiceEligible?'flying-now-status ok':'flying-now-status waiting';
-      status.textContent=d.voiceEligible?'Flight active — you are in Champagne Voice and are now earning Journey Points.':'Join the Champagne Voice Channel to start earning Journey Points.';
+      status.textContent=d.voiceEligible?'Flight active — Journey Points are earning now. Your flight will finish automatically when you leave Champagne Voice.':'Join the Champagne Voice Channel to start earning Journey Points.';
       btn.textContent=d.voiceEligible?'ACTIVE ✓':'POSTED ✓';
       setTimeout(()=>{close();btn.disabled=false;btn.textContent='POST TO DISCORD';syncStatus()},2200);
     }catch(err){
       status.className='flying-now-status err';status.textContent=err.message||'Could not post flight';
       btn.disabled=false;btn.textContent='POST TO DISCORD';
     }
-  });
-
-  $('flyingNowFinish')?.addEventListener('click',async()=>{
-    const finish=$('flyingNowFinish');
-    finish.disabled=true;
-    finish.textContent='FINISHING…';
-    try{
-      const r=await fetch('/api/flying-now/finish',{method:'POST',credentials:'same-origin'});
-      const d=await r.json().catch(()=>({}));
-      if(!r.ok)throw new Error(d.error||'Could not finish flight');
-      mergeJourneyStatuses(d);
-      renderState({state:'idle'});
-    }catch{}
-    finish.disabled=false;
-    finish.textContent='FLIGHT FINISHED';
   });
 
   renderState({state:'idle'});
