@@ -65,16 +65,49 @@ function durableAttendance(record) {
   return Math.max(0, Number(record?.attendanceMs || 0) + activeElapsed(record));
 }
 
+function resumableRecord(record, now = Date.now()) {
+  if (!record?.active || !record.channelId || !voiceChannelsMap) return false;
+  if (nativeGet.call(voiceChannelsMap, String(record.userId)) !== record.channelId) return false;
+  const window = eventWindow(record);
+  if (window && now >= window.end) return false;
+  return true;
+}
+
 function resumeActiveVoiceRecords() {
   if (!registrationsMap || !voiceStartsMap || !voiceChannelsMap) return;
+
+  const now = Date.now();
+  const groups = new Map();
+
+  // A deploy must not drop a pilot who is still in the same Discord voice
+  // channel. This includes flights whose Passport stamp has already been
+  // claimed; claiming a stamp does not end the flight or its comms timer.
+  // Pick only one registration per pilot/channel to avoid double-counting old
+  // claimed records that happen to share a voice channel.
   for (const record of nativeValues.call(registrationsMap)) {
-    if (!record?.active || record.claimed || !record.channelId) continue;
-    if (nativeGet.call(voiceChannelsMap, String(record.userId)) !== record.channelId) continue;
+    if (!resumableRecord(record, now)) continue;
+    const groupKey = `${record.userId}:${record.channelId}`;
+    const list = groups.get(groupKey) || [];
+    list.push(record);
+    groups.set(groupKey, list);
+  }
+
+  for (const records of groups.values()) {
+    const unclaimed = records.filter(r => !r.claimed);
+    const pool = unclaimed.length ? unclaimed : records;
+    pool.sort((a, b) => {
+      const aStart = new Date(a.start || 0).getTime();
+      const bStart = new Date(b.start || 0).getTime();
+      if (unclaimed.length) return Math.abs(aStart - now) - Math.abs(bStart - now);
+      return bStart - aStart;
+    });
+
+    const record = pool[0];
+    if (!record) continue;
     const k = key(record.userId, record.eventId);
     if (nativeGet.call(voiceStartsMap, k)) continue;
     const window = eventWindow(record);
-    if (window && Date.now() >= window.end) continue;
-    nativeSet.call(voiceStartsMap, k, window ? Math.max(Date.now(), window.start) : Date.now());
+    nativeSet.call(voiceStartsMap, k, window ? Math.max(now, window.start) : now);
   }
 }
 
@@ -162,9 +195,9 @@ Map.prototype.get = function persistentGet(mapKey) {
       voiceStartsMap = this;
       resumeActiveVoiceRecords();
       const record = nativeGet.call(registrationsMap, mapKey);
-      if (record?.active && !record.claimed && record?.channelId && voiceChannelsMap && nativeGet.call(voiceChannelsMap, String(record.userId)) === record.channelId && !nativeGet.call(this, mapKey)) {
+      if (resumableRecord(record) && !nativeGet.call(this, mapKey)) {
         const window = eventWindow(record);
-        if (!window || Date.now() < window.end) nativeSet.call(this, mapKey, window ? Math.max(Date.now(), window.start) : Date.now());
+        nativeSet.call(this, mapKey, window ? Math.max(Date.now(), window.start) : Date.now());
       }
     }
   }
