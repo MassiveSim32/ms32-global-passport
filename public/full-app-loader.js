@@ -5,13 +5,15 @@
   if(document.querySelector('script[src*="/flying-now.js"]')) return;
 
   const files=[
-    '/rewards-prototype.js?v=20261013-15',
-    '/dual-clock.js?v=20261013-15',
-    '/stamp-style-v2.js?v=20261013-15',
-    '/bush-location-fix.js?v=20261013-15',
-    '/airliner-location-fix.js?v=20261013-15',
-    '/flying-now.js?v=20261013-15',
-    '/passport-pages.js?v=20261013-15'
+    '/rewards-prototype.js?v=20261014-1',
+    '/dual-clock.js?v=20261014-1',
+    '/stamp-style-v2.js?v=20261014-1',
+    '/bush-location-fix.js?v=20261014-1',
+    '/airliner-location-fix.js?v=20261014-1',
+    '/flying-now.js?v=20261014-1',
+    '/passport-pages.js?v=20261014-1',
+    '/home-quick-colors.js?v=20261014-1',
+    '/home-stat-links.js?v=20261014-1'
   ];
 
   const load=(src)=>new Promise((resolve)=>{
