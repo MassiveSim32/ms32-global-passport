@@ -25,13 +25,13 @@
   const next=document.getElementById('nextFlight');
   const card=document.createElement('div');
   card.className='card flying-now-card';
-  card.innerHTML=`<div class="eyebrow">Spontaneous flying</div><h3>Flying Now</h3><p>Heading up outside a scheduled event? Let other MS32 pilots know where you're going and what you're flying.</p><button class="btn primary" id="flyingNowOpen">✈ I'M FLYING NOW</button><div class="flying-now-meta">Posts to Ad Hoc Flights · bonus stamp when verified in the approved MS32 comms channel</div>`;
+  card.innerHTML=`<div class="eyebrow">Spontaneous flying</div><h3>Flying Now</h3><p>Heading up outside a scheduled event? Let other MS32 pilots know where you're going and what you're flying.</p><button class="btn primary" id="flyingNowOpen">✈ I'M FLYING NOW</button><div class="flying-now-meta">Posts to #champagne-chat · bonus stamp when verified in the approved MS32 comms channel</div>`;
   if(next?.parentNode)next.insertAdjacentElement('afterend',card); else home.appendChild(card);
 
   const modal=document.createElement('div');
   modal.className='flying-now-modal hidden';
   modal.id='flyingNowModal';
-  modal.innerHTML=`<div class="flying-now-panel"><div class="eyebrow">MS32 Companion App</div><h2>I'm Flying Now</h2><p>Share an ad hoc flight with the community. Your Discord identity is added automatically.</p><label class="flying-now-field"><span>Departure</span><input id="flyingNowDeparture" maxlength="32" placeholder="e.g. KBOI"></label><label class="flying-now-field"><span>Destination</span><input id="flyingNowDestination" maxlength="32" placeholder="e.g. KMYL"></label><label class="flying-now-field"><span>Aircraft type</span><input id="flyingNowAircraft" maxlength="48" placeholder="e.g. Cessna 208B"></label><div id="flyingNowStatus" class="flying-now-status">A bonus Passport stamp is only awarded when the pilot is detected in the configured Flying Now voice/comms channel.</div><button class="btn primary" id="flyingNowSubmit">POST TO DISCORD</button><button class="btn secondary" id="flyingNowClose">CANCEL</button></div>`;
+  modal.innerHTML=`<div class="flying-now-panel"><div class="eyebrow">MS32 Companion App</div><h2>I'm Flying Now</h2><p>Share an ad hoc flight with the community in #champagne-chat. Your Discord identity is added automatically.</p><label class="flying-now-field"><span>Departure</span><input id="flyingNowDeparture" maxlength="32" placeholder="e.g. KBOI"></label><label class="flying-now-field"><span>Destination</span><input id="flyingNowDestination" maxlength="32" placeholder="e.g. KMYL"></label><label class="flying-now-field"><span>Aircraft type</span><input id="flyingNowAircraft" maxlength="48" placeholder="e.g. Cessna 208B"></label><div id="flyingNowStatus" class="flying-now-status">A bonus Passport stamp is only awarded when the pilot is detected in the configured Flying Now voice/comms channel.</div><button class="btn primary" id="flyingNowSubmit">POST TO DISCORD</button><button class="btn secondary" id="flyingNowClose">CANCEL</button></div>`;
   document.body.appendChild(modal);
 
   const $=id=>document.getElementById(id);
@@ -70,13 +70,13 @@
       status.className='flying-now-status err';status.textContent='Please enter departure, destination and aircraft type.';return;
     }
     btn.disabled=true;btn.textContent='POSTING…';
-    status.className='flying-now-status';status.textContent='Posting your flight to Discord…';
+    status.className='flying-now-status';status.textContent='Posting your flight to #champagne-chat…';
     try{
       const r=await fetch('/api/flying-now',{method:'POST',headers:{'content-type':'application/json'},credentials:'same-origin',body:JSON.stringify({departure,destination,aircraft})});
       const d=await r.json().catch(()=>({}));
       if(!r.ok)throw new Error(d.error||'Could not post flight');
       status.className='flying-now-status ok';
-      status.textContent=d.stampAwarded?'Posted to Discord — bonus Flying Now stamp added to your Passport.':'Posted to Discord successfully. '+(d.bonusReason||'');
+      status.textContent=d.stampAwarded?'Posted to #champagne-chat — bonus Flying Now stamp added to your Passport.':'Posted to #champagne-chat successfully. '+(d.bonusReason||'');
       if(d.stampAwarded)await mergeBonusStamps();
       btn.textContent='POSTED ✓';
       setTimeout(()=>{close();btn.disabled=false;btn.textContent='POST TO DISCORD'},1800);
