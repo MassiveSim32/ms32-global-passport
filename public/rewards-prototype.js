@@ -32,15 +32,15 @@
     .utc-clock strong{font-size:20px}
     .utc-clock small{font-size:8px}
 
-    .rewards-compact{position:relative;overflow:hidden;border:1px solid #6a5530;background:linear-gradient(145deg,#10283c,#091725);border-radius:17px;padding:10px 12px;margin:0 0 10px;min-height:77px}
+    .rewards-compact{position:relative;overflow:hidden;border:1px solid #6a5530;background:linear-gradient(145deg,#10283c,#091725);border-radius:17px;padding:9px 12px 30px;margin:0 0 10px;height:78px;min-height:78px;max-height:78px}
     .rewards-compact:after{content:'✈';position:absolute;right:-5px;top:-17px;font-size:70px;color:#ffffff07;transform:rotate(-18deg);pointer-events:none}
-    .rewards-compact-head{display:flex;justify-content:space-between;align-items:center;gap:10px;position:relative;z-index:1}
+    .rewards-compact-head{display:flex;justify-content:space-between;align-items:center;gap:10px;position:relative;z-index:1;height:30px}
     .rewards-compact-title{font-size:9px;color:#ffbd66;font-weight:900;letter-spacing:.1em;text-transform:uppercase}
     .rewards-compact-tier{font-size:14px;font-weight:900;color:#fff;margin-top:1px}
     .rewards-compact-points{text-align:right;font-size:13px;font-weight:900;color:var(--orange)}
-    .rewards-track{height:8px;background:#142536;border-radius:99px;overflow:hidden;margin:7px 0 4px;border:1px solid #2b4355;position:relative;z-index:1}
-    .rewards-track i{display:block;height:100%;width:0;background:linear-gradient(90deg,#ff9f2f,#ffd27a);border-radius:99px;transition:width .45s ease}
-    .rewards-compact-foot{display:flex;justify-content:space-between;gap:10px;color:var(--muted);font-size:9px;position:relative;z-index:1}
+    .rewards-compact .rewards-track{position:absolute;left:12px;right:12px;bottom:20px;height:8px;margin:0;background:#142536;border-radius:99px;overflow:hidden;border:1px solid #2b4355;z-index:1}
+    .rewards-compact .rewards-track i{display:block;height:100%;width:0;background:linear-gradient(90deg,#ff9f2f,#ffd27a);border-radius:99px;transition:none!important}
+    .rewards-compact-foot{position:absolute;left:12px;right:12px;bottom:6px;display:flex;justify-content:space-between;gap:10px;color:var(--muted);font-size:9px;z-index:1;white-space:nowrap}
     .rewards-compact-foot strong{color:#fff}
 
     .rewards-profile{position:relative;overflow:hidden;border:1px solid #6a5530;background:radial-gradient(circle at top right,#5b421c55,#10283c 42%,#091725);border-radius:20px;padding:14px;margin:11px 0;box-shadow:inset 0 0 28px #ff9f2f0b}
@@ -49,6 +49,8 @@
     .rewards-title{font-size:10px;color:#ffbd66;font-weight:900;letter-spacing:.12em;text-transform:uppercase}
     .rewards-tier{font-size:21px;font-weight:1000;margin-top:2px;letter-spacing:.02em}
     .rewards-points{text-align:right}.rewards-points b{display:block;font-size:21px;color:var(--orange)}.rewards-points span{font-size:9px;color:var(--muted);letter-spacing:.08em;text-transform:uppercase}
+    .rewards-track{height:8px;background:#142536;border-radius:99px;overflow:hidden;margin:7px 0 4px;border:1px solid #2b4355;position:relative;z-index:1}
+    .rewards-track i{display:block;height:100%;width:0;background:linear-gradient(90deg,#ff9f2f,#ffd27a);border-radius:99px;transition:width .45s ease}
     .rewards-next{display:flex;justify-content:space-between;gap:10px;color:var(--muted);font-size:10px}
     .rewards-next strong{color:#fff}
     .rewards-stats{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:10px}
@@ -142,7 +144,7 @@
           <div><div class="rewards-compact-title">Journey Points</div><div class="rewards-compact-tier">${tier.current.name}</div></div>
           <div class="rewards-compact-points">${t.points.toLocaleString()} points</div>
         </div>
-        <div class="rewards-track"><i style="width:${tier.pct}%"></i></div>
+        <div class="rewards-track"><i style="width:${t.points<=0?0:tier.pct}%"></i></div>
         <div class="rewards-compact-foot"><span>${tier.next?`Next: <strong>${tier.next.name}</strong>`:'Top tier achieved'}</span><span>${tier.next?`${remaining.toLocaleString()} points to go`:'MAX STATUS'}</span></div>
       `;
       lastHomeSignature=homeSignature;
