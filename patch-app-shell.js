@@ -22,6 +22,13 @@ if (!html.includes('/home-quick-colours.css?v=20261014-1')) {
   html = html.replace('</head>', quickColours + '\n</head>');
 }
 
+// Keep scheduled community flight actions aviation-blue while making
+// Spontaneous Flying a warmer amber/orange action so the two are unmistakable.
+const spontaneousStyle = '<link rel="stylesheet" href="/spontaneous-flight-style.css?v=20261014-1">';
+if (!html.includes('/spontaneous-flight-style.css?v=20261014-1')) {
+  html = html.replace('</head>', spontaneousStyle + '\n</head>');
+}
+
 // Normal pilots receive index.html via express.static(), while the admin root
 // can receive an already-enhanced page. The loader now fills only missing parts
 // so both paths get the same Companion App features and interactive Home stats.
