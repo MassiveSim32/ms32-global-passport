@@ -88,14 +88,14 @@ async function persistSession(s) {
   try {
     await p.query(`INSERT INTO passport_registrations
       (user_id,event_id,username,event_name,event_start,channel_id,attendance_ms,verified,claimed,active,updated_at)
-      VALUES($1,$2,$3,$4,$5,$6,$7,$8,true,false,NOW())
+      VALUES($1,$2,$3,$4,$5,$6,$7,$8,$8,false,NOW())
       ON CONFLICT (user_id,event_id) DO UPDATE SET
         username=EXCLUDED.username,
         event_name=EXCLUDED.event_name,
         channel_id=EXCLUDED.channel_id,
         attendance_ms=GREATEST(passport_registrations.attendance_ms,EXCLUDED.attendance_ms),
         verified=(passport_registrations.verified OR EXCLUDED.verified),
-        claimed=true,
+        claimed=(passport_registrations.claimed OR EXCLUDED.claimed),
         active=false,
         updated_at=NOW()`,
       [s.userId,s.eventId,s.username,`Flying Now · ${s.departure} to ${s.destination} · ${s.aircraft}`,new Date(s.postedAt).toISOString(),FLYING_NOW_VOICE_CHANNEL_ID,total,verified]);
@@ -189,7 +189,7 @@ async function historyFor(userId) {
         const minutes = Math.floor(Number(r.attendance_ms || 0)/60000);
         rows.push({
           eventId:String(r.event_id),registered:true,attendanceMinutes:minutes,thresholdMinutes:30,
-          verified:!!r.verified,claimed:!!r.claimed,inVoice:false,points:pointsForMinutes(minutes)
+          verified:!!r.verified,claimed:!!r.verified && !!r.claimed,inVoice:false,points:pointsForMinutes(minutes)
         });
       }
     } catch (e) {
@@ -201,7 +201,7 @@ async function historyFor(userId) {
     const minutes = Math.floor(sessionTotalMs(s)/60000);
     const current = {
       eventId:s.eventId,registered:true,attendanceMinutes:minutes,thresholdMinutes:30,
-      verified:minutes>=30,claimed:true,inVoice:s.state==='active',points:pointsForMinutes(minutes)
+      verified:minutes>=30,claimed:minutes>=30,inVoice:s.state==='active',points:pointsForMinutes(minutes)
     };
     const i = rows.findIndex(x=>x.eventId===s.eventId);
     if (i >= 0) rows[i] = current; else rows.push(current);
