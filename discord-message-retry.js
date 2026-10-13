@@ -66,6 +66,19 @@ async function enqueue(url, options, delayMs = 60_000) {
   return true;
 }
 
+async function tryBot(url, options={}) {
+  if (!process.env.DISCORD_BOT_TOKEN) return null;
+  try {
+    return await originalFetch(url, {
+      method:'POST',
+      headers:{authorization:`Bot ${process.env.DISCORD_BOT_TOKEN}`,'content-type':'application/json'},
+      body:String(options?.body || '')
+    });
+  } catch {
+    return null;
+  }
+}
+
 async function tryWebhook(options) {
   const webhook = getWebhookUrl();
   if (!webhook || !validWebhookUrl(webhook)) return null;
@@ -78,6 +91,22 @@ async function tryWebhook(options) {
   } catch {
     return null;
   }
+}
+
+async function tryDiscordDelivery(url, options={}) {
+  const botResponse = await tryBot(url, options);
+  if (botResponse?.ok) {
+    console.log('Flying Now Discord post delivered by bot');
+    return botResponse;
+  }
+
+  const webhookResponse = await tryWebhook(options);
+  if (webhookResponse?.ok) {
+    console.log('Flying Now Discord post delivered through champagne-chat webhook');
+    return webhookResponse;
+  }
+
+  return webhookResponse || botResponse || null;
 }
 
 async function scheduleRetry(row, response) {
@@ -100,19 +129,7 @@ async function flushOutbox() {
     const q = await p.query(`SELECT id,url,body,attempts FROM discord_outbox
       WHERE next_attempt_at <= NOW() ORDER BY created_at ASC LIMIT 1`);
     for (const row of q.rows) {
-      const webhook = getWebhookUrl();
-      let response = null;
-      if (webhook && validWebhookUrl(webhook)) {
-        response = await tryWebhook({body:row.body});
-      } else if (process.env.DISCORD_BOT_TOKEN) {
-        try {
-          response = await originalFetch(row.url, {
-            method:'POST',
-            headers:{authorization:`Bot ${process.env.DISCORD_BOT_TOKEN}`,'content-type':'application/json'},
-            body:row.body
-          });
-        } catch {}
-      }
+      const response = await tryDiscordDelivery(row.url, {body:row.body});
 
       if (response?.ok) {
         await p.query('DELETE FROM discord_outbox WHERE id=$1', [row.id]);
@@ -132,29 +149,7 @@ async function flushOutbox() {
 globalThis.fetch = async function ms32Fetch(url, options={}) {
   if (!isDiscordMessagePost(url, options)) return originalFetch(url, options);
 
-  const webhook = getWebhookUrl();
-  if (webhook && validWebhookUrl(webhook)) {
-    const response = await tryWebhook(options);
-    if (response?.ok) {
-      console.log('Flying Now Discord post delivered through champagne-chat webhook');
-      return response;
-    }
-
-    const delayMs = response ? await retryDelayMs(response, 60_000) : 60_000;
-    const queued = await enqueue(url, options, delayMs).catch(()=>false);
-    if (queued) {
-      return new Response(JSON.stringify({queued:true,message:'Flight saved and queued for automatic Discord delivery'}), {
-        status:503,
-        headers:{'content-type':'application/json','x-ms32-discord-queued':'1'}
-      });
-    }
-    return response || new Response(JSON.stringify({message:'Discord delivery unavailable'}), {status:503, headers:{'content-type':'application/json'}});
-  }
-
-  let response = null;
-  try {
-    response = await originalFetch(url, options);
-  } catch {}
+  const response = await tryDiscordDelivery(url, options);
   if (response?.ok) return response;
 
   const delayMs = response ? await retryDelayMs(response, 60_000) : 60_000;
