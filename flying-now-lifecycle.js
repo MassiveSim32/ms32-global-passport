@@ -272,8 +272,16 @@ express.application.get = function flyingNowLifecycleGet(path,...handlers) {
 const originalSend = express.response.send;
 express.response.send = function flyingNowLifecycleSend(body) {
   try {
-    if (typeof body === 'string' && body.includes('/flying-now.js?v=20261013-1')) {
-      body = body.replace('/flying-now.js?v=20261013-1','/flying-now.js?v=20261013-2');
+    if (typeof body === 'string') {
+      if (body.includes('/flying-now.js?v=20261013-1')) {
+        body = body.replace('/flying-now.js?v=20261013-1','/flying-now.js?v=20261013-2');
+      }
+      if (body.includes('v0.0.14')) {
+        body = body.replaceAll('v0.0.14','v0.0.15');
+        this.set('Cache-Control','no-store, no-cache, must-revalidate, proxy-revalidate');
+        this.set('Pragma','no-cache');
+        this.set('Expires','0');
+      }
     }
   } catch {}
   return originalSend.call(this,body);
