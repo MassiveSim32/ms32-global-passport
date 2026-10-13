@@ -76,6 +76,7 @@
 
   let lastHomeSignature='';
   let lastProfileSignature='';
+  const bankedRewards=new Map();
 
   function pointsForStatus(s){
     if(!s?.registered) return 0;
@@ -87,8 +88,55 @@
     return 100;
   }
 
+  function stableRows(){
+    const source=(typeof statuses==='object'&&statuses)?statuses:{};
+    const rows=[];
+    const seen=new Set();
+
+    for(const [id,s] of Object.entries(source)){
+      if(!s)continue;
+      seen.add(id);
+      const current={...s,attendanceMinutes:Number(s.attendanceMinutes||0)};
+      const banked=bankedRewards.get(id);
+
+      // Passport/claimed rewards are historical earnings. Other pollers can
+      // temporarily replace the shared status with a partial snapshot, so keep
+      // the strongest claimed snapshot instead of letting the total oscillate.
+      if(current.claimed){
+        const next={
+          ...banked,
+          ...current,
+          registered:true,
+          claimed:true,
+          verified:!!(current.verified||banked?.verified),
+          attendanceMinutes:Math.max(Number(banked?.attendanceMinutes||0),current.attendanceMinutes),
+          thresholdMinutes:Number(current.thresholdMinutes||banked?.thresholdMinutes||30)
+        };
+        bankedRewards.set(id,next);
+      }
+
+      if(banked){
+        rows.push({
+          ...current,
+          registered:true,
+          claimed:true,
+          verified:!!(current.verified||banked.verified),
+          attendanceMinutes:Math.max(Number(current.attendanceMinutes||0),Number(banked.attendanceMinutes||0)),
+          thresholdMinutes:Number(current.thresholdMinutes||banked.thresholdMinutes||30)
+        });
+      }else{
+        rows.push(current);
+      }
+    }
+
+    for(const [id,s] of bankedRewards){
+      if(!seen.has(id))rows.push(s);
+    }
+    return rows;
+  }
+
   function totals(){
-    const rows=Object.values(typeof statuses==='object'&&statuses?statuses:{}).filter(Boolean);
+    const rows=stableRows();
     const points=rows.reduce((n,s)=>n+pointsForStatus(s),0);
     const minutes=rows.reduce((n,s)=>n+(s.registered?Number(s.attendanceMinutes||0):0),0);
     const flights=rows.filter(s=>s.registered&&(s.verified||s.claimed||Number(s.attendanceMinutes||0)>=Number(s.thresholdMinutes||30))).length;
