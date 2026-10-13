@@ -38,6 +38,21 @@ function validWebhookUrl(webhook) {
   return /^https:\/\/(?:canary\.|ptb\.)?(?:discord\.com|discordapp\.com)\/api\/webhooks\/\d+\/[A-Za-z0-9._-]+(?:\?.*)?$/.test(webhook);
 }
 
+async function classifyDiscordFailure(response) {
+  if (!response) return 'network-unavailable';
+  try {
+    const body = await response.clone().json();
+    const code = Number(body?.code || 0);
+    const message = String(body?.message || '').toLowerCase();
+    if (code === 50001 || code === 50013 || message.includes('missing access') || message.includes('missing permissions')) return 'permission-or-access';
+    if (code === 10003 || message.includes('unknown channel')) return 'channel-unavailable';
+    if (code === 10015 || message.includes('unknown webhook') || message.includes('invalid webhook token')) return 'webhook-invalid';
+    if (body?.retry_after != null || message.includes('rate limit')) return 'temporarily-deferred';
+    if (message.includes('cannot send messages')) return 'permission-or-access';
+  } catch {}
+  return 'discord-refused';
+}
+
 async function retryDelayMs(response, fallbackMs = 60_000) {
   try {
     const h = Number(response?.headers?.get?.('retry-after'));
@@ -112,21 +127,20 @@ async function tryWebhook(options) {
 }
 
 async function tryDiscordDelivery(url, options={}) {
-  // Plain-text bot delivery is the proven reliable path for #champagne-chat.
-  // Use it first so a rejected rich embed does not interfere with the working send route.
   const textBody = plainTextBody(options?.body);
   const textResponse = await tryBot(url, options, textBody);
   if (textResponse?.ok) {
     console.log('Flying Now Discord post delivered by bot as plain text');
     return textResponse;
   }
+  console.log(`Flying Now bot delivery diagnostic: ${await classifyDiscordFailure(textResponse)}`);
 
-  // Keep the webhook as a secondary automatic fallback only.
   const webhookResponse = await tryWebhook(options);
   if (webhookResponse?.ok) {
     console.log('Flying Now Discord post delivered through champagne-chat webhook');
     return webhookResponse;
   }
+  console.log(`Flying Now webhook delivery diagnostic: ${await classifyDiscordFailure(webhookResponse)}`);
 
   return webhookResponse || textResponse || null;
 }
