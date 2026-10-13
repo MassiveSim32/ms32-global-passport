@@ -10,7 +10,7 @@
     '/bush-location-fix.js?v=20261014-4',
     '/airliner-location-fix.js?v=20261014-4',
     '/flying-now.js?v=20261014-4',
-    '/home-feature-tiles.js?v=20261014-2',
+    '/home-feature-tiles.js?v=20261014-3',
     '/passport-pages.js?v=20261014-4',
     '/home-quick-colors.js?v=20261014-4',
     '/home-stat-links.js?v=20261014-4'
