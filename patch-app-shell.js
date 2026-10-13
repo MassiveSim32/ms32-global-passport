@@ -25,11 +25,12 @@ if (!html.includes('/home-quick-colours.css?v=20261014-1')) {
 // Normal pilots receive index.html via express.static(), which bypasses the
 // server response.send() enhancement hook used by the admin account. Add one
 // small loader to the static shell so every beta pilot receives the same full
-// Companion App features, including Flying Now, Journey Points and new stamps.
-const loader = '<script src="/full-app-loader.js?v=20261013-15"></script>';
-if (!html.includes('/full-app-loader.js?v=20261013-15')) {
-  html = html.replace('</html>', loader + '</html>');
-}
+// Companion App features, including Flying Now, Journey Points, new stamps
+// and interactive Home stats.
+const oldLoader = '<script src="/full-app-loader.js?v=20261013-15"></script>';
+const loader = '<script src="/full-app-loader.js?v=20261014-1"></script>';
+if (html.includes(oldLoader)) html = html.replace(oldLoader, loader);
+else if (!html.includes('/full-app-loader.js?v=20261014-1')) html = html.replace('</html>', loader + '</html>');
 
 await fs.writeFile(file,html,'utf8');
 console.log('App shell patched to full v0.0.15 Companion App loader');
