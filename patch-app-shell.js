@@ -35,8 +35,11 @@ if (!html.includes('/home-quick-colours.css?v=20261014-1')) html = html.replace(
 const spontaneousStyle = '<link rel="stylesheet" href="/spontaneous-flight-style.css?v=20261014-1">';
 if (!html.includes('/spontaneous-flight-style.css?v=20261014-1')) html = html.replace('</head>', spontaneousStyle + '\n</head>');
 
-const journeyStyle = '<link rel="stylesheet" href="/journey-banner-colours.css?v=20261014-1">';
-if (!html.includes('/journey-banner-colours.css?v=20261014-1')) html = html.replace('</head>', journeyStyle + '\n</head>');
+// Hard-lock the Home Journey Points rail via a cache-busted stylesheet so even
+// legacy/admin shells that loaded an older rewards script receive the stable bar.
+html = html.replaceAll('/journey-banner-colours.css?v=20261014-1','/journey-banner-colours.css?v=20261014-2');
+const journeyStyle = '<link rel="stylesheet" href="/journey-banner-colours.css?v=20261014-2">';
+if (!html.includes('/journey-banner-colours.css?v=20261014-2')) html = html.replace('</head>', journeyStyle + '\n</head>');
 
 const oldLoaders = [
   '<script src="/full-app-loader.js?v=20261013-15"></script>',
