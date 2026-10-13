@@ -199,8 +199,10 @@ globalThis.fetch = async function ms32Fetch(url, options={}) {
   const delayMs = response ? await retryDelayMs(response, 60_000) : 60_000;
   const queued = await enqueue(url, options, delayMs).catch(()=>false);
   if (queued) {
-    return new Response(JSON.stringify({queued:true,message:'Flight saved and queued for automatic Discord delivery'}), {
-      status:503,
+    // Discord delivery is asynchronous. A queued announcement must not block
+    // the pilot's flight lifecycle or Journey Points flow.
+    return new Response(JSON.stringify({queued:true,message:'Flight accepted; Discord announcement delivery is pending'}), {
+      status:202,
       headers:{'content-type':'application/json','x-ms32-discord-queued':'1'}
     });
   }
