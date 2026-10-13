@@ -93,6 +93,48 @@
     .passport-stamp.stamp-bush:before{border-radius:18% 7% 17% 8%;border-style:dashed}
     .passport-stamp.stamp-bush .stamp-family{color:#f1d38a;letter-spacing:.18em}
 
+    /* Spontaneous Flying: compact, worn red passport ink */
+    .passport-stamp.stamp-spontaneous{
+      --stamp-accent:#a51f2d;
+      --stamp-ink:#a51f2d;
+      width:92%;
+      min-height:118px;
+      margin:10px auto;
+      padding:12px 9px 10px;
+      border:3px double #a51f2d;
+      border-radius:47% 43% 46% 42%;
+      color:#a51f2d;
+      background:
+        radial-gradient(circle at 17% 24%,rgba(165,31,45,.13) 0 1px,transparent 2px),
+        radial-gradient(circle at 73% 68%,rgba(165,31,45,.11) 0 1px,transparent 2px),
+        repeating-linear-gradient(7deg,transparent 0 8px,rgba(165,31,45,.035) 9px 10px);
+      background-size:13px 13px,17px 17px,auto;
+      box-shadow:none;
+      transform:rotate(-4deg);
+      opacity:.92;
+    }
+    .passport-stamp.stamp-spontaneous:nth-child(even){transform:rotate(3deg)}
+    .passport-stamp.stamp-spontaneous:before{inset:6px;border:1px dashed #a51f2d;border-radius:45% 41% 44% 40%;opacity:.62}
+    .passport-stamp.stamp-spontaneous:after{
+      background:
+        linear-gradient(104deg,transparent 0 16%,rgba(239,231,210,.55) 17% 18%,transparent 19% 67%,rgba(239,231,210,.4) 68% 69%,transparent 70%),
+        radial-gradient(circle at 32% 48%,rgba(239,231,210,.8) 0 1px,transparent 2px);
+      background-size:auto,9px 9px;
+      mix-blend-mode:normal;
+      opacity:.42;
+    }
+    .passport-stamp.stamp-spontaneous .stamp-family{margin-top:0;font-size:7px;letter-spacing:.18em;color:#a51f2d}
+    .passport-stamp.stamp-spontaneous .stamp-country{margin-top:6px;font-size:18px;color:#a51f2d;text-shadow:none}
+    .passport-stamp.stamp-spontaneous .stamp-city{margin-top:4px;font-size:9px;letter-spacing:.13em;color:#a51f2d}
+    .passport-stamp.stamp-spontaneous .stamp-date{margin-top:7px;font-size:7px;color:#a51f2d}
+    .passport-stamp.stamp-spontaneous .stamp-series{margin-top:3px;font-size:5px;letter-spacing:.13em;color:#a51f2d;opacity:.82}
+    .stamp-modal-card .passport-stamp.stamp-spontaneous{width:220px;min-height:150px;padding:16px 12px 13px;transform:rotate(-3deg)}
+    .stamp-modal-card .passport-stamp.stamp-spontaneous .stamp-family{font-size:9px}
+    .stamp-modal-card .passport-stamp.stamp-spontaneous .stamp-country{font-size:25px}
+    .stamp-modal-card .passport-stamp.stamp-spontaneous .stamp-city{font-size:12px}
+    .stamp-modal-card .passport-stamp.stamp-spontaneous .stamp-date{font-size:9px}
+    .stamp-modal-card .passport-stamp.stamp-spontaneous .stamp-series{font-size:7px}
+
     /* Default community stamp keeps the established blue Passport style */
     .passport-stamp.stamp-community .stamp-family{color:#a9d9ff}
 
@@ -113,7 +155,13 @@
     .stamp-modal-card .passport-stamp.arrival-stamp .stamp-route{font-size:10px;margin-top:11px;padding-top:9px}
     .stamp-modal-card .passport-stamp.arrival-stamp .stamp-date{font-size:11px;margin-top:8px}
     .stamp-modal-card .passport-stamp.arrival-stamp .stamp-series{font-size:7px;margin-top:6px}
-    @media(max-width:520px){.passport-stamp.arrival-stamp{min-height:142px;padding:12px 8px 10px}.stamp-country{font-size:17px}.stamp-city{font-size:9px}.stamp-route{font-size:6px}}
+    .stamp-modal-card .passport-stamp.stamp-spontaneous{width:220px;min-height:150px;padding:16px 12px 13px;transform:rotate(-3deg)}
+    .stamp-modal-card .passport-stamp.stamp-spontaneous .stamp-family{font-size:9px;margin-top:0}
+    .stamp-modal-card .passport-stamp.stamp-spontaneous .stamp-country{font-size:25px;margin-top:7px}
+    .stamp-modal-card .passport-stamp.stamp-spontaneous .stamp-city{font-size:12px;margin-top:5px}
+    .stamp-modal-card .passport-stamp.stamp-spontaneous .stamp-date{font-size:9px;margin-top:8px}
+    .stamp-modal-card .passport-stamp.stamp-spontaneous .stamp-series{font-size:7px;margin-top:4px}
+    @media(max-width:520px){.passport-stamp.arrival-stamp{min-height:142px;padding:12px 8px 10px}.stamp-country{font-size:17px}.stamp-city{font-size:9px}.stamp-route{font-size:6px}.passport-stamp.stamp-spontaneous{min-height:112px;padding:10px 7px 9px}.passport-stamp.stamp-spontaneous .stamp-country{font-size:16px}}
   `;
   document.head.appendChild(style);
 
@@ -121,7 +169,15 @@
     'Ireland':'#75dd84','Australia':'#f3bf44','New Zealand':'#78c7ff','Japan':'#ff7d83','United States':'#ff8d6f','United Kingdom':'#86baff','France':'#72a9ff','Germany':'#f0c95b','Italy':'#72d69d','Spain':'#f5c94d','Portugal':'#73d19b','Netherlands':'#ff9f66','Canada':'#ff7777','Singapore':'#ff7f8e','South Korea':'#86c8ff','United Arab Emirates':'#72d4a2','South Africa':'#e2c76d','Brazil':'#7bd47c','Argentina':'#8ecfff','Chile':'#ff8a83','Mexico':'#77d18b'
   };
 
+  const spontaneousCityByIcao={
+    RPLL:'Manila',VVTS:'Ho Chi Minh City',VVNB:'Hanoi',WSSS:'Singapore',WMKK:'Kuala Lumpur',VTBS:'Bangkok',VHHH:'Hong Kong',RKSI:'Seoul',RJTT:'Tokyo',RJAA:'Tokyo',
+    YSSY:'Sydney',YMML:'Melbourne',YBBN:'Brisbane',YPAD:'Adelaide',YPPH:'Perth',YBCS:'Cairns',YMHB:'Hobart',YMLT:'Launceston',NZAA:'Auckland',NZWN:'Wellington',NZCH:'Christchurch',
+    KJFK:'New York',KLAX:'Los Angeles',KSFO:'San Francisco',KSEA:'Seattle',KORD:'Chicago',KATL:'Atlanta',EGLL:'London',LFPG:'Paris',EDDF:'Frankfurt',EHAM:'Amsterdam',
+    OMDB:'Dubai',OMAA:'Abu Dhabi',FAOR:'Johannesburg'
+  };
+
   const familyRules=[
+    {family:'spontaneous',label:'SPONTANEOUS FLIGHT · MS32 VERIFIED',keywords:['flying now','spontaneous flight']},
     {family:'warbirds',label:'WARBIRDS · SORTIE VERIFIED',keywords:['warbird','warbirds','sortie','heritage flight','memorial flight','squadron']},
     {family:'helicopter',label:'HELICOPTER · ROTOR OPS',keywords:['helicopter','heli club','heli ','rotor','rotorcraft','chopper','rescue']},
     {family:'airliner',label:'AIRLINER · VERIFIED ARRIVAL',keywords:['airliner','world tour','airline','jetliner','commercial jet','awt']},
@@ -129,6 +185,7 @@
   ];
 
   function stampFamily(e){
+    if(String(e?.id||'').startsWith('flying-now:'))return{family:'spontaneous',label:'SPONTANEOUS FLIGHT · MS32 VERIFIED'};
     const hay=`${e?.name||''} ${e?.description||''}`.toLowerCase();
     for(const rule of familyRules){
       if(rule.keywords.some(k=>hay.includes(k)))return rule;
@@ -190,23 +247,23 @@
     const route=typeof routeInfo==='function'?routeInfo(e):{route:'',destination:'',icaos:[]};
     const parenRoute=parentheticalRoute(e);
     const region=detectedRegion(e);
+    const destinationIcao=Array.isArray(route.icaos)&&route.icaos.length?String(route.icaos[route.icaos.length-1]).toUpperCase():'';
     let country=normalCountry(loc?.country||'');
-    if(!country&&Array.isArray(route.icaos)&&route.icaos.length&&typeof countryFromIcao==='function')country=normalCountry(countryFromIcao(route.icaos[route.icaos.length-1]));
+    if(!country&&destinationIcao&&typeof countryFromIcao==='function')country=normalCountry(countryFromIcao(destinationIcao));
     const explicit=explicitDestination(e);
-    let city=cleanDestination(explicit,country);
+    let city=family.family==='spontaneous'&&destinationIcao?spontaneousCityByIcao[destinationIcao]||'':'';
+    if(!city)city=cleanDestination(explicit,country);
     if(!city&&route?.destination&&!/^\w{4}$/.test(route.destination))city=cleanDestination(route.destination,country);
     if(!city&&country&&String(loc?.place||'').toLowerCase()!==country.toLowerCase())city=cleanDestination(loc.place,country);
+    if(family.family==='spontaneous'&&!city&&destinationIcao)city=destinationIcao;
     let displayRoute='';
     if(Array.isArray(route.icaos)&&route.icaos.length>=2)displayRoute=`${route.icaos[0]} → ${route.icaos[1]}`;
     else if(parenRoute)displayRoute=`${parenRoute.from} → ${parenRoute.to}`;
     else displayRoute=route?.route||loc?.route||'COMMUNITY FLIGHT';
     const hero=country||'GLOBAL PASSPORT';
-    // Bush stamps should always show the country plus the most useful local area.
-    // Prefer a readable destination/city, then a detected state/region, and never
-    // fall back to a generic MS32 destination label when a region is available.
     const bushPlace=city||region||((!country&&loc?.place)?loc.place:'BUSH DESTINATION');
     const secondary=family.family==='bush'?bushPlace:(city||((!country&&loc?.place)?loc.place:'MS32 DESTINATION'));
-    const accent=accentByCountry[country]||'#63d6c4';
+    const accent=family.family==='spontaneous'?'#a51f2d':(accentByCountry[country]||'#63d6c4');
     return{
       hero:String(hero).toUpperCase(),
       city:String(secondary).toUpperCase(),
@@ -222,6 +279,9 @@
   window.stampData=function(e){return arrivalStampData(e)};
   window.stampMarkup=function(e){
     const s=arrivalStampData(e);
+    if(s.family==='spontaneous'){
+      return `<div class="passport-stamp arrival-stamp stamp-spontaneous"><div class="stamp-family">SPONTANEOUS FLIGHT</div><div class="stamp-country">${esc(s.hero)}</div><div class="stamp-city">${esc(s.city)}</div><div class="stamp-date">${esc(s.date)}</div><div class="stamp-series">MS32 VERIFIED</div></div>`;
+    }
     const familyText={
       airliner:'AIRLINER · ARRIVED',
       warbirds:'WARBIRDS · SORTIE',
