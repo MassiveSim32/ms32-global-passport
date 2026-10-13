@@ -143,8 +143,8 @@ globalThis.fetch = async function ms32Fetch(url, options={}) {
     const delayMs = response ? await retryDelayMs(response, 60_000) : 60_000;
     const queued = await enqueue(url, options, delayMs).catch(()=>false);
     if (queued) {
-      return new Response(JSON.stringify({queued:true,message:'Discord delivery is queued automatically'}), {
-        status:202,
+      return new Response(JSON.stringify({queued:true,message:'Flight saved and queued for automatic Discord delivery'}), {
+        status:503,
         headers:{'content-type':'application/json','x-ms32-discord-queued':'1'}
       });
     }
@@ -160,8 +160,8 @@ globalThis.fetch = async function ms32Fetch(url, options={}) {
   const delayMs = response ? await retryDelayMs(response, 60_000) : 60_000;
   const queued = await enqueue(url, options, delayMs).catch(()=>false);
   if (queued) {
-    return new Response(JSON.stringify({queued:true,message:'Discord delivery is queued automatically'}), {
-      status:202,
+    return new Response(JSON.stringify({queued:true,message:'Flight saved and queued for automatic Discord delivery'}), {
+      status:503,
       headers:{'content-type':'application/json','x-ms32-discord-queued':'1'}
     });
   }
