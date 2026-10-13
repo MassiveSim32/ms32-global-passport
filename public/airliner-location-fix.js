@@ -10,7 +10,7 @@
     'Hokkaido','Okinawa'
   ].sort((a,b)=>b.length-a.length);
 
-  const COUNTRY_RE=/^(usa|united states|us|u\.s\.|australia|canada|japan|new zealand|united kingdom|uk|england|scotland|wales|ireland|france|germany|italy|spain|portugal|netherlands|belgium|switzerland|austria|norway|sweden|finland|denmark|iceland|greece|turkey|singapore|malaysia|indonesia|thailand|vietnam|philippines|china|hong kong|south korea|korea|india|united arab emirates|uae|qatar|saudi arabia|south africa|brazil|argentina|chile|peru|mexico)$/i;
+  const COUNTRY_RE=/^(usa|united states|us|u\.s\.|australia|canada|japan|new zealand|united kingdom|uk|england|scotland|wales|ireland|france|germany|italy|spain|portugal|netherlands|belgium|switzerland|austria|norway|sweden|finland|denmark|iceland|greece|turkey|singapore|malaysia|indonesia|thailand|vietnam|philippines|china|hong kong|south korea|korea|india|united arab emirates|uae|qatar|saudi arabia|south africa|brazil|argentina|chile|peru|mexico|venezuela)$/i;
 
   function textOf(e){return `${e?.name||''} ${e?.description||''}`;}
   function cleanBit(s){
@@ -51,7 +51,7 @@
     const aliases=[
       [/\b(usa|united states|u\.s\.)\b/,'UNITED STATES'],
       [/\baustralia\b/,'AUSTRALIA'],[/\bnew zealand\b/,'NEW ZEALAND'],[/\bjapan\b/,'JAPAN'],[/\bcanada\b/,'CANADA'],
-      [/\b(united kingdom|uk|england|scotland|wales)\b/,'UNITED KINGDOM'],[/\bireland\b/,'IRELAND'],[/\bfrance\b/,'FRANCE'],[/\bgermany\b/,'GERMANY'],[/\bitaly\b/,'ITALY'],[/\bspain\b/,'SPAIN'],[/\bportugal\b/,'PORTUGAL'],[/\bnetherlands\b/,'NETHERLANDS'],[/\bsingapore\b/,'SINGAPORE'],[/\bsouth korea\b/,'SOUTH KOREA'],[/\b(united arab emirates|uae)\b/,'UNITED ARAB EMIRATES'],[/\bsouth africa\b/,'SOUTH AFRICA'],[/\bbrazil\b/,'BRAZIL'],[/\bargentina\b/,'ARGENTINA'],[/\bchile\b/,'CHILE'],[/\bmexico\b/,'MEXICO']
+      [/\b(united kingdom|uk|england|scotland|wales)\b/,'UNITED KINGDOM'],[/\bireland\b/,'IRELAND'],[/\bfrance\b/,'FRANCE'],[/\bgermany\b/,'GERMANY'],[/\bitaly\b/,'ITALY'],[/\bspain\b/,'SPAIN'],[/\bportugal\b/,'PORTUGAL'],[/\bnetherlands\b/,'NETHERLANDS'],[/\bsingapore\b/,'SINGAPORE'],[/\bsouth korea\b/,'SOUTH KOREA'],[/\b(united arab emirates|uae)\b/,'UNITED ARAB EMIRATES'],[/\bsouth africa\b/,'SOUTH AFRICA'],[/\bbrazil\b/,'BRAZIL'],[/\bargentina\b/,'ARGENTINA'],[/\bchile\b/,'CHILE'],[/\bmexico\b/,'MEXICO'],[/\bvenezuela\b/,'VENEZUELA']
     ];
     for(const [re,label] of aliases)if(re.test(lower))return label;
     return String(fallback||'GLOBAL PASSPORT').toUpperCase();
