@@ -11,10 +11,11 @@ html = html.replaceAll('v0.0.14','v1.0.0-rc.1');
 html = html.replaceAll('v0.0.15','v1.0.0-rc.1');
 html = html.replaceAll('<span class="beta-pill">BETA</span>','<span class="beta-pill">RC</span>');
 
-// Personalise the Home headline as one concise journey message.
+// Personalise the Home headline as one concise journey message, kept compact
+// to match the HOME eyebrow label directly above it.
 html = html.replace(
   '<h1 id="hello">Welcome aboard.</h1><p class="sub">Your interactive Massive Simulations 32 Journey starts here</p>',
-  '<h1 id="hello">Your MS32 interactive journey starts here.</h1>'
+  '<h1 id="hello" style="font-size:10px;line-height:1.35;margin:4px 0 8px">Your MS32 interactive journey starts here.</h1>'
 );
 html = html.replace(
   "el('hello').textContent=`Welcome, ${me.user.username}.`;",
