@@ -112,31 +112,23 @@ async function tryWebhook(options) {
 }
 
 async function tryDiscordDelivery(url, options={}) {
-  const botResponse = await tryBot(url, options);
-  if (botResponse?.ok) {
-    console.log('Flying Now Discord post delivered by bot');
-    return botResponse;
-  }
-
-  // If Discord rejects the rich embed, retry the same post as plain text.
-  // This only needs basic Send Messages permission and keeps Flying Now usable
-  // even when Embed Links is not granted on the channel.
+  // Plain-text bot delivery is the proven reliable path for #champagne-chat.
+  // Use it first so a rejected rich embed does not interfere with the working send route.
   const textBody = plainTextBody(options?.body);
-  if (textBody && textBody !== String(options?.body || '')) {
-    const textResponse = await tryBot(url, options, textBody);
-    if (textResponse?.ok) {
-      console.log('Flying Now Discord post delivered by bot as plain text');
-      return textResponse;
-    }
+  const textResponse = await tryBot(url, options, textBody);
+  if (textResponse?.ok) {
+    console.log('Flying Now Discord post delivered by bot as plain text');
+    return textResponse;
   }
 
+  // Keep the webhook as a secondary automatic fallback only.
   const webhookResponse = await tryWebhook(options);
   if (webhookResponse?.ok) {
     console.log('Flying Now Discord post delivered through champagne-chat webhook');
     return webhookResponse;
   }
 
-  return webhookResponse || botResponse || null;
+  return webhookResponse || textResponse || null;
 }
 
 async function scheduleRetry(row, response) {
