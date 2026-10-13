@@ -7,7 +7,9 @@ const file = path.join(__dirname,'public','index.html');
 
 let html = await fs.readFile(file,'utf8');
 
-html = html.replaceAll('v0.0.14','v0.0.15');
+html = html.replaceAll('v0.0.14','v1.0.0-rc.1');
+html = html.replaceAll('v0.0.15','v1.0.0-rc.1');
+html = html.replaceAll('<span class="beta-pill">BETA</span>','<span class="beta-pill">RC</span>');
 
 if (!html.includes('http-equiv="Cache-Control"')) {
   html = html.replace(
@@ -43,13 +45,14 @@ const oldLoaders = [
   '<script src="/full-app-loader.js?v=20261014-1"></script>',
   '<script src="/full-app-loader.js?v=20261014-2"></script>',
   '<script src="/full-app-loader.js?v=20261014-3"></script>',
-  '<script src="/full-app-loader.js?v=20261014-4"></script>'
+  '<script src="/full-app-loader.js?v=20261014-4"></script>',
+  '<script src="/full-app-loader.js?v=20261014-5"></script>'
 ];
-const loader = '<script src="/full-app-loader.js?v=20261014-5"></script>';
+const loader = '<script src="/full-app-loader.js?v=20261014-rc1"></script>';
 for (const oldLoader of oldLoaders) {
   if (html.includes(oldLoader)) html = html.replace(oldLoader, loader);
 }
-if (!html.includes('/full-app-loader.js?v=20261014-5')) html = html.replace('</html>', loader + '</html>');
+if (!html.includes('/full-app-loader.js?v=20261014-rc1')) html = html.replace('</html>', loader + '</html>');
 
 await fs.writeFile(file,html,'utf8');
-console.log('App shell patched to full v0.0.15 Companion App loader');
+console.log('App shell patched to Massive Simulations 32 Companion App v1.0.0-rc.1');
