@@ -4,7 +4,7 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "start": "node server-fixed-wrapper.js",
+    "start": "FLYING_NOW_VOICE_CHANNEL_ID=1395185791709483049 node server-fixed-wrapper.js",
     "dev": "node --watch server-fixed-wrapper.js"
   },
   "dependencies": {
