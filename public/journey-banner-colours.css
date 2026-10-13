@@ -1,4 +1,10 @@
 .rewards-compact{
+  position:relative!important;
+  overflow:hidden!important;
+  height:78px!important;
+  min-height:78px!important;
+  max-height:78px!important;
+  padding:9px 12px 30px!important;
   border-color:#8b6a2f!important;
   background:
     radial-gradient(circle at 88% 18%,#ff9f2f2b,transparent 34%),
@@ -16,7 +22,36 @@
 .rewards-compact-title{color:#ffd27a!important}
 .rewards-compact-tier{color:#fff7e8!important;text-shadow:0 0 12px #ffb34720}
 .rewards-compact-points{color:#ffb347!important}
-.rewards-track{background:#0b1a27!important;border-color:#6d542d!important;box-shadow:inset 0 0 8px #0006}
-.rewards-track i{background:linear-gradient(90deg,#ff8a2a,#ffbd59,#ffe09a)!important;box-shadow:0 0 10px #ff9f2f66}
-.rewards-compact-foot{color:#9db5c8!important}
+.rewards-compact .rewards-track{
+  position:absolute!important;
+  left:12px!important;
+  right:12px!important;
+  top:auto!important;
+  bottom:20px!important;
+  width:auto!important;
+  height:8px!important;
+  margin:0!important;
+  transform:none!important;
+  animation:none!important;
+  background:#0b1a27!important;
+  border-color:#6d542d!important;
+  box-shadow:inset 0 0 8px #0006!important;
+}
+.rewards-compact .rewards-track i{
+  display:block!important;
+  height:100%!important;
+  transform:none!important;
+  animation:none!important;
+  transition:none!important;
+  background:linear-gradient(90deg,#ff8a2a,#ffbd59,#ffe09a)!important;
+  box-shadow:0 0 10px #ff9f2f66!important;
+}
+.rewards-compact-foot{
+  position:absolute!important;
+  left:12px!important;
+  right:12px!important;
+  bottom:6px!important;
+  margin:0!important;
+  color:#9db5c8!important;
+}
 .rewards-compact-foot strong{color:#ffd27a!important}
