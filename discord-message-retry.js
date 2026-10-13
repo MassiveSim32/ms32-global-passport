@@ -133,8 +133,16 @@ async function tryDiscordDelivery(url, options={}) {
     console.log('Flying Now Discord post delivered by bot as plain text');
     return textResponse;
   }
-  console.log(`Flying Now bot delivery diagnostic: ${await classifyDiscordFailure(textResponse)}`);
 
+  const botFailure = await classifyDiscordFailure(textResponse);
+  console.log(`Flying Now bot delivery diagnostic: ${botFailure}`);
+
+  // A temporary refusal is already accompanied by Discord's requested wait window.
+  // Do not immediately hit the webhook as well: that doubles traffic and extends
+  // the problem. Queue the single bot delivery and retry it automatically later.
+  if (botFailure === 'temporarily-deferred') return textResponse;
+
+  // Use the webhook only for a genuine bot-path failure such as permissions/access.
   const webhookResponse = await tryWebhook(options);
   if (webhookResponse?.ok) {
     console.log('Flying Now Discord post delivered through champagne-chat webhook');
