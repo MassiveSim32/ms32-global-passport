@@ -7,10 +7,8 @@ const file = path.join(__dirname,'public','index.html');
 
 let html = await fs.readFile(file,'utf8');
 
-// Keep the visible beta version aligned with the deployed package.
 html = html.replaceAll('v0.0.14','v0.0.15');
 
-// Do not let an old installed/browser shell linger between beta builds.
 if (!html.includes('http-equiv="Cache-Control"')) {
   html = html.replace(
     '<head>',
@@ -18,23 +16,14 @@ if (!html.includes('http-equiv="Cache-Control"')) {
   );
 }
 
-// These enhancements used to be injected only through response.send().
-// Ordinary beta pilots are served index.html by express.static(), which bypasses
-// response.send(), so they were receiving the old base shell without Flying Now.
-// Put the complete Companion App bundle directly into the app shell for everyone.
-const appBundle = [
-  '<script src="/rewards-prototype.js?v=20261013-15"></script>',
-  '<script src="/dual-clock.js?v=20261013-15"></script>',
-  '<script src="/stamp-style-v2.js?v=20261013-15"></script>',
-  '<script src="/bush-location-fix.js?v=20261013-15"></script>',
-  '<script src="/airliner-location-fix.js?v=20261013-15"></script>',
-  '<script src="/flying-now.js?v=20261013-15"></script>',
-  '<script src="/passport-pages.js?v=20261013-15"></script>'
-].join('');
-
-if (!html.includes('/flying-now.js?v=20261013-15')) {
-  html = html.replace('</body>', appBundle + '</body>');
+// Normal pilots receive index.html via express.static(), which bypasses the
+// server response.send() enhancement hook used by the admin account. Add one
+// small loader to the static shell so every beta pilot receives the same full
+// Companion App features, including Flying Now, Journey Points and new stamps.
+const loader = '<script src="/full-app-loader.js?v=20261013-15"></script>';
+if (!html.includes('/full-app-loader.js?v=20261013-15')) {
+  html = html.replace('</html>', loader + '</html>');
 }
 
 await fs.writeFile(file,html,'utf8');
-console.log('App shell patched to full v0.0.15 Companion App bundle');
+console.log('App shell patched to full v0.0.15 Companion App loader');
