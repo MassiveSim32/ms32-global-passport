@@ -93,8 +93,6 @@
   function tierFor(points){
     let current=tiers[0],next=tiers[1]||null;
     for(let i=0;i<tiers.length;i++) if(points>=tiers[i].min){current=tiers[i];next=tiers[i+1]||null}
-    // Keep progress cumulative toward the next status so reaching a new tier
-    // does not visually reset the bar to zero. Example: 500/1500 = 33%.
     const pct=next?Math.max(0,Math.min(100,(points/next.min)*100)):100;
     return {current,next,pct};
   }
@@ -107,7 +105,7 @@
 
   function ensureHeaderBuildLabel(){
     const subtitle=document.querySelector('.top .brand small');
-    if(subtitle) subtitle.textContent='Global Passport · BETA v0.0.15';
+    if(subtitle) subtitle.textContent='Companion App · RC v1.0.0-rc.1';
   }
 
   function ensureCards(){
@@ -144,7 +142,7 @@
     const profile=document.getElementById('rewardsProfile');
     if(profile)profile.innerHTML=`
       <div class="rewards-top">
-        <div><div class="rewards-title">Journey Points <span class="prototype-pill">PROTOTYPE</span></div><div class="rewards-tier">${tier.current.name}</div></div>
+        <div><div class="rewards-title">Journey Points <span class="prototype-pill">RC</span></div><div class="rewards-tier">${tier.current.name}</div></div>
         <div class="rewards-points"><b>${t.points.toLocaleString()}</b><span>Journey Points</span></div>
       </div>
       <div class="rewards-track"><i style="width:${tier.pct}%"></i></div>
@@ -162,9 +160,9 @@
   window.shareRewardsAchievement=async function(){
     const t=totals(),tier=tierFor(t.points);
     const name=(typeof currentUser==='object'&&currentUser?.username)?currentUser.username:'A Massive Sim 32 pilot';
-    const text=`✈️ MS32 GLOBAL PASSPORT ACHIEVEMENT\n${name} · ${tier.current.name.toUpperCase()} STATUS\n🏆 ${t.points.toLocaleString()} Journey Points\n✈️ ${t.flights} Verified Community Flight${t.flights===1?'':'s'}\n🎙️ ${fmtMinutes(t.minutes)} Verified Comms\n\nMassive Simulations 32 Global Passport`;
+    const text=`✈️ MS32 COMPANION APP ACHIEVEMENT\n${name} · ${tier.current.name.toUpperCase()} STATUS\n🏆 ${t.points.toLocaleString()} Journey Points\n✈️ ${t.flights} Verified Community Flight${t.flights===1?'':'s'}\n🎙️ ${fmtMinutes(t.minutes)} Verified Comms\n\nMassive Simulations 32 Companion App`;
     try{
-      if(navigator.share){await navigator.share({title:'MS32 Global Passport Achievement',text});return}
+      if(navigator.share){await navigator.share({title:'MS32 Companion App Achievement',text});return}
       await navigator.clipboard.writeText(text);toast('Achievement copied — paste it into Discord');
     }catch(e){if(e?.name!=='AbortError')toast('Could not open sharing on this device')}
   };
