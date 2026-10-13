@@ -19,7 +19,7 @@
     .flying-now-panel p{margin:0 0 14px;color:var(--muted);font-size:11px;line-height:1.45}
     .flying-now-field{display:block;margin-top:11px}
     .flying-now-field span{display:block;font-size:9px;font-weight:900;letter-spacing:.1em;color:#9bb5c9;text-transform:uppercase;margin-bottom:5px}
-    .flying-now-field input{width:100%;border:1px solid #29475f;background:#07131f;color:#fff;border-radius:13px;padding:12px 13px;font:inherit;outline:none}
+    .flying-now-field input{width:100%;border:1px solid #29475f;background:#07131f;color:#fff;border-radius:13px;padding:12px 13px;font:inherit;outline:none;text-transform:uppercase}
     .flying-now-field input:focus{border-color:var(--orange);box-shadow:0 0 0 2px #ff9f2f22}
     .flying-now-status{margin-top:12px;padding:10px 11px;border-radius:12px;background:#081521;border:1px solid #1e394e;color:#b8ccdc;font-size:10px;line-height:1.4}
     .flying-now-status.ok{border-color:#28563f;background:#112b21;color:#83e6af}
@@ -38,10 +38,19 @@
   const modal=document.createElement('div');
   modal.className='flying-now-modal hidden';
   modal.id='flyingNowModal';
-  modal.innerHTML=`<div class="flying-now-panel"><div class="eyebrow">MS32 Companion App</div><h2>I'm Flying Now</h2><p>Share an ad hoc flight with the community in #champagne-chat. Your Discord identity is added automatically.</p><label class="flying-now-field"><span>Departure</span><input id="flyingNowDeparture" maxlength="32" placeholder="e.g. KBOI"></label><label class="flying-now-field"><span>Destination</span><input id="flyingNowDestination" maxlength="32" placeholder="e.g. KMYL"></label><label class="flying-now-field"><span>Aircraft type</span><input id="flyingNowAircraft" maxlength="48" placeholder="e.g. Cessna 208B"></label><div id="flyingNowStatus" class="flying-now-status">A bonus Passport stamp is only awarded when the pilot is detected in the configured Flying Now voice/comms channel.</div><button class="btn primary" id="flyingNowSubmit">POST TO DISCORD</button><button class="btn secondary" id="flyingNowClose">CANCEL</button></div>`;
+  modal.innerHTML=`<div class="flying-now-panel"><div class="eyebrow">MS32 Companion App</div><h2>I'm Flying Now</h2><p>Share an ad hoc flight with the community in #champagne-chat. Your Discord identity is added automatically.</p><label class="flying-now-field"><span>Departure</span><input id="flyingNowDeparture" maxlength="32" placeholder="E.G. KBOI"></label><label class="flying-now-field"><span>Destination</span><input id="flyingNowDestination" maxlength="32" placeholder="E.G. KMYL"></label><label class="flying-now-field"><span>Aircraft type</span><input id="flyingNowAircraft" maxlength="48" placeholder="E.G. CESSNA 208B"></label><div id="flyingNowStatus" class="flying-now-status">A bonus Passport stamp is only awarded when the pilot is detected in the configured Flying Now voice/comms channel.</div><button class="btn primary" id="flyingNowSubmit">POST TO DISCORD</button><button class="btn secondary" id="flyingNowClose">CANCEL</button></div>`;
   document.body.appendChild(modal);
 
   const $=id=>document.getElementById(id);
+  ['flyingNowDeparture','flyingNowDestination','flyingNowAircraft'].forEach(id=>{
+    $(id)?.addEventListener('input',e=>{
+      const el=e.currentTarget;
+      const start=el.selectionStart;
+      const end=el.selectionEnd;
+      el.value=el.value.toUpperCase();
+      try{el.setSelectionRange(start,end)}catch{}
+    });
+  });
   function close(){modal.classList.add('hidden')}
   function open(){modal.classList.remove('hidden');$('flyingNowDeparture')?.focus()}
   function loadActive(){
@@ -96,9 +105,9 @@
   }
 
   $('flyingNowSubmit')?.addEventListener('click',async()=>{
-    const departure=String($('flyingNowDeparture')?.value||'').trim();
-    const destination=String($('flyingNowDestination')?.value||'').trim();
-    const aircraft=String($('flyingNowAircraft')?.value||'').trim();
+    const departure=String($('flyingNowDeparture')?.value||'').trim().toUpperCase();
+    const destination=String($('flyingNowDestination')?.value||'').trim().toUpperCase();
+    const aircraft=String($('flyingNowAircraft')?.value||'').trim().toUpperCase();
     const status=$('flyingNowStatus');
     const btn=$('flyingNowSubmit');
     if(!departure||!destination||!aircraft){
