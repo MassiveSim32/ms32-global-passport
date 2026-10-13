@@ -46,6 +46,20 @@
   background:linear-gradient(90deg,#ff8a2a,#ffbd59,#ffe09a)!important;
   box-shadow:0 0 10px #ff9f2f66!important;
 }
+
+/* At zero points, do not display the live DOM progress element at all.
+   Draw the empty track directly into the card background so polling/re-renders
+   cannot make the horizontal bar move or flash. */
+.rewards-compact:has(.rewards-track i[style^="width:0"]) {
+  background:
+    linear-gradient(#0b1a27,#0b1a27) left 12px bottom 20px / calc(100% - 24px) 8px no-repeat,
+    radial-gradient(circle at 88% 18%,#ff9f2f2b,transparent 34%),
+    linear-gradient(135deg,#17334a 0%,#102638 46%,#2a2112 100%)!important;
+}
+.rewards-compact:has(.rewards-track i[style^="width:0"]) .rewards-track{
+  visibility:hidden!important;
+}
+
 .rewards-compact-foot{
   position:absolute!important;
   left:12px!important;
