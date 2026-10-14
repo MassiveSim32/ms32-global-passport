@@ -80,25 +80,32 @@ async function loadBaseAttendance(userId, eventId) {
   } catch { return 0; }
 }
 
+function parseFlightName(name='') {
+  const m = String(name).match(/^Flying Now · (.+?) to (.+?) · (.+)$/);
+  return {departure:m?.[1]||'AD HOC', destination:m?.[2]||'FLIGHT', aircraft:m?.[3]||'Aircraft'};
+}
+
 async function persistSession(s) {
   const p = await getPool();
   if (!p || !s) return;
   const total = Math.max(0, Math.round(sessionTotalMs(s)));
   const verified = total >= 30 * 60 * 1000;
+  const active = s.state === 'active';
   try {
     await p.query(`INSERT INTO passport_registrations
       (user_id,event_id,username,event_name,event_start,channel_id,attendance_ms,verified,claimed,active,updated_at)
-      VALUES($1,$2,$3,$4,$5,$6,$7,$8,$8,false,NOW())
+      VALUES($1,$2,$3,$4,$5,$6,$7,$8,$8,$9,NOW())
       ON CONFLICT (user_id,event_id) DO UPDATE SET
         username=EXCLUDED.username,
         event_name=EXCLUDED.event_name,
+        event_start=COALESCE(passport_registrations.event_start,EXCLUDED.event_start),
         channel_id=EXCLUDED.channel_id,
         attendance_ms=GREATEST(passport_registrations.attendance_ms,EXCLUDED.attendance_ms),
         verified=(passport_registrations.verified OR EXCLUDED.verified),
         claimed=(passport_registrations.claimed OR EXCLUDED.claimed),
-        active=false,
+        active=EXCLUDED.active,
         updated_at=NOW()`,
-      [s.userId,s.eventId,s.username,`Flying Now · ${s.departure} to ${s.destination} · ${s.aircraft}`,new Date(s.postedAt).toISOString(),FLYING_NOW_VOICE_CHANNEL_ID,total,verified]);
+      [s.userId,s.eventId,s.username,`Flying Now · ${s.departure} to ${s.destination} · ${s.aircraft}`,new Date(s.postedAt).toISOString(),FLYING_NOW_VOICE_CHANNEL_ID,total,verified,active]);
   } catch (e) {
     console.error('Flying Now lifecycle persistence failed:', e?.message || e);
   }
@@ -106,7 +113,7 @@ async function persistSession(s) {
 
 function activateSession(userId) {
   const s = sessions.get(String(userId));
-  if (!s || s.state !== 'pending') return s;
+  if (!s || (s.state !== 'pending' && s.state !== 'recovered')) return s;
   s.state = 'active';
   s.joinedAt = Date.now();
   s.activatedAt = s.joinedAt;
@@ -150,6 +157,39 @@ async function createPendingSession(user, body) {
   return s;
 }
 
+async function recoverSession(userId) {
+  const id = String(userId);
+  if (sessions.get(id)?.state === 'active') return sessions.get(id);
+  if (!FLYING_NOW_VOICE_CHANNEL_ID || currentVoiceChannel(id) !== FLYING_NOW_VOICE_CHANNEL_ID) return sessions.get(id) || null;
+  const p = await getPool();
+  if (!p) return null;
+  try {
+    const day = new Date().toISOString().slice(0,10);
+    const q = await p.query(`SELECT user_id,event_id,username,event_name,event_start,attendance_ms,active,updated_at
+      FROM passport_registrations
+      WHERE user_id=$1 AND event_id LIKE 'flying-now:%'
+        AND (active=true OR (event_id=$2 AND updated_at > NOW()-INTERVAL '2 hours'))
+      ORDER BY active DESC, updated_at DESC LIMIT 1`,[id,`flying-now:${day}`]);
+    if (!q.rowCount) return null;
+    const r = q.rows[0];
+    const parts = parseFlightName(r.event_name);
+    const s = {
+      userId:String(r.user_id),username:r.username||'',eventId:String(r.event_id),
+      departure:parts.departure,destination:parts.destination,aircraft:parts.aircraft,
+      postedAt:r.event_start ? new Date(r.event_start).getTime() : Date.now(),
+      state:'recovered',joinedAt:null,activatedAt:null,finishedAt:null,finishReason:null,
+      baseAttendanceMs:Number(r.attendance_ms||0),sessionAttendanceMs:0
+    };
+    sessions.set(id,s);
+    activateSession(id);
+    console.log(`Flying Now session recovered after restart at ${Math.floor(Number(r.attendance_ms||0)/60000)} min`);
+    return sessions.get(id);
+  } catch (e) {
+    console.error('Flying Now restart recovery failed:', e?.message || e);
+    return null;
+  }
+}
+
 let voiceMap = null;
 function currentVoiceChannel(userId) {
   return voiceMap?.get(String(userId)) || null;
@@ -163,7 +203,10 @@ Map.prototype.set = function flyingNowVoiceSet(key,value) {
     const old = this.get(key);
     if (old === FLYING_NOW_VOICE_CHANNEL_ID && value !== FLYING_NOW_VOICE_CHANNEL_ID) finishSession(key,'left_voice');
     const result = baseMapSet.call(this,key,value);
-    if (value === FLYING_NOW_VOICE_CHANNEL_ID) activateSession(key);
+    if (value === FLYING_NOW_VOICE_CHANNEL_ID) {
+      if (sessions.has(String(key))) activateSession(key);
+      else void recoverSession(key);
+    }
     return result;
   }
   return baseMapSet.call(this,key,value);
@@ -204,7 +247,7 @@ async function historyFor(userId) {
       verified:minutes>=30,claimed:minutes>=30,inVoice:s.state==='active',points:pointsForMinutes(minutes)
     };
     const i = rows.findIndex(x=>x.eventId===s.eventId);
-    if (i >= 0) rows[i] = current; else rows.push(current);
+    if (i >= 0) rows[i] = {...rows[i],...current,attendanceMinutes:Math.max(Number(rows[i].attendanceMinutes||0),minutes)}; else rows.push(current);
   }
   return rows;
 }
@@ -213,6 +256,7 @@ async function buildStatus(userId) {
   const id = String(userId);
   let s = sessions.get(id) || null;
   const voice = currentVoiceChannel(id);
+  if (!s && voice === FLYING_NOW_VOICE_CHANNEL_ID) s = await recoverSession(id);
   if (s?.state === 'pending' && voice === FLYING_NOW_VOICE_CHANNEL_ID) s = activateSession(id);
   if (s?.state === 'active' && voice !== FLYING_NOW_VOICE_CHANNEL_ID) s = finishSession(id,'left_voice');
   const history = await historyFor(id);
@@ -235,6 +279,7 @@ function installRoutes(app) {
   originalGet.call(app,'/api/flying-now/status',async(req,res)=>{
     const user = auth(req);
     if (!user) return res.status(401).json({error:'Please sign in with Discord first'});
+    res.set('Cache-Control','no-store, no-cache, must-revalidate, proxy-revalidate');
     res.json(await buildStatus(user.id));
   });
 
@@ -268,6 +313,12 @@ express.application.get = function flyingNowLifecycleGet(path,...handlers) {
   installRoutes(this);
   return originalGet.call(this,path,...handlers);
 };
+
+setInterval(()=>{
+  for (const s of sessions.values()) {
+    if (s?.state === 'active') void persistSession(s);
+  }
+},10000).unref?.();
 
 const originalSend = express.response.send;
 express.response.send = function flyingNowLifecycleSend(body) {
