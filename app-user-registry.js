@@ -1,0 +1,135 @@
+import crypto from 'node:crypto';
+import express from 'express';
+import { Pool } from 'pg';
+
+const originalGet = express.application.get;
+const originalSend = express.response.send;
+const installedApps = new WeakSet();
+let pool = null;
+let schemaReady = false;
+
+function parseCookies(header='') {
+  const out = {};
+  for (const part of String(header).split(';')) {
+    const i = part.indexOf('=');
+    if (i < 0) continue;
+    const k = part.slice(0, i).trim();
+    const v = part.slice(i + 1).trim();
+    if (k) out[k] = decodeURIComponent(v);
+  }
+  return out;
+}
+
+function authUser(req) {
+  const sessionUser = req.session?.user;
+  if (sessionUser?.id && sessionUser?.member) {
+    return {id:String(sessionUser.id), username:String(sessionUser.username || ''), avatar:sessionUser.avatar || null};
+  }
+  try {
+    const secret = process.env.SESSION_SECRET;
+    if (!secret) return null;
+    const raw = parseCookies(req.headers.cookie || '').ms32_auth;
+    if (!raw) return null;
+    const [payload, sig] = raw.split('.');
+    if (!payload || !sig) return null;
+    const expected = crypto.createHmac('sha256', secret).update(payload).digest('base64url');
+    const a = Buffer.from(sig), b = Buffer.from(expected);
+    if (a.length !== b.length || !crypto.timingSafeEqual(a, b)) return null;
+    const user = JSON.parse(Buffer.from(payload, 'base64url').toString('utf8'));
+    if (!user?.id || !user?.member || Number(user.exp || 0) <= Date.now()) return null;
+    return {id:String(user.id), username:String(user.username || ''), avatar:user.avatar || null};
+  } catch { return null; }
+}
+
+function isAdmin(user) {
+  return !!(user?.id && process.env.ADMIN_DISCORD_ID && String(user.id) === String(process.env.ADMIN_DISCORD_ID));
+}
+
+async function getPool() {
+  if (!process.env.DATABASE_URL) return null;
+  if (!pool) pool = new Pool({connectionString:process.env.DATABASE_URL, ssl:{rejectUnauthorized:false}, max:2});
+  if (!schemaReady) {
+    await pool.query(`CREATE TABLE IF NOT EXISTS app_users (
+      user_id text PRIMARY KEY,
+      username text,
+      avatar text,
+      first_seen_at timestamptz NOT NULL DEFAULT NOW(),
+      last_seen_at timestamptz NOT NULL DEFAULT NOW()
+    )`);
+    await pool.query(`INSERT INTO app_users (user_id,username,first_seen_at,last_seen_at)
+      SELECT user_id,MAX(username),MIN(created_at),MAX(updated_at)
+      FROM passport_registrations
+      GROUP BY user_id
+      ON CONFLICT (user_id) DO UPDATE SET
+        username=COALESCE(EXCLUDED.username,app_users.username),
+        first_seen_at=LEAST(app_users.first_seen_at,EXCLUDED.first_seen_at),
+        last_seen_at=GREATEST(app_users.last_seen_at,EXCLUDED.last_seen_at)`);
+    schemaReady = true;
+  }
+  return pool;
+}
+
+async function trackUser(req) {
+  const user = authUser(req);
+  if (!user) return;
+  const db = await getPool();
+  if (!db) return;
+  await db.query(`INSERT INTO app_users (user_id,username,avatar,first_seen_at,last_seen_at)
+    VALUES ($1,$2,$3,NOW(),NOW())
+    ON CONFLICT (user_id) DO UPDATE SET
+      username=EXCLUDED.username,
+      avatar=COALESCE(EXCLUDED.avatar,app_users.avatar),
+      last_seen_at=NOW()`, [user.id,user.username || null,user.avatar || null]);
+}
+
+function installRoutes(app) {
+  if (installedApps.has(app)) return;
+  installedApps.add(app);
+  originalGet.call(app, '/api/admin/app-users', async (req,res) => {
+    const user = authUser(req);
+    if (!user) return res.status(401).json({error:'Not signed in'});
+    if (!isAdmin(user)) return res.status(403).json({error:'Admin access denied'});
+    try {
+      const db = await getPool();
+      if (!db) return res.json([]);
+      const q = await db.query(`SELECT
+          u.user_id AS "userId",
+          u.username,
+          u.first_seen_at AS "firstSeenAt",
+          u.last_seen_at AS "lastSeenAt",
+          COUNT(DISTINCT p.event_id)::int AS "flightRegistrations",
+          COUNT(*) FILTER (WHERE p.claimed=true AND p.verified=true)::int AS stamps
+        FROM app_users u
+        LEFT JOIN passport_registrations p ON p.user_id=u.user_id
+        GROUP BY u.user_id,u.username,u.first_seen_at,u.last_seen_at
+        ORDER BY LOWER(COALESCE(u.username,'')),u.user_id`);
+      res.set('Cache-Control','no-store');
+      res.json(q.rows);
+    } catch (e) {
+      console.error('App user registry load failed:', e?.message || e);
+      res.status(500).json({error:'Could not load registered pilots'});
+    }
+  });
+}
+
+express.application.get = function appUserRegistryGet(path, ...handlers) {
+  installRoutes(this);
+  if (path === '/api/me' && handlers.length) {
+    const i = handlers.length - 1;
+    const handler = handlers[i];
+    handlers[i] = async function trackedMe(req,res,next) {
+      try { await trackUser(req); } catch (e) { console.error('App user tracking failed:', e?.message || e); }
+      return handler(req,res,next);
+    };
+  }
+  return originalGet.call(this, path, ...handlers);
+};
+
+express.response.send = function appUserAdminSend(body) {
+  if (this.req?.path === '/admin' && typeof body === 'string' && body.includes('</body>') && !body.includes('/admin-app-users.js')) {
+    body = body.replace('</body>', '<script src="/admin-app-users.js?v=20261014-1"></script></body>');
+  }
+  return originalSend.call(this, body);
+};
+
+getPool().catch(e => console.error('App user registry init failed:', e?.message || e));
