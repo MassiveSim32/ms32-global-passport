@@ -11,6 +11,7 @@
     '/bush-location-fix.js?v=20261014-4',
     '/airliner-location-fix.js?v=20261014-4',
     '/flying-now.js?v=20261014-4',
+    '/dynamic-home-flight-hero.js?v=20261014-1',
     '/home-feature-tiles.js?v=20261014-3',
     '/passport-pages.js?v=20261014-5',
     '/passport-history.js?v=20261014-2',
