@@ -33,11 +33,12 @@
       return merged.filter(e=>{
         const id=String(e?.id||'');
         if(!id||seen.has(id))return false;
-        // Persistent Passport history is authoritative for already-issued stamps.
-        // Live status remains authoritative for a stamp claimed in the current
-        // session before the next history refresh. This prevents a transient
-        // five-second status poll from making a historical stamp disappear.
-        const claimed=historyIds.has(id)||!!statuses?.[id]?.claimed;
+        // Flying Now stamps must exist in persistent Passport history. This keeps
+        // deleted/superseded ad-hoc records from being resurrected by stale
+        // allEvents/statuses data in an already-open browser session.
+        const claimed=id.startsWith('flying-now:')
+          ? historyIds.has(id)
+          : (historyIds.has(id)||!!statuses?.[id]?.claimed);
         if(!claimed)return false;
         seen.add(id);
         return true;
