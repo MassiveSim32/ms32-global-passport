@@ -1,5 +1,5 @@
 (()=>{
-  const src='/assets/sponsors/a2a.png?v=20261014-1';
+  const src='/images/sponsors/a2a.png?v=20261014-2';
   const fix=()=>{
     const img=[...document.querySelectorAll('#major-sponsors img')].find(el=>el.alt==='A2A Simulations');
     if(!img)return;
