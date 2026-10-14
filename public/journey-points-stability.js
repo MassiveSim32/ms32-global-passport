@@ -7,17 +7,43 @@
     {name:'Global Elite',min:5000}
   ];
 
-  const pilotKey=()=>{
-    const passport=(document.getElementById('profileNo')?.textContent||document.getElementById('passportNo')?.textContent||'').trim();
-    const name=(document.getElementById('profileName')?.textContent||'pilot').trim();
-    return `ms32:journey-points:${passport||name}`;
-  };
-
+  // Keep earned rewards stable within the current session, but never persist a
+  // guessed/high-water total in localStorage. The previous implementation did
+  // that and could permanently pin an incorrect value such as 200 points.
+  const bankedEarned=new Map();
   let applying=false;
 
-  function parsePoints(text){
-    const n=Number(String(text||'').replace(/[^0-9]/g,''));
-    return Number.isFinite(n)?n:0;
+  function isJourneyEvent(id){
+    return !!id && !String(id).startsWith('flying-now:');
+  }
+
+  function pointsFor(status){
+    // Journey Points are earned by completed Passport flights only. A future
+    // registration, manually seeded attendance or Flying Now bonus stamp must
+    // not award Journey Points.
+    if(!status?.registered || !status.claimed || !status.verified) return 0;
+    const m=Number(status.attendanceMinutes||0);
+    const threshold=Number(status.thresholdMinutes||30);
+    if(m<threshold) return 0;
+    if(m>=120) return 300;
+    if(m>=60) return 200;
+    return 100;
+  }
+
+  function authoritativePoints(){
+    const source=(typeof statuses==='object'&&statuses)?statuses:{};
+    const seen=new Set();
+
+    for(const [id,s] of Object.entries(source)){
+      if(!isJourneyEvent(id)||!s)continue;
+      seen.add(id);
+      const earned=pointsFor(s);
+      if(earned>0) bankedEarned.set(id,Math.max(Number(bankedEarned.get(id)||0),earned));
+    }
+
+    let total=0;
+    for(const value of bankedEarned.values()) total+=Number(value||0);
+    return total;
   }
 
   function tierFor(points){
@@ -25,14 +51,6 @@
     for(let i=0;i<tiers.length;i++) if(points>=tiers[i].min){current=tiers[i];next=tiers[i+1]||null}
     const pct=next?Math.max(0,Math.min(100,(points/next.min)*100)):100;
     return {current,next,pct};
-  }
-
-  function savedMax(){
-    try{return Math.max(0,Number(localStorage.getItem(pilotKey())||0)||0)}catch{return 0}
-  }
-
-  function saveMax(points){
-    try{localStorage.setItem(pilotKey(),String(points))}catch{}
   }
 
   function paint(card,points){
@@ -55,27 +73,31 @@
       const next=profile.querySelector('.rewards-next');
       if(p)p.textContent=points.toLocaleString();
       if(pt)pt.textContent=tier.current.name;
-      if(pb)pb.style.width=`${tier.pct}%`;
+      if(pb)pb.style.width=`${points<=0?0:tier.pct}%`;
       if(next)next.innerHTML=`<span>${tier.next?`Progress to <strong>${tier.next.name}</strong>`:'Top tier achieved'}</span><span>${tier.next?`${remaining.toLocaleString()} points to go`:'MAX STATUS'}</span>`;
     }
+  }
+
+  function clearLegacyCache(){
+    try{
+      for(let i=localStorage.length-1;i>=0;i--){
+        const key=localStorage.key(i);
+        if(key&&key.startsWith('ms32:journey-points:')) localStorage.removeItem(key);
+      }
+    }catch{}
   }
 
   function stabilize(){
     if(applying)return;
     const card=document.getElementById('rewardsHome');
-    const pointsEl=card?.querySelector('.rewards-compact-points');
-    if(!card||!pointsEl)return;
-
-    const current=parsePoints(pointsEl.textContent);
-    const max=Math.max(current,savedMax());
-    if(max!==savedMax())saveMax(max);
-    if(current<max){
-      applying=true;
-      paint(card,max);
-      requestAnimationFrame(()=>{applying=false});
-    }
+    if(!card)return;
+    const points=authoritativePoints();
+    applying=true;
+    paint(card,points);
+    requestAnimationFrame(()=>{applying=false});
   }
 
+  clearLegacyCache();
   const observer=new MutationObserver(stabilize);
   observer.observe(document.documentElement,{subtree:true,childList:true,characterData:true,attributes:true,attributeFilter:['style']});
   setInterval(stabilize,1000);
