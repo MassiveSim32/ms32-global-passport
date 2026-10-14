@@ -22,6 +22,7 @@
     '/taogs-sponsor.js?v=20261015-1',
     '/fss-sponsor.js?v=20261015-1',
     '/transparent-sponsor-tiles.js?v=20261015-1',
+    '/a2a-new-logo.js?v=20261015-1',
     '/passport-pages.js?v=20261014-7',
     '/passport-history.js?v=20261014-2',
     '/globe-coming-soon.js?v=20261014-1',
