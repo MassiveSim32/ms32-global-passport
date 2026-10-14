@@ -78,8 +78,23 @@
   let lastProfileSignature='';
   const bankedRewards=new Map();
 
-  function pointsForStatus(s){
-    if(!s?.registered) return 0;
+  function eventFor(id){
+    try{
+      const events=[...(Array.isArray(allEvents)?allEvents:[]),...(Array.isArray(window.passportHistoryEvents)?window.passportHistoryEvents:[])];
+      return events.find(e=>String(e?.id||'')===String(id))||null;
+    }catch{return null}
+  }
+
+  function isEligibleNow(id){
+    if(String(id||'').startsWith('flying-now:'))return true;
+    const event=eventFor(id);
+    if(!event?.start)return true;
+    const start=new Date(event.start).getTime();
+    return !Number.isFinite(start)||start<=Date.now();
+  }
+
+  function pointsForStatus(id,s){
+    if(!s?.registered||!isEligibleNow(id)) return 0;
     const m=Number(s.attendanceMinutes||0);
     const threshold=Number(s.thresholdMinutes||30);
     if(m<threshold) return 0;
@@ -96,16 +111,14 @@
     for(const [id,s] of Object.entries(source)){
       if(!s)continue;
       seen.add(id);
-      const current={...s,attendanceMinutes:Number(s.attendanceMinutes||0)};
+      const current={...s,eventId:id,attendanceMinutes:Number(s.attendanceMinutes||0)};
       const banked=bankedRewards.get(id);
 
-      // Passport/claimed rewards are historical earnings. Other pollers can
-      // temporarily replace the shared status with a partial snapshot, so keep
-      // the strongest claimed snapshot instead of letting the total oscillate.
-      if(current.claimed){
+      if(current.claimed&&isEligibleNow(id)){
         const next={
           ...banked,
           ...current,
+          eventId:id,
           registered:true,
           claimed:true,
           verified:!!(current.verified||banked?.verified),
@@ -118,6 +131,7 @@
       if(banked){
         rows.push({
           ...current,
+          eventId:id,
           registered:true,
           claimed:true,
           verified:!!(current.verified||banked.verified),
@@ -130,16 +144,17 @@
     }
 
     for(const [id,s] of bankedRewards){
-      if(!seen.has(id))rows.push(s);
+      if(!seen.has(id))rows.push({...s,eventId:id});
     }
     return rows;
   }
 
   function totals(){
     const rows=stableRows();
-    const points=rows.reduce((n,s)=>n+pointsForStatus(s),0);
-    const minutes=rows.reduce((n,s)=>n+(s.registered?Number(s.attendanceMinutes||0):0),0);
-    const flights=rows.filter(s=>s.registered&&(s.verified||s.claimed||Number(s.attendanceMinutes||0)>=Number(s.thresholdMinutes||30))).length;
+    const eligible=rows.filter(s=>isEligibleNow(s.eventId));
+    const points=eligible.reduce((n,s)=>n+pointsForStatus(s.eventId,s),0);
+    const minutes=eligible.reduce((n,s)=>n+(s.registered?Number(s.attendanceMinutes||0):0),0);
+    const flights=eligible.filter(s=>s.registered&&(s.verified||s.claimed||Number(s.attendanceMinutes||0)>=Number(s.thresholdMinutes||30))).length;
     return {points,minutes,flights};
   }
 
