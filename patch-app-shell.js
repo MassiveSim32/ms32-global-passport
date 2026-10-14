@@ -75,13 +75,14 @@ const oldLoaders = [
   '<script src="/full-app-loader.js?v=20261014-rc11"></script>',
   '<script src="/full-app-loader.js?v=20261014-rc12"></script>',
   '<script src="/full-app-loader.js?v=20261014-rc13"></script>',
-  '<script src="/full-app-loader.js?v=20261014-rc14"></script>'
+  '<script src="/full-app-loader.js?v=20261014-rc14"></script>',
+  '<script src="/full-app-loader.js?v=20261014-rc15"></script>'
 ];
-const loader = '<script src="/full-app-loader.js?v=20261014-rc15"></script>';
+const loader = '<script src="/full-app-loader.js?v=20261014-rc16"></script>';
 for (const oldLoader of oldLoaders) {
   if (html.includes(oldLoader)) html = html.replace(oldLoader, loader);
 }
-if (!html.includes('/full-app-loader.js?v=20261014-rc15')) html = html.replace('</html>', loader + '</html>');
+if (!html.includes('/full-app-loader.js?v=20261014-rc16')) html = html.replace('</html>', loader + '</html>');
 
 await fs.writeFile(file,html,'utf8');
 console.log('App shell patched to Massive Simulations 32 Companion App v1.0.0-rc.1');
