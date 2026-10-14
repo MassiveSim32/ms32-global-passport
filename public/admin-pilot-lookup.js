@@ -1,203 +1,52 @@
 (()=>{
-  const overviewBase=typeof showOverview==='function'?showOverview:null;
+  // Keep admin reporting aligned with the same rule used by the pilot Passport:
+  // a stamp is only considered issued when it is both claimed and verified.
+  const baseApi=typeof api==='function'?api:null;
+  if(!baseApi)return;
 
-  function openAdminTab(tab,preset=''){
-    window.adminPilotPreset=preset;
-    const button=document.querySelector(`.tabs button[data-tab="${tab}"]`);
-    if(button)button.click();
+  function normalizePilotRows(rows){
+    if(!Array.isArray(rows))return rows;
+    return rows.map(r=>{
+      const legacyClaimed=!!(r?.claimed&&!r?.verified);
+      return {...r,legacyClaimed,claimed:!!(r?.claimed&&r?.verified)};
+    });
   }
 
-  if(overviewBase){
-    showOverview=function(o){
-      overviewBase(o);
-      if(!document.getElementById('adminMetricLinkStyle')){
-        const style=document.createElement('style');
-        style.id='adminMetricLinkStyle';
-        style.textContent=`
-          .metric.admin-metric-link{cursor:pointer;position:relative;overflow:hidden;transition:transform .16s ease,border-color .16s ease,box-shadow .16s ease,background .16s ease}
-          .metric.admin-metric-link:hover,.metric.admin-metric-link:focus-visible{transform:translateY(-2px);outline:none;box-shadow:0 10px 24px #0005}
-          .metric.admin-metric-link:active{transform:translateY(0)}
-          .metric.admin-metric-link:after{content:'VIEW →';display:block;margin-top:8px;font-size:8px;font-weight:900;letter-spacing:.1em;color:#7898ae}
-          .metric.admin-metric-link[data-kind="events"]{background:radial-gradient(circle at top right,#17486d,#10283c 48%,#0b1725);border-color:#2e6f9b}
-          .metric.admin-metric-link[data-kind="registered"]{background:radial-gradient(circle at top right,#45305f,#28213c 48%,#0b1725);border-color:#6d5790}
-          .metric.admin-metric-link[data-kind="voice"]{background:radial-gradient(circle at top right,#174f49,#102f31 48%,#0b1725);border-color:#2d756b}
-          .metric.admin-metric-link[data-kind="stamps"]{background:radial-gradient(circle at top right,#5a3417,#2b1e17 48%,#0b1725);border-color:#8b5a2b}
-        `;
-        document.head.appendChild(style);
-      }
-      const cards=[...content.querySelectorAll('.grid .metric')];
-      const actions=[
-        {kind:'events',label:'View upcoming events',run:()=>openAdminTab('events')},
-        {kind:'registered',label:'View registered pilots',run:()=>openAdminTab('pilots','registered')},
-        {kind:'voice',label:'View pilots in verified voice',run:()=>openAdminTab('pilots','voice')},
-        {kind:'stamps',label:'View claimed passport stamps',run:()=>openAdminTab('pilots','stamps')}
-      ];
-      cards.forEach((card,i)=>{
-        const a=actions[i];if(!a)return;
-        card.classList.add('admin-metric-link');
-        card.dataset.kind=a.kind;
-        card.setAttribute('role','button');
-        card.setAttribute('tabindex','0');
-        card.setAttribute('aria-label',a.label);
-        card.addEventListener('click',a.run);
-        card.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();a.run();}});
-      });
-    };
-  }
+  api=async function adminConsistentApi(url,opt){
+    const data=await baseApi(url,opt);
 
-  function renderPilotCard(p){
-    const remaining=p.tier.next?Math.max(0,p.tier.next.min-p.points):0;
-    const historyId=`history-${p.userId}`;
-    return `
-      <div class="card item">
-        <div style="display:flex;justify-content:space-between;gap:10px;align-items:flex-start">
-          <div><h3 style="margin-bottom:2px">${esc(p.username)}</h3><p style="margin-top:0">Discord ${esc(p.userId)}</p></div>
-          <strong class="${p.inVoice?'ok':''}">${p.inVoice?'IN VOICE ✓':''}</strong>
-        </div>
-        <div class="row"><span>Frequent Flyer</span><strong>${esc(p.tier.current.name)} · ${p.points.toLocaleString()} pts</strong></div>
-        <div style="height:8px;background:#142536;border:1px solid #2b4355;border-radius:99px;overflow:hidden;margin:8px 0 5px"><i style="display:block;height:100%;width:${p.tier.pct}%;background:linear-gradient(90deg,#ff9f2f,#ffd27a)"></i></div>
-        <p>${p.tier.next?`${remaining.toLocaleString()} pts to ${esc(p.tier.next.name)}`:'Top tier achieved'}</p>
-        <div class="row"><span>Passport stamps</span><strong class="ok">${p.stamps}</strong></div>
-        <div class="row"><span>Verified flights</span><strong>${p.verifiedFlights}</strong></div>
-        <div class="row"><span>Verified comms</span><strong>${fmtMinutes(p.minutes)}</strong></div>
-        <button class="full" data-history="${historyId}" style="margin-top:10px">View flight history</button>
-        <div id="${historyId}" style="display:none;margin-top:10px">
-          ${p.rows.slice().sort((a,b)=>new Date(b.start||0)-new Date(a.start||0)).map((r)=>`
-            <div style="border-top:1px solid #193247;padding:10px 0">
-              <strong>${esc(r.eventName)}</strong>
-              <p>${esc(fmt(r.start))}</p>
-              <div class="row"><span>Attendance</span><strong>${r.attendanceMinutes} min</strong></div>
-              <div class="row"><span>Points</span><strong>${pointsFor(r)} pts</strong></div>
-              <div class="row"><span>Passport</span><strong class="${r.claimed?'ok':r.verified?'warn':''}">${r.claimed?'STAMPED ✓':r.verified?'STAMP READY':'Tracking'}</strong></div>
-              <div class="actions">
-                <button data-adjust data-user="${esc(r.userId)}" data-event="${esc(r.eventId)}">Adjust time</button>
-                <button data-stamp data-user="${esc(r.userId)}" data-event="${esc(r.eventId)}" data-action="${r.claimed?'revoke':'award'}" class="${r.claimed?'revoke':'award'}">${r.claimed?'Revoke stamp':'Award stamp'}</button>
-              </div>
-            </div>`).join('')}
-        </div>
-      </div>`;
-  }
-
-  function currentRegistrationCard(p){
-    const rows=p.rows.slice().sort((a,b)=>new Date(a.start||0)-new Date(b.start||0));
-    return `
-      <div class="card item">
-        <div style="display:flex;justify-content:space-between;gap:10px;align-items:flex-start">
-          <div><h3 style="margin-bottom:2px">${esc(p.username)}</h3><p style="margin-top:0">Discord ${esc(p.userId)}</p></div>
-          <strong class="${p.inVoice?'ok':''}">${p.inVoice?'IN VOICE ✓':'REGISTERED'}</strong>
-        </div>
-        ${rows.map(r=>`<div style="border-top:1px solid #193247;padding:10px 0 2px">
-          <strong>${esc(r.eventName)}</strong>
-          <p style="margin:4px 0">${esc(fmt(r.start))}</p>
-          <div class="row"><span>Attendance</span><strong>${Number(r.attendanceMinutes||0)} min</strong></div>
-          <div class="row"><span>Status</span><strong class="${r.inVoice?'ok':r.verified?'warn':''}">${r.inVoice?'IN VOICE ✓':r.verified?'STAMP READY':'REGISTERED'}</strong></div>
-        </div>`).join('')}
-      </div>`;
-  }
-
-  function stampedPilotCard(p){
-    const claimed=p.rows.filter(r=>r.claimed).sort((a,b)=>new Date(b.start||0)-new Date(a.start||0));
-    return `
-      <div class="card item">
-        <div style="display:flex;justify-content:space-between;gap:10px;align-items:flex-start">
-          <div><h3 style="margin-bottom:2px">${esc(p.username)}</h3><p style="margin-top:0">Discord ${esc(p.userId)}</p></div>
-          <strong class="ok">${claimed.length} STAMP${claimed.length===1?'':'S'}</strong>
-        </div>
-        ${claimed.map(r=>`<div style="border-top:1px solid #193247;padding:10px 0 2px">
-          <strong>${esc(r.eventName)}</strong>
-          <p style="margin:4px 0">${esc(fmt(r.start))}</p>
-          <div class="row"><span>Attendance</span><strong>${Number(r.attendanceMinutes||0)} min</strong></div>
-          <div class="row"><span>Passport</span><strong class="ok">STAMPED ✓</strong></div>
-          <div class="actions"><button data-stamp data-user="${esc(r.userId)}" data-event="${esc(r.eventId)}" data-action="revoke" class="revoke">Revoke stamp</button></div>
-        </div>`).join('')}
-      </div>`;
-  }
-
-  showPilots=function(rows){
-    const pilots=groupPilots(rows);
-    content.innerHTML=`
-      <div class="card" style="padding:14px;margin-top:0">
-        <div class="eyebrow">Pilot Lookup</div>
-        <h3 style="margin:5px 0 4px">Check a pilot's current status</h3>
-        <p style="margin:0 0 10px;color:var(--muted);font-size:11px">Search by Discord display name or Discord user ID.</p>
-        <button id="showCurrentRegistrations" class="full" style="margin:0 0 10px">SHOW CURRENTLY REGISTERED PILOTS</button>
-        <input id="pilotSearch" class="search" placeholder="Enter pilot name or Discord ID…" autocomplete="off" style="margin-bottom:0">
-      </div>
-      <div id="pilotRows"><div class="empty">Enter a pilot name or Discord ID to look them up, or show current flight registrations.</div></div>`;
-
-    const box=document.getElementById('pilotRows');
-    const search=document.getElementById('pilotSearch');
-    const currentButton=document.getElementById('showCurrentRegistrations');
-
-    const bindResultActions=()=>{
-      box.querySelectorAll('[data-history]').forEach((b)=>b.addEventListener('click',()=>{
-        const panel=document.getElementById(b.dataset.history);
-        const open=panel.style.display!=='none';
-        panel.style.display=open?'none':'block';
-        b.textContent=open?'View flight history':'Hide flight history';
-      }));
-      box.querySelectorAll('[data-adjust]').forEach((b)=>b.addEventListener('click',()=>adjust(b.dataset.user,b.dataset.event)));
-      box.querySelectorAll('[data-stamp]').forEach((b)=>b.addEventListener('click',()=>stamp(b.dataset.user,b.dataset.event,b.dataset.action)));
-    };
-
-    const render=()=>{
-      const q=search.value.trim().toLowerCase();
-      if(!q){
-        box.innerHTML='<div class="empty">Enter a pilot name or Discord ID to look them up, or show current flight registrations.</div>';
-        return;
-      }
-      const filtered=pilots.filter((p)=>`${p.username} ${p.userId}`.toLowerCase().includes(q));
-      if(!filtered.length){
-        box.innerHTML='<div class="empty">No current record found for that pilot.</div>';
-        return;
-      }
-      box.innerHTML=filtered.map(renderPilotCard).join('');
-      bindResultActions();
-    };
-
-    const showRegistered=async()=>{
-      currentButton.disabled=true;
-      currentButton.textContent='LOADING CURRENT REGISTRATIONS…';
-      search.value='';
-      try{
-        const events=await api('/api/admin/events');
-        const ids=new Set(events.map(e=>String(e.id||e.eventId||'')).filter(Boolean));
-        const names=new Set(events.map(e=>String(e.name||'')).filter(Boolean));
-        const currentRows=rows.filter(r=>ids.has(String(r.eventId))||names.has(String(r.eventName||'')));
-        const currentPilots=groupPilots(currentRows);
-        box.innerHTML=currentPilots.length
-          ? `<div class="card" style="padding:10px 14px"><div class="row"><span>Currently registered pilots</span><strong class="ok">${currentPilots.length}</strong></div></div>${currentPilots.map(currentRegistrationCard).join('')}`
-          : '<div class="empty">No pilots are currently registered for upcoming flights.</div>';
-      }catch(e){
-        box.innerHTML=`<div class="card bad">${esc(e.message)}</div>`;
-      }finally{
-        currentButton.disabled=false;
-        currentButton.textContent='SHOW CURRENTLY REGISTERED PILOTS';
-      }
-    };
-
-    currentButton.addEventListener('click',showRegistered);
-    search.addEventListener('input',render);
-
-    const preset=String(window.adminPilotPreset||'');
-    window.adminPilotPreset='';
-    if(preset==='registered'){
-      setTimeout(showRegistered,0);
-    }else if(preset==='voice'){
-      const active=pilots.filter(p=>p.inVoice);
-      box.innerHTML=active.length
-        ? `<div class="card" style="padding:10px 14px"><div class="row"><span>Pilots in verified voice</span><strong class="ok">${active.length}</strong></div></div>${active.map(renderPilotCard).join('')}`
-        : '<div class="empty">No pilots are currently in verified voice.</div>';
-      bindResultActions();
-    }else if(preset==='stamps'){
-      const stamped=pilots.filter(p=>p.stamps>0);
-      const total=stamped.reduce((n,p)=>n+p.stamps,0);
-      box.innerHTML=stamped.length
-        ? `<div class="card" style="padding:10px 14px"><div class="row"><span>Claimed passport stamps</span><strong class="ok">${total}</strong></div></div>${stamped.map(stampedPilotCard).join('')}`
-        : '<div class="empty">No passport stamps have been claimed yet.</div>';
-      bindResultActions();
-    }else{
-      setTimeout(()=>search.focus(),50);
+    if(url==='/api/admin/pilots'){
+      return normalizePilotRows(data);
     }
+
+    if(url==='/api/admin/overview'&&data&&typeof data==='object'){
+      try{
+        const pilots=normalizePilotRows(await baseApi('/api/admin/pilots'))||[];
+        const stamps=pilots.filter(r=>r.claimed).length;
+        const stampReady=pilots.filter(r=>r.verified&&!r.claimed&&!r.legacyClaimed).length;
+        return {...data,stamps,stampReady};
+      }catch{return data}
+    }
+
+    if(url==='/api/admin/events'&&Array.isArray(data)){
+      try{
+        const pilots=normalizePilotRows(await baseApi('/api/admin/pilots'))||[];
+        return data.map(e=>{
+          const eventId=String(e?.id||e?.eventId||'');
+          const eventRows=pilots.filter(r=>String(r?.eventId||'')===eventId);
+          return {
+            ...e,
+            stamped:eventRows.filter(r=>r.claimed).length,
+            ready:eventRows.filter(r=>r.verified&&!r.claimed&&!r.legacyClaimed).length
+          };
+        });
+      }catch{return data}
+    }
+
+    return data;
   };
+
+  // The core admin page may have started its first request before this helper
+  // loaded. Refresh the active tab once so the corrected values are immediate.
+  setTimeout(()=>{try{if(typeof load==='function')load()}catch{}},0);
 })();
