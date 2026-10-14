@@ -4,8 +4,8 @@
   // the server wrapper, so skip individual files that are already present rather
   // than aborting the whole loader.
   const files=[
-    '/rewards-prototype.js?v=20261014-rc4',
-    '/journey-points-stability.js?v=20261014-2',
+    '/journey-status-sanitizer.js?v=20261014-1',
+    '/rewards-prototype.js?v=20261014-rc5',
     '/dual-clock.js?v=20261014-4',
     '/stamp-style-v2.js?v=20261014-4',
     '/bush-location-fix.js?v=20261014-4',
