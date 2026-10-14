@@ -1,9 +1,26 @@
 import fs from 'node:fs/promises';
 import path from 'node:path';
+import { createHash } from 'node:crypto';
 import { fileURLToPath } from 'node:url';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const file = path.join(__dirname,'public','index.html');
+
+const a2aPartFiles = [
+  'a2a.part01.b64',
+  'a2a.part02.b64',
+  'a2a.part03.b64',
+  'a2a.part04.b64',
+  'a2a.part05.b64'
+].map(name => path.join(__dirname,'assets','a2a',name));
+const a2aBase64 = (await Promise.all(a2aPartFiles.map(part => fs.readFile(part,'utf8')))).join('').replace(/\s+/g,'');
+const a2aPng = Buffer.from(a2aBase64,'base64');
+const a2aHash = createHash('sha256').update(a2aPng).digest('hex');
+const expectedA2aHash = 'e75fa32edf9d2b62ca12933f1967e3beae14a95a33c669261e8610816d74c5f2';
+if (a2aHash !== expectedA2aHash) throw new Error(`A2A sponsor image checksum mismatch: ${a2aHash}`);
+const sponsorDir = path.join(__dirname,'public','images','sponsors');
+await fs.mkdir(sponsorDir,{recursive:true});
+await fs.writeFile(path.join(sponsorDir,'a2a.png'),a2aPng);
 
 let html = await fs.readFile(file,'utf8');
 
@@ -57,13 +74,14 @@ const oldLoaders = [
   '<script src="/full-app-loader.js?v=20261014-rc10"></script>',
   '<script src="/full-app-loader.js?v=20261014-rc11"></script>',
   '<script src="/full-app-loader.js?v=20261014-rc12"></script>',
-  '<script src="/full-app-loader.js?v=20261014-rc13"></script>'
+  '<script src="/full-app-loader.js?v=20261014-rc13"></script>',
+  '<script src="/full-app-loader.js?v=20261014-rc14"></script>'
 ];
-const loader = '<script src="/full-app-loader.js?v=20261014-rc14"></script>';
+const loader = '<script src="/full-app-loader.js?v=20261014-rc15"></script>';
 for (const oldLoader of oldLoaders) {
   if (html.includes(oldLoader)) html = html.replace(oldLoader, loader);
 }
-if (!html.includes('/full-app-loader.js?v=20261014-rc14')) html = html.replace('</html>', loader + '</html>');
+if (!html.includes('/full-app-loader.js?v=20261014-rc15')) html = html.replace('</html>', loader + '</html>');
 
 await fs.writeFile(file,html,'utf8');
 console.log('App shell patched to Massive Simulations 32 Companion App v1.0.0-rc.1');
