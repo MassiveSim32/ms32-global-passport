@@ -33,7 +33,7 @@ function auth(req) {
     const expected = crypto.createHmac('sha256', secret).update(payload).digest('base64url');
     const a = Buffer.from(sig), b = Buffer.from(expected);
     if (a.length !== b.length || !crypto.timingSafeEqual(a, b)) return null;
-    const user = JSON.parse(Buffer.from(payload, 'base64url').toString('utf8'));
+    const user = JSON.parse(Buffer.from(payload,'base64url').toString('utf8'));
     if (!user?.id || !user?.username || !user?.member || Number(user.exp || 0) <= Date.now()) return null;
     return {id:String(user.id), username:String(user.username).slice(0,80)};
   } catch { return null; }
@@ -165,11 +165,14 @@ async function recoverSession(userId) {
   if (!p) return null;
   try {
     const day = new Date().toISOString().slice(0,10);
+    const todayEventId = `flying-now:${day}`;
+    // Never recover a previous-day Flying Now row just because it was left
+    // active by an older deploy. The Discord voice state may span midnight,
+    // but the Companion App's current flight belongs to today's event row.
     const q = await p.query(`SELECT user_id,event_id,username,event_name,event_start,attendance_ms,active,updated_at
       FROM passport_registrations
-      WHERE user_id=$1 AND event_id LIKE 'flying-now:%'
-        AND (active=true OR (event_id=$2 AND updated_at > NOW()-INTERVAL '2 hours'))
-      ORDER BY active DESC, updated_at DESC LIMIT 1`,[id,`flying-now:${day}`]);
+      WHERE user_id=$1 AND event_id=$2
+      ORDER BY updated_at DESC LIMIT 1`,[id,todayEventId]);
     if (!q.rowCount) return null;
     const r = q.rows[0];
     const parts = parseFlightName(r.event_name);
