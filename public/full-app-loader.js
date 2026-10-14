@@ -17,7 +17,6 @@
     '/ybrm-airfield-weather.js?v=20261014-1',
     '/event-sponsors.js?v=20261014-3',
     '/nza-sponsor.js?v=20261014-1',
-    '/a2a-sponsor-fix.js?v=20261014-2',
     '/hangar713-sponsor.js?v=20261014-1',
     '/taogs-sponsor.js?v=20261015-1',
     '/fss-sponsor.js?v=20261015-1',
