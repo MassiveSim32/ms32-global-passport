@@ -25,11 +25,22 @@
 
   function claimedEvents(){
     try{
-      const merged=[...(Array.isArray(window.passportHistoryEvents)?window.passportHistoryEvents:[]),...(Array.isArray(allEvents)?allEvents:[])];
+      const history=Array.isArray(window.passportHistoryEvents)?window.passportHistoryEvents:[];
+      const live=Array.isArray(allEvents)?allEvents:[];
+      const historyIds=new Set(history.filter(Boolean).map(e=>String(e.id||'')));
+      const merged=[...history,...live];
       const seen=new Set();
       return merged.filter(e=>{
-        if(!e?.id||seen.has(e.id)||!statuses[e.id]?.claimed)return false;
-        seen.add(e.id);return true;
+        const id=String(e?.id||'');
+        if(!id||seen.has(id))return false;
+        // Persistent Passport history is authoritative for already-issued stamps.
+        // Live status remains authoritative for a stamp claimed in the current
+        // session before the next history refresh. This prevents a transient
+        // five-second status poll from making a historical stamp disappear.
+        const claimed=historyIds.has(id)||!!statuses?.[id]?.claimed;
+        if(!claimed)return false;
+        seen.add(id);
+        return true;
       }).sort((a,b)=>new Date(a.start||0)-new Date(b.start||0));
     }catch{return[]}
   }
