@@ -49,6 +49,13 @@ function rowToRecord(row) {
   };
 }
 
+function restorePersistedKey(map, mapKey) {
+  if (!map || typeof mapKey !== 'string' || nativeGet.call(map, mapKey) !== undefined) return;
+  const row = persistedRows.find(r => key(r.user_id, r.event_id) === mapKey);
+  if (!row) return;
+  nativeSet.call(map, mapKey, rowToRecord(row));
+}
+
 function eventWindow(record) {
   const start = new Date(record?.start || 0).getTime();
   if (!Number.isFinite(start) || start <= 0) return null;
@@ -71,9 +78,6 @@ function durableAttendance(record) {
 }
 
 function resumableRecord(record, now = Date.now()) {
-  // Flying Now has its own durable lifecycle and must never be resumed by the
-  // generic scheduled-event persistence bridge. Mixing the two systems can
-  // attach the live Discord timer to a stale previous-day Flying Now row.
   if (isFlyingNow(record)) return false;
   if (!record?.active || !record.channelId || !voiceChannelsMap) return false;
   if (nativeGet.call(voiceChannelsMap, String(record.userId)) !== record.channelId) return false;
@@ -196,7 +200,9 @@ Map.prototype.get = function persistentGet(mapKey) {
   if (registrationRouteDepth > 0 && typeof mapKey === 'string' && mapKey.includes(':')) {
     if (!registrationsMap) {
       hydrate(this);
-    } else if (this !== registrationsMap && !voiceStartsMap) {
+    } else if (this === registrationsMap) {
+      restorePersistedKey(this, mapKey);
+    } else if (!voiceStartsMap) {
       voiceStartsMap = this;
       resumeActiveVoiceRecords();
       const record = nativeGet.call(registrationsMap, mapKey);
