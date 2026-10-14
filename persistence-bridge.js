@@ -129,8 +129,7 @@ async function loadRows() {
       SELECT user_id,event_id,username,event_name,event_start,channel_id,
              attendance_ms,verified,claimed,active
       FROM passport_registrations
-      WHERE (active = TRUE OR claimed = TRUE)
-        AND event_id NOT LIKE 'flying-now:%'
+      WHERE active = TRUE OR claimed = TRUE OR event_id LIKE 'flying-now:%'
       ORDER BY event_start NULLS LAST
     `);
     persistedRows = result.rows;
