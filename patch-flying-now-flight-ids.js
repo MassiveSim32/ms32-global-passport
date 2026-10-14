@@ -65,7 +65,7 @@ async function patchLegacyDailyStamp(){
     '        const start = new Date().toISOString();',
     '        await saveFlyingNowStamp({',
     '          userId:user.id,eventId,username:user.username,',
-    '          eventName:`Flying Now · ${departure} to ${destination} · ${aircraft}`,',
+    '          eventName:`Flying Now · ${departure} to ${destination} · ${aircraft}`,' ,
     '          start,channelId:currentVoice,departure,destination,aircraft',
     '        });',
     '        stampAwarded = true;',
@@ -85,6 +85,18 @@ async function patchLegacyDailyStamp(){
   await fs.writeFile(file,src);
 }
 
+async function patchStampCities(){
+  const file='public/stamp-style-v2.js';
+  let src=await fs.readFile(file,'utf8');
+  if(src.includes("CYVR:'Vancouver'")) return;
+  const target="KJFK:'New York',KLAX:'Los Angeles',KSFO:'San Francisco',KSEA:'Seattle',KORD:'Chicago',KATL:'Atlanta',EGLL:'London'";
+  const replacement="KJFK:'New York',KLAX:'Los Angeles',KSFO:'San Francisco',KSEA:'Seattle',KORD:'Chicago',KATL:'Atlanta',CYVR:'Vancouver',EGLL:'London'";
+  if(!src.includes(target)) throw new Error('Flying Now stamp city map target not found');
+  src=src.replace(target,replacement);
+  await fs.writeFile(file,src);
+}
+
 await patchLifecycle();
 await patchLegacyDailyStamp();
-console.log('Flying Now per-flight attendance isolation patch applied; legacy daily sessions are history-only');
+await patchStampCities();
+console.log('Flying Now per-flight attendance isolation patch applied; legacy daily sessions are history-only; Vancouver stamp label fixed');
