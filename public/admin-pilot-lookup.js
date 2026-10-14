@@ -12,32 +12,61 @@
     });
   }
 
+  async function persistentPilotRows(){
+    try{
+      const rows=await baseApi('/api/admin/pilot-history');
+      return normalizePilotRows(rows)||[];
+    }catch{return[]}
+  }
+
+  function mergePilotRows(live,persisted){
+    const byKey=new Map();
+    for(const r of [...(persisted||[]),...(live||[])]){
+      const k=`${r?.userId||''}:${r?.eventId||''}`;
+      if(!r?.userId||!r?.eventId)continue;
+      const prev=byKey.get(k)||{};
+      byKey.set(k,{
+        ...prev,
+        ...r,
+        attendanceMinutes:Math.max(Number(prev.attendanceMinutes||0),Number(r.attendanceMinutes||0)),
+        verified:!!(prev.verified||r.verified),
+        claimed:!!((prev.claimed||r.claimed)&&(prev.verified||r.verified)),
+        active:!!(r.active??prev.active),
+        inVoice:!!(r.inVoice||prev.inVoice)
+      });
+    }
+    return [...byKey.values()].sort((a,b)=>String(a.username||'').localeCompare(String(b.username||''))||new Date(a.start||0)-new Date(b.start||0));
+  }
+
   api=async function adminConsistentApi(url,opt){
     const data=await baseApi(url,opt);
 
     if(url==='/api/admin/pilots'){
-      return normalizePilotRows(data);
+      const live=normalizePilotRows(data)||[];
+      return mergePilotRows(live,await persistentPilotRows());
     }
 
     if(url==='/api/admin/overview'&&data&&typeof data==='object'){
       try{
-        const pilots=normalizePilotRows(await baseApi('/api/admin/pilots'))||[];
+        const pilots=await api('/api/admin/pilots')||[];
         const stamps=pilots.filter(r=>r.claimed).length;
         const stampReady=pilots.filter(r=>r.verified&&!r.claimed&&!r.legacyClaimed).length;
-        return {...data,stamps,stampReady};
+        return {...data,stamps,stampReady,registrations:pilots.length,pilots:new Set(pilots.map(r=>r.userId)).size};
       }catch{return data}
     }
 
     if(url==='/api/admin/events'&&Array.isArray(data)){
       try{
-        const pilots=normalizePilotRows(await baseApi('/api/admin/pilots'))||[];
+        const pilots=await api('/api/admin/pilots')||[];
         return data.map(e=>{
           const eventId=String(e?.id||e?.eventId||'');
           const eventRows=pilots.filter(r=>String(r?.eventId||'')===eventId);
           return {
             ...e,
             stamped:eventRows.filter(r=>r.claimed).length,
-            ready:eventRows.filter(r=>r.verified&&!r.claimed&&!r.legacyClaimed).length
+            ready:eventRows.filter(r=>r.verified&&!r.claimed&&!r.legacyClaimed).length,
+            registrations:eventRows.length,
+            inVoice:eventRows.filter(r=>r.inVoice).length
           };
         });
       }catch{return data}
