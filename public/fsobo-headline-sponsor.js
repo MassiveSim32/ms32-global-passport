@@ -16,25 +16,31 @@
   const card=document.createElement('div');
   card.id='fsoboHeadlineSponsor';
   card.className='headline-sponsor';
-  card.innerHTML='<div class="headline-sponsor-error">Loading headline sponsor…</div><strong>FSOBO Studio</strong><small>Major Headline Sponsor · Massive Fly In “Broome”</small>';
+  card.innerHTML='<div class="headline-sponsor-error">Loading headline sponsor…</div><strong>ASOBO Studio</strong><small>Major Headline Sponsor · Massive Fly In “Broome”</small>';
   host.prepend(card);
 
   const parts=Array.from({length:8},(_,i)=>`/fsobo-logo.part${String(i+1).padStart(2,'0')}.b64`);
+  const expectedHash='4ba1a719a284214df962214d7101e9d773107aa24f7a8767c312e2524a3f62a9';
   Promise.all(parts.map(src=>fetch(src,{cache:'force-cache'}).then(r=>{
     if(!r.ok)throw new Error(`Sponsor logo part failed: ${src}`);
     return r.text();
-  }))).then(chunks=>{
+  }))).then(async chunks=>{
     const base64=chunks.join('').replace(/\s+/g,'');
     if(base64.length!==74568)throw new Error(`Sponsor logo length mismatch: ${base64.length}`);
+    const binary=atob(base64);
+    const bytes=Uint8Array.from(binary,c=>c.charCodeAt(0));
+    const digest=await crypto.subtle.digest('SHA-256',bytes);
+    const hash=[...new Uint8Array(digest)].map(b=>b.toString(16).padStart(2,'0')).join('');
+    if(hash!==expectedHash)throw new Error(`Sponsor logo checksum mismatch: ${hash}`);
     const img=document.createElement('img');
     img.src=`data:image/png;base64,${base64}`;
-    img.alt='FSOBO Studio';
+    img.alt='ASOBO Studio';
     img.decoding='async';
     const loading=card.querySelector('.headline-sponsor-error');
     if(loading)loading.replaceWith(img);else card.prepend(img);
   }).catch(err=>{
-    console.error('FSOBO headline sponsor logo failed to load',err);
+    console.error('ASOBO headline sponsor logo failed to load',err);
     const loading=card.querySelector('.headline-sponsor-error');
-    if(loading)loading.textContent='FSOBO Studio';
+    if(loading)loading.textContent='ASOBO Studio';
   });
 })();
