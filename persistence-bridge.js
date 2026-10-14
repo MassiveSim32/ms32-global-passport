@@ -28,6 +28,11 @@ function isSnowflake(value) {
   return /^\d{16,20}$/.test(String(value || ''));
 }
 
+function isFlyingNow(recordOrId) {
+  const id = typeof recordOrId === 'object' ? recordOrId?.eventId : recordOrId;
+  return String(id || '').startsWith('flying-now:');
+}
+
 function rowToRecord(row) {
   return {
     userId: String(row.user_id),
@@ -66,6 +71,10 @@ function durableAttendance(record) {
 }
 
 function resumableRecord(record, now = Date.now()) {
+  // Flying Now has its own durable lifecycle and must never be resumed by the
+  // generic scheduled-event persistence bridge. Mixing the two systems can
+  // attach the live Discord timer to a stale previous-day Flying Now row.
+  if (isFlyingNow(record)) return false;
   if (!record?.active || !record.channelId || !voiceChannelsMap) return false;
   if (nativeGet.call(voiceChannelsMap, String(record.userId)) !== record.channelId) return false;
   const window = eventWindow(record);
@@ -116,7 +125,8 @@ async function loadRows() {
       SELECT user_id,event_id,username,event_name,event_start,channel_id,
              attendance_ms,verified,claimed,active
       FROM passport_registrations
-      WHERE active = TRUE OR claimed = TRUE
+      WHERE (active = TRUE OR claimed = TRUE)
+        AND event_id NOT LIKE 'flying-now:%'
       ORDER BY event_start NULLS LAST
     `);
     persistedRows = result.rows;
@@ -138,7 +148,7 @@ function hydrate(map) {
 }
 
 async function saveRecord(record) {
-  if (!db || !record?.userId || !record?.eventId) return;
+  if (!db || !record?.userId || !record?.eventId || isFlyingNow(record)) return;
   const attendanceMs = durableAttendance(record);
   const verified = !!record.verified || attendanceMs >= 30 * 60 * 1000;
   const active = record.active !== false;
@@ -231,7 +241,7 @@ Map.prototype.set = function persistentSet(mapKey, value) {
 Map.prototype.delete = function persistentDelete(mapKey) {
   if (this === registrationsMap && typeof mapKey === 'string' && mapKey.includes(':') && db) {
     const record = nativeGet.call(this, mapKey);
-    if (record && !record.claimed) {
+    if (record && !record.claimed && !isFlyingNow(record)) {
       record.active = false;
       db.query('UPDATE passport_registrations SET active=FALSE,updated_at=NOW() WHERE user_id=$1 AND event_id=$2', [String(record.userId), String(record.eventId)])
         .catch(error => console.error('Passport persistence cancel update failed:', error.message));
