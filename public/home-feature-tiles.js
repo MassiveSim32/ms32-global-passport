@@ -47,12 +47,12 @@
   major.className='major-event-tile';
   major.innerHTML=`
     <div>
-      <div class="major-event-kicker">Major Event</div>
-      <div class="major-event-title">Massive Fly In Broome</div>
+      <div class="major-event-kicker">Major Event Hub</div>
+      <div class="major-event-title">Next Event — Massive Fly In “Broome”</div>
       <div class="major-event-date">14th November 2026</div>
       <div class="major-event-copy">Featured MS32 community event with dedicated event information.</div>
     </div>
-    <button class="major-event-action" type="button">OPEN EVENT HUB</button>`;
+    <button class="major-event-action" type="button">MAJOR EVENT HUB</button>`;
   wrap.appendChild(major);
 
   const app=document.getElementById('app');
@@ -64,8 +64,8 @@
     page.innerHTML=`
       <button class="major-event-back" type="button">← BACK TO HOME</button>
       <div class="event-hub-head">
-        <div class="eyebrow">Major Event</div>
-        <h1>Massive Fly In Broome</h1>
+        <div class="eyebrow">Major Event Hub</div>
+        <h1>Massive Fly In “Broome”</h1>
         <div class="event-hub-date">14th November 2026 · YBRM Broome</div>
       </div>
       <div class="major-event-menu">
