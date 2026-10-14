@@ -19,6 +19,7 @@
     '/nza-sponsor.js?v=20261014-1',
     '/hangar713-sponsor.js?v=20261014-1',
     '/taogs-sponsor.js?v=20261015-1',
+    '/taogs-replacement-logo.js?v=20261015-1',
     '/fss-sponsor.js?v=20261015-1',
     '/asobo-event-sponsor.js?v=20261015-1',
     '/a2a-new-logo.js?v=20261015-2',
