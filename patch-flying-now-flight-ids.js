@@ -35,8 +35,8 @@ async function patchLifecycle(){
     '    const day=hobartDay();',
     '    const q=await p.query(`SELECT user_id,event_id,username,event_name,event_start,attendance_ms,active,updated_at',
     '      FROM passport_registrations',
-    '      WHERE user_id=$1 AND active=TRUE AND (event_id LIKE $2 OR event_id=$3)',
-    '      ORDER BY updated_at DESC LIMIT 1`,[id,`flying-now:${day}:%`,`flying-now:${day}`]);'
+    '      WHERE user_id=$1 AND active=TRUE AND event_id LIKE $2',
+    '      ORDER BY updated_at DESC LIMIT 1`,[id,`flying-now:${day}:%`]);'
   ]);
   if(!src.includes(oldRecover)) throw new Error('Flying Now recovery patch target not found');
   src=src.replace(oldRecover,newRecover);
@@ -87,4 +87,4 @@ async function patchLegacyDailyStamp(){
 
 await patchLifecycle();
 await patchLegacyDailyStamp();
-console.log('Flying Now per-flight attendance isolation patch applied');
+console.log('Flying Now per-flight attendance isolation patch applied; legacy daily sessions are history-only');
