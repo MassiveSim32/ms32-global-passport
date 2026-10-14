@@ -110,6 +110,36 @@ function installRoutes(app) {
       res.status(500).json({error:'Could not load registered pilots'});
     }
   });
+
+  originalGet.call(app, '/api/admin/pilot-history', async (req,res) => {
+    const user = authUser(req);
+    if (!user) return res.status(401).json({error:'Not signed in'});
+    if (!isAdmin(user)) return res.status(403).json({error:'Admin access denied'});
+    try {
+      const db = await getPool();
+      if (!db) return res.json([]);
+      const q = await db.query(`SELECT
+          user_id AS "userId",
+          username,
+          event_id AS "eventId",
+          event_name AS "eventName",
+          event_start AS start,
+          channel_id AS "channelId",
+          FLOOR(COALESCE(attendance_ms,0)/60000.0)::int AS "attendanceMinutes",
+          30::int AS "thresholdMinutes",
+          verified,
+          claimed,
+          active,
+          false AS "inVoice"
+        FROM passport_registrations
+        ORDER BY LOWER(COALESCE(username,'')), event_start NULLS LAST`);
+      res.set('Cache-Control','no-store');
+      res.json(q.rows);
+    } catch (e) {
+      console.error('Persistent pilot history load failed:', e?.message || e);
+      res.status(500).json({error:'Could not load pilot history'});
+    }
+  });
 }
 
 express.application.get = function appUserRegistryGet(path, ...handlers) {
