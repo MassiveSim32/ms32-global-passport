@@ -33,6 +33,9 @@
     .major-event-info{display:none;margin-top:12px}
     .major-event-info.active{display:block}
     .major-event-info h3{margin:0 0 6px}
+    .event-registration-grid{display:grid;grid-template-columns:1fr;gap:9px;margin-top:13px}
+    .event-registration-grid button{width:100%;border:1px solid #385c78;background:linear-gradient(145deg,#12304a,#0b1d2d);color:#fff;border-radius:14px;padding:13px 14px;text-align:left;font-size:11px;font-weight:900;letter-spacing:.035em;cursor:pointer}
+    .event-registration-grid button:active{transform:translateY(1px)}
     .major-event-back{margin:0 0 10px;background:#102439;color:#fff;border:1px solid #2b4a64;border-radius:13px;padding:10px 12px;font-weight:900;cursor:pointer}
     @media(max-width:360px){.home-feature-tiles,.major-event-menu{grid-template-columns:1fr}.home-feature-tiles .flying-now-card,.major-event-tile{min-height:auto}}
   `;
@@ -72,12 +75,12 @@
       </div>
       <div class="major-event-menu">
         <button type="button" data-major-section="sponsors"><span>★</span>SPONSORS<small>Event supporters and featured partners</small></button>
-        <button type="button" data-major-section="events"><span>✈</span>EVENTS<small>Flights and activities for the Fly In</small></button>
+        <button type="button" data-major-section="events"><span>✈</span>EVENTS AND REGISTRATIONS<small>Choose an event and manage registration</small></button>
         <button type="button" data-major-section="times"><span>◷</span>TIMES<small>Event schedule and operating times</small></button>
         <button type="button" data-major-section="airfield"><span>◎</span>YBRM AIRFIELD INFO<small>Broome airport information for pilots</small></button>
       </div>
       <div id="major-sponsors" class="card major-event-info"><div class="eyebrow">Sponsors</div><h3>Massive Fly In Broome Sponsors</h3><p class="sub">Sponsor information will be added here as event partners are confirmed.</p></div>
-      <div id="major-events" class="card major-event-info"><div class="eyebrow">Events</div><h3>Fly In Events</h3><p class="sub">The full event programme and associated community flights will appear here as they are published.</p><button class="btn secondary" type="button" data-open-flights>VIEW UPCOMING FLIGHTS</button></div>
+      <div id="major-events" class="card major-event-info"><div class="eyebrow">Events &amp; Registrations</div><h3>Choose an Event</h3><p class="sub">Select an event below to continue to its registration area.</p><div class="event-registration-grid"><button type="button" data-major-registration="drag-racing">DRAG RACING</button><button type="button" data-major-registration="landing-challenge">LANDING CHALLENGE</button><button type="button" data-major-registration="helicopter-precision">HELICOPTER PRECISION</button><button type="button" data-major-registration="jetson-super-cup">JETSON SUPER CUP</button><button type="button" data-major-registration="stol-comp">STOL COMP.</button></div></div>
       <div id="major-times" class="card major-event-info"><div class="eyebrow">Times</div><h3>Event Times</h3><p class="sub">Official Fly In timings will be listed here in both local event time and UTC once finalised.</p></div>
       <div id="major-airfield" class="card major-event-info"><div class="eyebrow">YBRM</div><h3>Broome Airfield Information</h3><p class="sub">Dedicated YBRM pilot information, arrival notes and useful airfield details will be added here for the event.</p></div>`;
     if(nav)app.insertBefore(page,nav);else app.appendChild(page);
@@ -87,7 +90,6 @@
       page.querySelectorAll('.major-event-info').forEach(x=>x.classList.remove('active'));
       document.getElementById(`major-${btn.dataset.majorSection}`)?.classList.add('active');
     }));
-    page.querySelector('[data-open-flights]')?.addEventListener('click',()=>{if(typeof showPage==='function')showPage('flights')});
   }
 
   major.querySelector('button')?.addEventListener('click',()=>{if(typeof showPage==='function')showPage('majorEvent')});
