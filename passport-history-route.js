@@ -72,11 +72,20 @@ function installHistoryRoute(app) {
       const db = await getPool();
       if (!db) return res.json({history:[]});
       const q = await db.query(`
-        SELECT event_id,event_name,event_start,channel_id,attendance_ms,verified,claimed,active
-        FROM passport_registrations
-        WHERE user_id=$1
-          AND (claimed=true OR verified=true OR attendance_ms > 0)
-        ORDER BY event_start ASC NULLS LAST
+        SELECT p.event_id,p.event_name,p.event_start,p.channel_id,p.attendance_ms,p.verified,p.claimed,p.active
+        FROM passport_registrations p
+        WHERE p.user_id=$1
+          AND (p.claimed=true OR p.verified=true OR p.attendance_ms > 0)
+          AND NOT (
+            p.event_id ~ '^flying-now:[0-9]{4}-[0-9]{2}-[0-9]{2}$'
+            AND EXISTS (
+              SELECT 1
+              FROM passport_registrations newer
+              WHERE newer.user_id=p.user_id
+                AND newer.event_id LIKE p.event_id || ':%'
+            )
+          )
+        ORDER BY p.event_start ASC NULLS LAST
       `,[user.id]);
       const history = q.rows.map(r => ({
         event:{
@@ -102,6 +111,7 @@ function installHistoryRoute(app) {
           active:!!r.active
         }
       }));
+      res.set('Cache-Control','no-store');
       res.json({history});
     } catch (e) {
       console.error('Passport history load failed:', e?.message || e);
