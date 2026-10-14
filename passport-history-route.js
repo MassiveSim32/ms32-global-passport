@@ -1,7 +1,11 @@
 import crypto from 'node:crypto';
+import fs from 'node:fs/promises';
+import path from 'node:path';
+import { fileURLToPath } from 'node:url';
 import express from 'express';
 import { Pool } from 'pg';
 
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const originalGet = express.application.get;
 const installedApps = new WeakSet();
 let pool = null;
@@ -45,6 +49,21 @@ async function getPool() {
 function installHistoryRoute(app) {
   if (installedApps.has(app)) return;
   installedApps.add(app);
+
+  originalGet.call(app, '/assets/sponsors/a2a.png', async (req, res) => {
+    try {
+      const source = await fs.readFile(path.join(__dirname,'public','event-sponsors.js'),'utf8');
+      const match = source.match(/const a2aLogo='data:image\/png;base64,([^']+)'/);
+      if (!match) return res.sendStatus(404);
+      const png = Buffer.from(match[1], 'base64');
+      res.set('Content-Type','image/png');
+      res.set('Cache-Control','public, max-age=31536000, immutable');
+      res.send(png);
+    } catch (e) {
+      console.error('A2A sponsor image load failed:', e?.message || e);
+      res.sendStatus(500);
+    }
+  });
 
   originalGet.call(app, '/api/passport/history', async (req, res) => {
     const user = authUser(req);
