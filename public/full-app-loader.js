@@ -16,6 +16,7 @@
     '/home-feature-tiles.js?v=20261014-3',
     '/event-sponsors.js?v=20261014-3',
     '/a2a-sponsor-fix.js?v=20261014-2',
+    '/hangar713-sponsor.js?v=20261014-1',
     '/passport-pages.js?v=20261014-5',
     '/passport-history.js?v=20261014-2',
     '/home-quick-colors.js?v=20261014-4',
