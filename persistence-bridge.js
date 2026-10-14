@@ -79,11 +79,6 @@ function resumeActiveVoiceRecords() {
   const now = Date.now();
   const groups = new Map();
 
-  // A deploy must not drop a pilot who is still in the same Discord voice
-  // channel. This includes flights whose Passport stamp has already been
-  // claimed; claiming a stamp does not end the flight or its comms timer.
-  // Pick only one registration per pilot/channel to avoid double-counting old
-  // claimed records that happen to share a voice channel.
   for (const record of nativeValues.call(registrationsMap)) {
     if (!resumableRecord(record, now)) continue;
     const groupKey = `${record.userId}:${record.channelId}`;
@@ -156,9 +151,9 @@ async function saveRecord(record) {
       event_name=EXCLUDED.event_name,
       event_start=EXCLUDED.event_start,
       channel_id=EXCLUDED.channel_id,
-      attendance_ms=EXCLUDED.attendance_ms,
-      verified=EXCLUDED.verified,
-      claimed=EXCLUDED.claimed,
+      attendance_ms=GREATEST(passport_registrations.attendance_ms,EXCLUDED.attendance_ms),
+      verified=(passport_registrations.verified OR EXCLUDED.verified),
+      claimed=(passport_registrations.claimed OR EXCLUDED.claimed),
       active=EXCLUDED.active,
       updated_at=NOW()
   `, [
