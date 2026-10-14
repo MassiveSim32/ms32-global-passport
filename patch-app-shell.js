@@ -11,8 +11,6 @@ html = html.replaceAll('v0.0.14','v1.0.0-rc.1');
 html = html.replaceAll('v0.0.15','v1.0.0-rc.1');
 html = html.replaceAll('<span class="beta-pill">BETA</span>','<span class="beta-pill">RC</span>');
 
-// Personalise the Home headline as one concise journey message, kept compact
-// to match the HOME eyebrow label directly above it.
 html = html.replace(
   '<h1 id="hello">Welcome aboard.</h1><p class="sub">Your interactive Massive Simulations 32 Journey starts here</p>',
   '<h1 id="hello" style="font-size:10px;line-height:1.35;margin:4px 0 8px">Your MS32 interactive journey starts here.</h1>'
@@ -35,8 +33,6 @@ if (!html.includes('/home-quick-colours.css?v=20261014-1')) html = html.replace(
 const spontaneousStyle = '<link rel="stylesheet" href="/spontaneous-flight-style.css?v=20261014-1">';
 if (!html.includes('/spontaneous-flight-style.css?v=20261014-1')) html = html.replace('</head>', spontaneousStyle + '\n</head>');
 
-// At zero Journey Points the visible rail is now painted directly into the
-// card background so status polling cannot move or recreate it.
 html = html.replaceAll('/journey-banner-colours.css?v=20261014-1','/journey-banner-colours.css?v=20261014-3');
 html = html.replaceAll('/journey-banner-colours.css?v=20261014-2','/journey-banner-colours.css?v=20261014-3');
 const journeyStyle = '<link rel="stylesheet" href="/journey-banner-colours.css?v=20261014-3">';
@@ -52,13 +48,14 @@ const oldLoaders = [
   '<script src="/full-app-loader.js?v=20261014-rc1"></script>',
   '<script src="/full-app-loader.js?v=20261014-rc2"></script>',
   '<script src="/full-app-loader.js?v=20261014-rc3"></script>',
-  '<script src="/full-app-loader.js?v=20261014-rc4"></script>'
+  '<script src="/full-app-loader.js?v=20261014-rc4"></script>',
+  '<script src="/full-app-loader.js?v=20261014-rc5"></script>'
 ];
-const loader = '<script src="/full-app-loader.js?v=20261014-rc5"></script>';
+const loader = '<script src="/full-app-loader.js?v=20261014-rc6"></script>';
 for (const oldLoader of oldLoaders) {
   if (html.includes(oldLoader)) html = html.replace(oldLoader, loader);
 }
-if (!html.includes('/full-app-loader.js?v=20261014-rc5')) html = html.replace('</html>', loader + '</html>');
+if (!html.includes('/full-app-loader.js?v=20261014-rc6')) html = html.replace('</html>', loader + '</html>');
 
 await fs.writeFile(file,html,'utf8');
 console.log('App shell patched to Massive Simulations 32 Companion App v1.0.0-rc.1');
