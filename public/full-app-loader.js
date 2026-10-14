@@ -19,7 +19,6 @@
     '/hangar713-sponsor.js?v=20261014-1',
     '/passport-pages.js?v=20261014-6',
     '/passport-history.js?v=20261014-2',
-    '/flying-now-history-visible.js?v=20261014-1',
     '/home-quick-colors.js?v=20261014-4',
     '/home-stat-links.js?v=20261014-4',
     '/release-v1.js?v=1.0.0'
