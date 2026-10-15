@@ -60,6 +60,8 @@
   function fixedAirlinerData(e){
     const s=oldStampData(e);
     if(s?.family!=='airliner')return s;
+    const isCartagena=/(?:SKCG|Cartagena)/i.test(textOf(e));
+    if(isCartagena)return {...s,hero:'COLOMBIA',city:'CARTAGENA'};
     const generic=/^(MS32 DESTINATION|GLOBAL PASSPORT|AIRLINER DESTINATION)$/i.test(String(s.city||''));
     const place=detectedPlace(e);
     return {
