@@ -61,6 +61,7 @@
     align-items:center;
     gap:10px;
     width:100%;
+    min-height:48px;
     padding:12px 13px;
     border-radius:12px;
     text-align:left;
@@ -68,11 +69,16 @@
   }
 
   #app > .nav button span{
-    display:inline-block;
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
     width:24px;
+    height:24px;
     margin:0;
     font-size:20px;
+    line-height:1;
     text-align:center;
+    flex:0 0 24px;
   }
 
   #app > .nav button.active{
@@ -113,6 +119,7 @@
     grid-column:1 / -1;
     grid-template-columns:repeat(4,minmax(0,1fr));
     gap:12px;
+    align-items:stretch;
   }
 
   #home > .card,
@@ -133,16 +140,57 @@
 
   .quick button{
     min-height:112px;
+    height:100%;
+    display:flex;
+    flex-direction:column;
+    align-items:flex-start;
+    justify-content:flex-start;
   }
 
+  .quick button .ms32-tile-count{
+    margin-top:auto!important;
+    padding-top:9px;
+  }
+
+  /* Keep primary card actions on one visual baseline in desktop grids. */
   #flights.active #events{
     display:grid;
     grid-template-columns:repeat(2,minmax(0,1fr));
     gap:12px;
+    align-items:stretch;
   }
 
   #flights.active #events .event{
     margin:0;
+    height:100%;
+    display:flex;
+    flex-direction:column;
+  }
+
+  #flights.active #events .event > .checks{
+    margin-top:auto;
+  }
+
+  #flights.active #events .event > [id^="a-"]{
+    margin-top:0;
+  }
+
+  #flights.active #events .event .btn{
+    width:100%;
+  }
+
+  #flights.active #events .event > .preview{
+    margin-top:14px;
+  }
+
+  /* Generic desktop card button rows: equal heights, predictable alignment. */
+  .card > .btn,
+  .hero > .btn,
+  #profile.active > .btn{
+    min-height:46px;
+    display:flex;
+    align-items:center;
+    justify-content:center;
   }
 
   #passport.active .passport-page{
