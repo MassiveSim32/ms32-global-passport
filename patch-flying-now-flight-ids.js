@@ -96,7 +96,16 @@ async function patchStampCities(){
   await fs.writeFile(file,src);
 }
 
+async function patchFlyingNowCooldown(){
+  const file='server-fixed-wrapper.js';
+  let src=await fs.readFile(file,'utf8');
+  const target='const FLYING_NOW_COOLDOWN_MS = 15 * 60 * 1000;';
+  if(src.includes(target)) src=src.replace(target,'const FLYING_NOW_COOLDOWN_MS = 0;');
+  await fs.writeFile(file,src);
+}
+
 await patchLifecycle();
 await patchLegacyDailyStamp();
 await patchStampCities();
-console.log('Flying Now per-flight attendance isolation patch applied; legacy daily sessions are history-only; Vancouver stamp label fixed');
+await patchFlyingNowCooldown();
+console.log('Flying Now per-flight attendance isolation patch applied; legacy daily sessions are history-only; Vancouver stamp label fixed; posting cooldown disabled');
