@@ -1,3 +1,4 @@
+import crypto from 'node:crypto';
 import express from 'express';
 
 const nativeMapSet = Map.prototype.set;
@@ -54,4 +55,44 @@ express.response.json = function adminLiveSessionJson(body) {
     return originalJson.call(this, mergeLiveSessions(body));
   }
   return originalJson.call(this, body);
+};
+
+const originalGet = express.application.get;
+const installedFlightBoards = new WeakSet();
+
+function signedInPilot(req) {
+  if (req.session?.user?.id && req.session.user.member) return true;
+  try {
+    const secret = process.env.SESSION_SECRET;
+    const cookie = String(req.headers.cookie || '').split(';').map(x=>x.trim()).find(x=>x.startsWith('ms32_auth='));
+    if (!secret || !cookie) return false;
+    const [payload,sig] = decodeURIComponent(cookie.slice(10)).split('.');
+    if (!payload || !sig) return false;
+    const expected = crypto.createHmac('sha256',secret).update(payload).digest('base64url');
+    const a=Buffer.from(sig), b=Buffer.from(expected);
+    if(a.length!==b.length || !crypto.timingSafeEqual(a,b))return false;
+    const user=JSON.parse(Buffer.from(payload,'base64url').toString('utf8'));
+    return !!(user.id && user.member && Number(user.exp)>Date.now());
+  } catch {return false;}
+}
+
+express.application.get = function liveFlightsRoute(path,...handlers) {
+  if (!installedFlightBoards.has(this)) {
+    installedFlightBoards.add(this);
+    originalGet.call(this,'/api/community/live-flights',(req,res)=>{
+      res.set('Cache-Control','no-store, no-cache, must-revalidate');
+      if(!signedInPilot(req))return res.status(401).json({error:'Sign in to browse live flights'});
+      const flights = flyingSessions ? [...flyingSessions.values()]
+        .filter(s=>looksLikeFlyingSession(s) && s.state==='active')
+        .map(s=>({
+          pilot:String(s.username || 'MS32 Pilot').slice(0,80),
+          departure:String(s.departure || '').slice(0,32),
+          destination:String(s.destination || '').slice(0,32),
+          aircraft:String(s.aircraft || '').slice(0,48),
+          startedAt:s.postedAt ? new Date(s.postedAt).toISOString() : null
+        })) : [];
+      res.json({flights,updatedAt:new Date().toISOString()});
+    });
+  }
+  return originalGet.call(this,path,...handlers);
 };
