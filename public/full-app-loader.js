@@ -10,7 +10,7 @@
     '/stamp-style-v2.js?v=20261014-4',
     '/bush-location-fix.js?v=20261014-4',
     '/airliner-location-fix.js?v=20261014-4',
-    '/flying-now.js?v=20261015-5',
+    '/flying-now.js?v=20261015-6',
     '/dynamic-home-flight-hero.js?v=20261014-1',
     '/app-header-brand.js?v=20261014-2',
     '/home-feature-tiles.js?v=20261014-6',
