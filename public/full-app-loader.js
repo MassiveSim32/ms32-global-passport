@@ -6,7 +6,7 @@
   const files=[
     '/journey-status-sanitizer.js?v=20261014-1',
     '/rewards-prototype.js?v=20261015-v1fix',
-    '/journey-leaderboard.js?v=20261015-1',
+    '/journey-leaderboard.js?v=20261016-sources1',
     '/dual-clock.js?v=20261014-4',
     '/stamp-style-v2.js?v=20261016-explore',
     '/bush-location-fix.js?v=20261014-4',
