@@ -1,6 +1,12 @@
 (()=>{
   const style=document.createElement('style');
   style.textContent=`
+    #rewardsHome.ms32-flight-pulse{animation:ms32JourneyLivePulse 3.6s ease-in-out infinite;will-change:box-shadow}
+    @keyframes ms32JourneyLivePulse{
+      0%,100%{box-shadow:0 0 0 0 rgba(255,173,61,0),0 0 0 rgba(255,173,61,0)}
+      50%{box-shadow:0 0 0 2px rgba(255,173,61,.24),0 0 19px rgba(255,173,61,.16)}
+    }
+    @media(prefers-reduced-motion:reduce){#rewardsHome.ms32-flight-pulse{animation:none;box-shadow:0 0 0 1px rgba(255,173,61,.28)}}
     .flying-now-card{border-color:#5d4520;background:radial-gradient(circle at top right,#4a2d12,#1c1a16 58%,#0b1725);position:relative;overflow:hidden}
     .flying-now-card:after{content:"✈";position:absolute;right:-8px;top:-20px;font-size:92px;opacity:.06;transform:rotate(-10deg);pointer-events:none}
     .flying-now-card h3{margin:5px 0 4px;font-size:18px}
@@ -76,11 +82,16 @@
     }catch{return null}
   }
 
+  function syncJourneyPulse(isLive){
+    document.getElementById('rewardsHome')?.classList.toggle('ms32-flight-pulse',!!isLive);
+  }
+
   function renderHomeFlight(data=lastFlyingNowData,restore=true){
     const host=document.getElementById('nextFlight');
     if(!host)return false;
 
     if(data?.state==='active'){
+      syncJourneyPulse(true);
       host.classList.add('pilot-flight-active');
       const mins=Number(data.attendanceMinutes||0);
       const pts=Number(data.points||0);
@@ -90,12 +101,14 @@
 
     const scheduled=activeScheduledFlight();
     if(scheduled){
+      syncJourneyPulse(true);
       const s=statuses[scheduled.id]||{};
       host.classList.add('pilot-flight-active');
       host.innerHTML=`<div class="eyebrow">Active community flight</div><div class="pilot-home-live">● PILOT ACTIVE · IN EVENT COMMS</div><h2>${safeText(scheduled.name)}</h2>${typeof eventTimes==='function'?eventTimes(scheduled.start):''}<div class="sub" style="margin-top:8px">${Number(s.attendanceMinutes||0)}/${Number(s.thresholdMinutes||30)} min verified comms · Journey Points tracking active</div><button class="btn ready" onclick="showPage('flights')">VIEW ACTIVE FLIGHT</button>`;
       return true;
     }
 
+    syncJourneyPulse(false);
     const wasActive=host.classList.contains('pilot-flight-active');
     host.classList.remove('pilot-flight-active');
     if(wasActive&&restore&&baseUpdateDashboard)baseUpdateDashboard();
