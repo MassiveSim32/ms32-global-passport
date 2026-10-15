@@ -173,7 +173,7 @@
 
   function ensureHeaderBuildLabel(){
     const subtitle=document.querySelector('.top .brand small');
-    if(subtitle) subtitle.textContent='Companion App · RC v1.0.0-rc.1';
+    if(subtitle) subtitle.textContent='COMPANION APP · V1.0.0';
   }
 
   function ensureCards(){
@@ -216,7 +216,7 @@
     if(profile&&profileSignature!==lastProfileSignature){
       profile.innerHTML=`
         <div class="rewards-top">
-          <div><div class="rewards-title">Journey Points <span class="prototype-pill">RC</span></div><div class="rewards-tier">${tier.current.name}</div></div>
+          <div><div class="rewards-title">Journey Points <span class="prototype-pill">V1</span></div><div class="rewards-tier">${tier.current.name}</div></div>
           <div class="rewards-points"><b>${t.points.toLocaleString()}</b><span>Journey Points</span></div>
         </div>
         <div class="rewards-track"><i style="width:${tier.pct}%"></i></div>
