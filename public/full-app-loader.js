@@ -11,6 +11,7 @@
     '/stamp-style-v2.js?v=20261016-explore',
     '/bush-location-fix.js?v=20261014-4',
     '/airliner-location-fix.js?v=20261015-cartagena3',
+    '/local-flight-stamp-fix.js?v=20261016-1',
     '/flying-now.js?v=20261016-explore',
     '/live-community-flights.js?v=20261015-1',
     '/dynamic-home-flight-hero.js?v=20261014-1',
