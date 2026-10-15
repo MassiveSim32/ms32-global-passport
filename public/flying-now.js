@@ -1,13 +1,13 @@
 (()=>{
   const style=document.createElement('style');
   style.textContent=`
-    #rewardsHome.ms32-flight-pulse{animation:ms32JourneyLivePulse 2.8s ease-in-out infinite;will-change:box-shadow,border-color}
-    #rewardsHome.ms32-flight-pulse .rewards-track i{animation:ms32JourneyBarPulse 2.8s ease-in-out infinite}
+    #rewardsHome.ms32-flight-pulse{animation:ms32JourneyLivePulse 2.4s ease-in-out infinite;will-change:box-shadow,border-color}
+    #rewardsHome.ms32-flight-pulse .rewards-track i{animation:ms32JourneyBarPulse 2.4s ease-in-out infinite}
     @keyframes ms32JourneyLivePulse{
-      0%,100%{border-color:#806137;box-shadow:0 0 0 1px rgba(255,173,61,.12),0 0 6px rgba(255,173,61,.08)}
-      50%{border-color:#ffbf67;box-shadow:0 0 0 2px rgba(255,173,61,.5),0 0 25px rgba(255,173,61,.34)}
+      0%,100%{border-color:#bb8230;box-shadow:0 0 0 1px rgba(255,173,61,.35),0 0 12px rgba(255,173,61,.18)}
+      50%{border-color:#ffe29a;box-shadow:0 0 0 3px rgba(255,173,61,.72),0 0 34px rgba(255,173,61,.62),inset 0 0 15px rgba(255,173,61,.12)}
     }
-    @keyframes ms32JourneyBarPulse{0%,100%{filter:brightness(1)}50%{filter:brightness(1.45)}}
+    @keyframes ms32JourneyBarPulse{0%,100%{filter:brightness(1)}50%{filter:brightness(1.7) drop-shadow(0 0 7px rgba(255,189,88,.8))}}
 
     @media(prefers-reduced-motion:reduce){#rewardsHome.ms32-flight-pulse{animation:none;box-shadow:0 0 0 1px rgba(255,173,61,.35)}#rewardsHome.ms32-flight-pulse .rewards-track i{animation:none}}
     .flying-now-card{border-color:#5d4520;background:radial-gradient(circle at top right,#4a2d12,#1c1a16 58%,#0b1725);position:relative;overflow:hidden}
