@@ -57,8 +57,9 @@ if (!html.includes('/home-quick-colours.css?v=20261014-1')) html = html.replace(
 const spontaneousStyle = '<link rel="stylesheet" href="/spontaneous-flight-style.css?v=20261014-1">';
 if (!html.includes('/spontaneous-flight-style.css?v=20261014-1')) html = html.replace('</head>', spontaneousStyle + '\n</head>');
 
-const desktopLayout = '<link rel="stylesheet" href="/desktop-layout.css?v=20261016-1">';
-if (!html.includes('/desktop-layout.css?v=20261016-1')) html = html.replace('</head>', desktopLayout + '\n</head>');
+html = html.replaceAll('/desktop-layout.css?v=20261016-1','/desktop-layout.css?v=20261016-2');
+const desktopLayout = '<link rel="stylesheet" href="/desktop-layout.css?v=20261016-2">';
+if (!html.includes('/desktop-layout.css?v=20261016-2')) html = html.replace('</head>', desktopLayout + '\n</head>');
 
 html = html.replaceAll('/journey-banner-colours.css?v=20261014-1','/journey-banner-colours.css?v=20261014-3');
 html = html.replaceAll('/journey-banner-colours.css?v=20261014-2','/journey-banner-colours.css?v=20261014-3');
