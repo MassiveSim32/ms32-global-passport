@@ -79,5 +79,6 @@ async function claim(id){try{const r=await json(`/api/events/${id}/claim`,{metho
 async function logout(){await json('/auth/logout',{method:'POST'});location.href='/'}
 updateUtcClock();setInterval(updateUtcClock,1000);setupInstall();boot();
 </script>
+<script src="/journey-leaderboard.js?v=20261015-2" defer></script>
 </body>
 </html>
