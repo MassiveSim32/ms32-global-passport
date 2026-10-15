@@ -252,7 +252,7 @@
     if(!country&&destinationIcao&&typeof countryFromIcao==='function')country=normalCountry(countryFromIcao(destinationIcao));
     const explicit=explicitDestination(e);
     if(destinationIcao==='LSZH')country='Switzerland';
-    const cartagenaArrival=family.family==='airliner'&&/\b(?:SKCG|Cartagena)\b/i.test(`${e?.name||''} ${e?.description||''}`);
+    const cartagenaArrival=family.family==='airliner'&&/(?:SKCG|Cartagena)/i.test(`${e?.name||''} ${e?.description||''}`);
     if(cartagenaArrival)country='Colombia';
     let city=family.family==='spontaneous'&&destinationIcao?spontaneousCityByIcao[destinationIcao]||'':'';
     if(destinationIcao==='LSZH')city='Zurich';
