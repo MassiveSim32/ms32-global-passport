@@ -5,8 +5,8 @@
     #rewardsHome.ms32-flight-pulse .rewards-track i{animation:ms32JourneyBarPulse 2.4s ease-in-out infinite}
     #rewardsHome.ms32-flight-pulse::before{
       content:'';position:absolute;z-index:4;pointer-events:none;
-      width:6px;height:6px;border-radius:50%;background:#fff4ce;
-      box-shadow:0 0 5px 2px #ffcb65,0 0 12px 4px rgba(255,166,40,.45);
+      width:4px;height:4px;border-radius:50%;background:#ffd899;
+      box-shadow:0 0 3px 1px rgba(255,194,94,.65),0 0 7px 2px rgba(255,166,40,.20);
       offset-path:inset(2px round 15px);offset-rotate:0deg;
       animation:ms32JourneyOrbit 7s linear infinite;
     }
