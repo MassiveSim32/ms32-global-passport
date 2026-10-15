@@ -60,7 +60,9 @@
   function fixedAirlinerData(e){
     const s=oldStampData(e);
     if(s?.family!=='airliner')return s;
-    const isCartagena=/(?:SKCG|Cartagena)/i.test(textOf(e));
+    const flightText=textOf(e);
+    const eventDate=String(e?.start||e?.scheduled_start||'');
+    const isCartagena=/(?:SKCG|Cartagena)/i.test(flightText)||(/2026-10-15/.test(eventDate)&&/(?:airliner|mini fly.in|world tour)/i.test(flightText));
     if(isCartagena)return {...s,hero:'COLOMBIA',city:'CARTAGENA'};
     const generic=/^(MS32 DESTINATION|GLOBAL PASSPORT|AIRLINER DESTINATION)$/i.test(String(s.city||''));
     const place=detectedPlace(e);
