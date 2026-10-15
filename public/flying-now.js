@@ -3,22 +3,13 @@
   style.textContent=`
     #rewardsHome.ms32-flight-pulse{animation:ms32JourneyLivePulse 2.4s ease-in-out infinite;will-change:box-shadow,border-color}
     #rewardsHome.ms32-flight-pulse .rewards-track i{animation:ms32JourneyBarPulse 2.4s ease-in-out infinite}
-    #rewardsHome.ms32-flight-pulse::before{
-      content:'';position:absolute;z-index:4;pointer-events:none;
-      width:4px;height:4px;border-radius:50%;background:#ffd899;
-      box-shadow:0 0 3px 1px rgba(255,194,94,.65),0 0 7px 2px rgba(255,166,40,.20);
-      offset-path:inset(2px round 15px);offset-rotate:0deg;
-      animation:ms32JourneyOrbit 7s linear infinite;
-    }
-    @keyframes ms32JourneyOrbit{from{offset-distance:0%}to{offset-distance:100%}}
-
     @keyframes ms32JourneyLivePulse{
       0%,100%{border-color:#bb8230;box-shadow:0 0 0 1px rgba(255,173,61,.35),0 0 12px rgba(255,173,61,.18)}
       50%{border-color:#ffe29a;box-shadow:0 0 0 3px rgba(255,173,61,.72),0 0 34px rgba(255,173,61,.62),inset 0 0 15px rgba(255,173,61,.12)}
     }
     @keyframes ms32JourneyBarPulse{0%,100%{filter:brightness(1)}50%{filter:brightness(1.7) drop-shadow(0 0 7px rgba(255,189,88,.8))}}
 
-    @media(prefers-reduced-motion:reduce){#rewardsHome.ms32-flight-pulse{animation:none;box-shadow:0 0 0 1px rgba(255,173,61,.35)}#rewardsHome.ms32-flight-pulse .rewards-track i{animation:none}#rewardsHome.ms32-flight-pulse::before{animation:none;display:none}}
+    @media(prefers-reduced-motion:reduce){#rewardsHome.ms32-flight-pulse{animation:none;box-shadow:0 0 0 1px rgba(255,173,61,.35)}#rewardsHome.ms32-flight-pulse .rewards-track i{animation:none}}
     .flying-now-card{border-color:#5d4520;background:radial-gradient(circle at top right,#4a2d12,#1c1a16 58%,#0b1725);position:relative;overflow:hidden}
     .flying-now-card:after{content:"✈";position:absolute;right:-8px;top:-20px;font-size:92px;opacity:.06;transform:rotate(-10deg);pointer-events:none}
     .flying-now-card h3{margin:5px 0 4px;font-size:18px}
