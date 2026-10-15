@@ -35,7 +35,8 @@ function mergeLiveSessions(rows) {
       eventId:String(s.eventId),
       eventName:`Flying Now · ${s.departure} to ${s.destination} · ${s.aircraft}`,
       start:s.postedAt ? new Date(s.postedAt).toISOString() : null,
-      channelId:String(process.env.FLYING_NOW_VOICE_CHANNEL_ID || '') || null,
+      channelId:s.channelId || String(process.env.FLYING_NOW_VOICE_CHANNEL_ID || '') || null,
+      joinPolicy:s.joinPolicy === 'solo' ? 'solo' : 'open',
       attendanceMinutes:minutes,
       thresholdMinutes:30,
       verified:minutes >= 30,
@@ -89,6 +90,8 @@ express.application.get = function liveFlightsRoute(path,...handlers) {
           departure:String(s.departure || '').slice(0,32),
           destination:String(s.destination || '').slice(0,32),
           aircraft:String(s.aircraft || '').slice(0,48),
+          channelId:String(s.channelId || ''),
+          joinPolicy:s.joinPolicy === 'solo' ? 'solo' : 'open',
           startedAt:s.postedAt ? new Date(s.postedAt).toISOString() : null
         })) : [];
       res.json({flights,updatedAt:new Date().toISOString()});
