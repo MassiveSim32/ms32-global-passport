@@ -14,6 +14,9 @@
     .ms32-live-flight .ms32-live-route{margin:7px 0;color:#ffc36d;font-size:13px;font-weight:800}
     .ms32-live-flight .ms32-live-detail{color:#b1c6d6;font-size:11px;line-height:1.5}
     .ms32-live-flight .ms32-live-tag{color:#82e8b1;font-size:10px;font-weight:800}
+    .ms32-live-flight .ms32-access{display:inline-block;margin-top:7px;padding:5px 8px;border-radius:999px;font-size:9px;font-weight:900;letter-spacing:.05em;text-transform:uppercase}
+    .ms32-live-flight .ms32-access.open{background:#123727;border:1px solid #285f43;color:#82e8b1}
+    .ms32-live-flight .ms32-access.solo{background:#312222;border:1px solid #6a3b3b;color:#ffb0a8}
     .ms32-live-board .ms32-live-empty{padding:13px;border:1px dashed #315066;border-radius:12px;color:#b3c5d5;font-size:12px;line-height:1.5}
     .ms32-live-board .ms32-live-help{font-size:11px;color:#a6bdce;line-height:1.5;margin:10px 0 0}
   `;
@@ -21,7 +24,7 @@
   const board=document.createElement('section');
   board.id='ms32LiveFlights';
   board.className='ms32-live-board';
-  board.innerHTML='<div class="ms32-live-head"><div><div class="eyebrow">Community activity</div><h2>Active Community Flights</h2></div><span class="ms32-live-count" id="ms32LiveCount">CHECKING…</span></div><input id="ms32LiveSearch" type="search" placeholder="Search pilot, aircraft or airport" aria-label="Search active community flights"><div class="ms32-live-list" id="ms32LiveList"><div class="ms32-live-empty">Checking active flights…</div></div><p class="ms32-live-help">Only MS32 pilots confirmed active in Champagne Voice appear here. To join a flight, head to Champagne Voice in Discord. Updates every 15 seconds.</p>';
+  board.innerHTML='<div class="ms32-live-head"><div><div class="eyebrow">Community activity</div><h2>Active Community Flights</h2></div><span class="ms32-live-count" id="ms32LiveCount">CHECKING…</span></div><input id="ms32LiveSearch" type="search" placeholder="Search pilot, aircraft or airport" aria-label="Search active community flights"><div class="ms32-live-list" id="ms32LiveList"><div class="ms32-live-empty">Checking active flights…</div></div><p class="ms32-live-help">Active spontaneous flights show whether they are open to other pilots or marked solo. Join the selected Radio channel in Discord for open flights. Updates every 15 seconds.</p>';
   page.insertBefore(board,page.firstChild);
   const search=board.querySelector('#ms32LiveSearch');
   const list=board.querySelector('#ms32LiveList');
@@ -30,9 +33,13 @@
   const escape=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
   function render(){
     const term=search.value.trim().toLowerCase();
-    const matches=flights.filter(f=>[f.pilot,f.departure,f.destination,f.aircraft].some(v=>String(v||'').toLowerCase().includes(term)));
+    const matches=flights.filter(f=>[f.pilot,f.departure,f.destination,f.aircraft,f.joinPolicy].some(v=>String(v||'').toLowerCase().includes(term)));
     count.textContent=flights.length+' LIVE';
-    list.innerHTML=matches.length?matches.map(f=>'<article class="ms32-live-flight"><span class="ms32-live-tag">● LIVE · SPONTANEOUS</span><div style="margin-top:5px"><b>'+escape(f.pilot)+'</b></div><div class="ms32-live-route">'+escape(f.departure)+' → '+escape(f.destination)+'</div><div class="ms32-live-detail">Aircraft: '+escape(f.aircraft)+'</div></article>').join(''):'<div class="ms32-live-empty">'+(term?'No active flights match your search.':'No spontaneous flights are currently confirmed active. Check back soon or start your own flight from Home.')+'</div>';
+    list.innerHTML=matches.length?matches.map(f=>{
+      const solo=String(f.joinPolicy||'open').toLowerCase()==='solo';
+      const access=solo?'🔒 SOLO FLIGHT':'🟢 OPEN TO JOIN';
+      return '<article class="ms32-live-flight"><span class="ms32-live-tag">● LIVE · SPONTANEOUS</span><div style="margin-top:5px"><b>'+escape(f.pilot)+'</b></div><div class="ms32-live-route">'+escape(f.departure)+' → '+escape(f.destination)+'</div><div class="ms32-live-detail">Aircraft: '+escape(f.aircraft)+'</div><span class="ms32-access '+(solo?'solo':'open')+'">'+access+'</span></article>';
+    }).join(''):'<div class="ms32-live-empty">'+(term?'No active flights match your search.':'No spontaneous flights are currently confirmed active. Check back soon or start your own flight from Home.')+'</div>';
   }
   search.addEventListener('input',render);
   async function refresh(){
