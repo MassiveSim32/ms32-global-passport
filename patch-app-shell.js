@@ -57,6 +57,9 @@ if (!html.includes('/home-quick-colours.css?v=20261014-1')) html = html.replace(
 const spontaneousStyle = '<link rel="stylesheet" href="/spontaneous-flight-style.css?v=20261014-1">';
 if (!html.includes('/spontaneous-flight-style.css?v=20261014-1')) html = html.replace('</head>', spontaneousStyle + '\n</head>');
 
+const desktopLayout = '<link rel="stylesheet" href="/desktop-layout.css?v=20261016-1">';
+if (!html.includes('/desktop-layout.css?v=20261016-1')) html = html.replace('</head>', desktopLayout + '\n</head>');
+
 html = html.replaceAll('/journey-banner-colours.css?v=20261014-1','/journey-banner-colours.css?v=20261014-3');
 html = html.replaceAll('/journey-banner-colours.css?v=20261014-2','/journey-banner-colours.css?v=20261014-3');
 const journeyStyle = '<link rel="stylesheet" href="/journey-banner-colours.css?v=20261014-3">';
@@ -95,4 +98,4 @@ for (const oldLoader of oldLoaders) {
 if (!html.includes('/full-app-loader.js?v=1.0.1')) html = html.replace('</html>', loader + '</html>');
 
 await fs.writeFile(file,html,'utf8');
-console.log('App shell patched to Massive Simulations 32 Companion App v1.0.1');
+console.log('App shell patched to Massive Simulations 32 Companion App v1.0.1 with responsive desktop layout');
