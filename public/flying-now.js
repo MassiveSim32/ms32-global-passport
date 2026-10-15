@@ -20,6 +20,12 @@
     .flying-now-card.is-active{border-color:#2d7a50;background:radial-gradient(circle at top right,#173b2a,#11271e 58%,#0b1725)}
     .flying-now-card.is-active .flying-now-meta{color:#8ee7b3}
     .flying-now-card.is-active #flyingNowOpen{background:#218c58!important;border-color:#36b974!important;color:#fff!important;box-shadow:0 0 0 1px #51d58a44,0 8px 24px #0e6a3d44}
+    .flying-now-card.is-active #flyingNowOpen{animation:ms32ActivePilotButtonPulse 2.6s ease-in-out infinite}
+    @keyframes ms32ActivePilotButtonPulse{
+      0%,100%{box-shadow:0 0 0 1px rgba(81,213,138,.35),0 6px 16px rgba(14,106,61,.2);filter:brightness(1)}
+      50%{box-shadow:0 0 0 5px rgba(81,213,138,.18),0 0 24px rgba(81,213,138,.42);filter:brightness(1.12)}
+    }
+    @media(prefers-reduced-motion:reduce){.flying-now-card.is-active #flyingNowOpen{animation:none!important}}
     .flying-now-active-line{display:none;margin-top:7px;font-size:10px;font-weight:800;color:#8ee7b3;letter-spacing:.03em}
     .flying-now-card.is-active .flying-now-active-line{display:block}
     .flying-now-auto-finish{display:none;margin-top:7px;font-size:9px;line-height:1.4;color:#a8cbb8;text-transform:uppercase;letter-spacing:.04em}
