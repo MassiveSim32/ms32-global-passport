@@ -85,6 +85,40 @@ async function trackUser(req) {
 function installRoutes(app) {
   if (installedApps.has(app)) return;
   installedApps.add(app);
+  originalGet.call(app, '/api/journey-leaderboard', async (req,res) => {
+    const user = authUser(req);
+    if (!user) return res.status(401).json({error:'Sign in to view the leaderboard'});
+    res.set('Cache-Control','no-store');
+    try {
+      const db = await getPool();
+      if (!db) return res.status(503).json({error:'Leaderboard unavailable'});
+      const q = await db.query(`WITH scores AS (
+        SELECT p.user_id,
+          MAX(COALESCE(u.username,p.username,'MS32 Pilot')) AS username,
+          SUM(CASE WHEN p.claimed=true AND p.verified=true
+            AND (p.event_start IS NULL OR p.event_start<=NOW())
+            AND COALESCE(p.attendance_ms,0)>=1800000
+            THEN CASE WHEN p.attendance_ms>=7200000 THEN 300
+                      WHEN p.attendance_ms>=3600000 THEN 200 ELSE 100 END
+            ELSE 0 END)::int AS points
+        FROM passport_registrations p
+        LEFT JOIN app_users u ON u.user_id=p.user_id
+        GROUP BY p.user_id
+      ), ranked AS (
+        SELECT user_id,username,points,
+          RANK() OVER (ORDER BY points DESC)::int AS rank
+        FROM scores WHERE points>0
+      )
+      SELECT user_id AS "userId",username,points,rank
+      FROM ranked WHERE rank<=20 OR user_id=$1
+      ORDER BY rank,LOWER(username),user_id LIMIT 100`,[user.id]);
+      res.json({leaders:q.rows.filter(x=>x.rank<=20),me:q.rows.find(x=>x.userId===user.id)||null});
+    } catch(e) {
+      console.error('Journey leaderboard failed:',e?.message||e);
+      res.status(500).json({error:'Could not load leaderboard'});
+    }
+  });
+
   originalGet.call(app, '/api/admin/app-users', async (req,res) => {
     const user = authUser(req);
     if (!user) return res.status(401).json({error:'Not signed in'});
