@@ -60,7 +60,7 @@
   const modal=document.createElement('div');
   modal.className='flying-now-modal hidden';
   modal.id='flyingNowModal';
-  modal.innerHTML=`<div class="flying-now-panel"><div class="eyebrow">MS32 Companion App</div><h2>I'm Flying Now</h2><p>Share an ad hoc flight with the community in #champagne-chat. Your Discord identity is added automatically.</p><label class="flying-now-field"><span>Departure</span><input id="flyingNowDeparture" maxlength="32" placeholder="E.G. KBOI"></label><label class="flying-now-field"><span>Destination</span><input id="flyingNowDestination" maxlength="32" placeholder="E.G. KMYL"></label><label class="flying-now-field"><span>Aircraft type</span><input id="flyingNowAircraft" maxlength="48" placeholder="E.G. CESSNA 208B"></label><div id="flyingNowStatus" class="flying-now-status">Post your flight, then join the Champagne Voice Channel to activate it and start earning Journey Points.</div><button class="btn primary" id="flyingNowSubmit">POST TO DISCORD</button><button class="btn secondary" id="flyingNowClose">CANCEL</button></div>`;
+  modal.innerHTML=`<div class="flying-now-panel"><div class="eyebrow">MS32 Companion App</div><h2>I'm Flying Now</h2><p>Share an ad hoc flight with the community in #champagne-chat. Your Discord identity is added automatically.</p><label class="flying-now-field"><span>Flight type</span><select id="flyingNowType" style="width:100%;padding:12px;background:#07131f;color:white;border:1px solid #29475f;border-radius:13px"><option value="route">Airport to Airport</option><option value="explore">Helicopter / Local Exploration</option><option value="test">Aircraft Testing / Free Flight</option></select></label><div id="flyingNowLocalFields" class="hidden"><label class="flying-now-field"><span>Country</span><input id="flyingNowCountry" maxlength="18" placeholder="E.G. AUSTRALIA"></label><label class="flying-now-field"><span>City / area</span><input id="flyingNowCity" maxlength="20" placeholder="E.G. HOBART"></label></div><div id="flyingNowRouteFields"><label class="flying-now-field"><span>Departure</span><input id="flyingNowDeparture" maxlength="32" placeholder="E.G. KBOI"></label><label class="flying-now-field"><span>Destination</span><input id="flyingNowDestination" maxlength="32" placeholder="E.G. KMYL"></label></div><label class="flying-now-field"><span>Aircraft type</span><input id="flyingNowAircraft" maxlength="48" placeholder="E.G. CESSNA 208B"></label><div id="flyingNowStatus" class="flying-now-status">Post your flight, then join the Champagne Voice Channel to activate it and start earning Journey Points.</div><button class="btn primary" id="flyingNowSubmit">POST TO DISCORD</button><button class="btn secondary" id="flyingNowClose">CANCEL</button></div>`;
   document.body.appendChild(modal);
 
   const $=id=>document.getElementById(id);
@@ -74,6 +74,7 @@
     });
   });
 
+  $('flyingNowType')?.addEventListener('change',()=>{const local=$('flyingNowType').value!=='route';$('flyingNowLocalFields').classList.toggle('hidden',!local);$('flyingNowRouteFields').classList.toggle('hidden',local)});
   let lastServerState='idle';
   let lastFlyingNowData={state:'idle'};
   let baseUpdateDashboard=null;
@@ -211,12 +212,15 @@
   modal.addEventListener('click',e=>{if(e.target===modal)close()});
 
   $('flyingNowSubmit')?.addEventListener('click',async()=>{
-    const departure=String($('flyingNowDeparture')?.value||'').trim().toUpperCase();
-    const destination=String($('flyingNowDestination')?.value||'').trim().toUpperCase();
+    const local=$('flyingNowType')?.value!=='route';
+    const country=String($('flyingNowCountry')?.value||'').trim().toUpperCase();
+    const city=String($('flyingNowCity')?.value||'').trim().toUpperCase();
+    const departure=local?($('flyingNowType').value==='test'?'TEST FLIGHT':'LOCAL FLIGHT'):String($('flyingNowDeparture')?.value||'').trim().toUpperCase();
+    const destination=local?`${city}, ${country}`:String($('flyingNowDestination')?.value||'').trim().toUpperCase();
     const aircraft=String($('flyingNowAircraft')?.value||'').trim().toUpperCase();
     const status=$('flyingNowStatus');
     const btn=$('flyingNowSubmit');
-    if(!departure||!destination||!aircraft){status.className='flying-now-status err';status.textContent='Please enter departure, destination and aircraft type.';return}
+    if((local&&(!city||!country||destination.length>32))||!departure||!destination||!aircraft){status.className='flying-now-status err';status.textContent=local?'Enter country, city/area and aircraft (combined location maximum 32 characters).':'Please enter departure, destination and aircraft type.';return}
     btn.disabled=true;btn.textContent='POSTING…';
     status.className='flying-now-status';status.textContent='Posting your flight to #champagne-chat…';
     try{
