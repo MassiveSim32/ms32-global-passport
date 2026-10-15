@@ -13,7 +13,7 @@
     '/airliner-location-fix.js?v=20261015-cartagena3',
     '/local-flight-stamp-fix.js?v=20261016-1',
     '/flying-now.js?v=20261016-radio1',
-    '/live-community-flights.js?v=20261015-1',
+    '/live-community-flights.js?v=20261016-access1',
     '/dynamic-home-flight-hero.js?v=20261014-1',
     '/app-header-brand.js?v=20261014-2',
     '/home-feature-tiles.js?v=20261014-6',
