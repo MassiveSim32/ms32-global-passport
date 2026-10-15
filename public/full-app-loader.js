@@ -10,7 +10,7 @@
     '/dual-clock.js?v=20261014-4',
     '/stamp-style-v2.js?v=20261015-cartagena',
     '/bush-location-fix.js?v=20261014-4',
-    '/airliner-location-fix.js?v=20261014-4',
+    '/airliner-location-fix.js?v=20261015-cartagena2',
     '/flying-now.js?v=20261015-8',
     '/live-community-flights.js?v=20261015-1',
     '/dynamic-home-flight-hero.js?v=20261014-1',
