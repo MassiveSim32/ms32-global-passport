@@ -15,30 +15,59 @@
     #home .quick button .ms32-tile-count strong{font-weight:900;color:#fff}
   `;
   document.head.appendChild(style);
+
   const pCount=document.createElement('span');
   pCount.className='ms32-tile-count';
+  pCount.innerHTML='<strong>–</strong> stamps';
   passport.appendChild(pCount);
+
   const fCount=document.createElement('span');
   fCount.className='ms32-tile-count';
   flights.appendChild(fCount);
   flights.dataset.ms32Flights='1';
 
-  const stampNode=document.getElementById('stampCount');
   const upcomingNode=document.getElementById('upcomingCount');
   const liveNode=document.getElementById('ms32LiveCount');
+  let authoritativeStampCount=null;
+
   function countFrom(node){
     const match=String(node?.textContent||'').match(/\d+/);
     return match?Number(match[0]):0;
   }
-  function update(){
-    const stamps=countFrom(stampNode);
+
+  function paintPassport(){
+    if(authoritativeStampCount===null)return;
+    const stamps=authoritativeStampCount;
+    pCount.innerHTML='<strong>'+stamps+'</strong> '+(stamps===1?'stamp':'stamps');
+  }
+
+  function paintFlights(){
     const upcoming=countFrom(upcomingNode);
     const liveText=String(liveNode?.textContent||'');
     const active=/\d+\s+LIVE/i.test(liveText)?countFrom(liveNode):null;
-    pCount.innerHTML='<strong>'+stamps+'</strong> '+(stamps===1?'stamp':'stamps');
     fCount.innerHTML='<strong>'+(active===null?'–':active)+'</strong> active · <strong>'+upcoming+'</strong> upcoming';
   }
-  const observer=new MutationObserver(update);
-  for(const node of [stampNode,upcomingNode,liveNode])if(node)observer.observe(node,{childList:true,characterData:true,subtree:true});
-  update();
+
+  async function refreshPassportCount(){
+    try{
+      const response=await fetch('/api/passport/history',{credentials:'same-origin',cache:'no-store'});
+      if(!response.ok)return;
+      const data=await response.json();
+      const ids=new Set();
+      for(const item of Array.isArray(data?.history)?data.history:[]){
+        const id=String(item?.event?.id||'');
+        const status=item?.status;
+        if(id&&status?.claimed&&status?.verified)ids.add(id);
+      }
+      authoritativeStampCount=ids.size;
+      paintPassport();
+    }catch{}
+  }
+
+  const observer=new MutationObserver(paintFlights);
+  for(const node of [upcomingNode,liveNode])if(node)observer.observe(node,{childList:true,characterData:true,subtree:true});
+
+  paintFlights();
+  refreshPassportCount();
+  setInterval(refreshPassportCount,15000);
 })();
