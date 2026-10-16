@@ -1,8 +1,9 @@
 (()=>{
-  // Keep every app shell on the same enhancement bundle. Some responses (notably
-  // the admin account's root page) already have parts of the bundle injected by
-  // the server wrapper, so skip individual files that are already present rather
-  // than aborting the whole loader.
+  // Keep every app shell on the same enhancement bundle. Scripts are appended
+  // together with async=false so the browser can download them in parallel while
+  // still executing them in the existing order. The old loader waited for every
+  // file to finish before even requesting the next one, which made the base shell
+  // visible for several seconds before the current UI finished applying.
   const files=[
     '/journey-status-sanitizer.js?v=20261014-1',
     '/rewards-prototype.js?v=20261015-v1fix',
@@ -44,16 +45,21 @@
     return [...document.scripts].some(s=>pathname(s.getAttribute('src')||'')===p);
   };
 
-  const load=(src)=>new Promise((resolve)=>{
-    if(alreadyLoaded(src)) return resolve();
-    const s=document.createElement('script');
-    s.src=src;
-    s.onload=resolve;
-    s.onerror=resolve;
-    document.body.appendChild(s);
-  });
+  const pending=[];
+  for(const src of files){
+    if(alreadyLoaded(src)) continue;
+    pending.push(new Promise(resolve=>{
+      const s=document.createElement('script');
+      s.src=src;
+      s.async=false;
+      s.onload=resolve;
+      s.onerror=resolve;
+      document.body.appendChild(s);
+    }));
+  }
 
-  (async()=>{
-    for(const src of files) await load(src);
-  })();
+  Promise.all(pending).finally(()=>{
+    document.documentElement.classList.add('ms32-ready');
+    window.dispatchEvent(new Event('ms32:ready'));
+  });
 })();
