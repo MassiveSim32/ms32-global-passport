@@ -49,6 +49,16 @@ if (!html.includes('http-equiv="Cache-Control"')) {
   );
 }
 
+// Do not paint the old base UI while the enhancement bundle is still loading.
+// A small branded boot screen is shown instead, then removed as soon as the
+// current bundle reports ready. The timeout is only a safety fallback.
+const bootStyle = `<style id="ms32BootStyle">
+html:not(.ms32-ready) .phone{visibility:hidden!important}
+html:not(.ms32-ready) body::before{content:"";position:fixed;inset:0;z-index:2147483646;background:radial-gradient(circle at top,#12314c,#06101b 52%,#02070c)}
+html:not(.ms32-ready) body::after{content:"MS32 COMPANION APP  ·  V1.0.1\\A Loading latest app…";white-space:pre;position:fixed;z-index:2147483647;left:50%;top:50%;transform:translate(-50%,-50%);color:#f5f8fb;text-align:center;font:800 13px/1.8 system-ui,-apple-system,Segoe UI,sans-serif;letter-spacing:.08em;text-transform:uppercase;padding:18px 24px;border:1px solid #2b506d;border-radius:18px;background:#0b1927e8;box-shadow:0 22px 60px #0008}
+</style><script>setTimeout(()=>document.documentElement.classList.add('ms32-ready'),8000)</script>`;
+if (!html.includes('id="ms32BootStyle"')) html = html.replace('</head>', bootStyle + '\n</head>');
+
 const quickColours = '<link rel="stylesheet" href="/home-quick-colours.css?v=20261014-1">';
 if (!html.includes('/home-quick-colours.css?v=20261014-1')) html = html.replace('</head>', quickColours + '\n</head>');
 
@@ -90,13 +100,14 @@ const oldLoaders = [
   '<script src="/full-app-loader.js?v=20261014-rc16"></script>',
   '<script src="/full-app-loader.js?v=20261014-rc17"></script>',
   '<script src="/full-app-loader.js?v=1.0.0"></script>',
-  '<script src="/full-app-loader.js?v=1.0.1"></script>'
+  '<script src="/full-app-loader.js?v=1.0.1"></script>',
+  '<script src="/full-app-loader.js?v=1.0.1-upcoming2"></script>'
 ];
-const loader = '<script src="/full-app-loader.js?v=1.0.1-upcoming2"></script>';
+const loader = '<script src="/full-app-loader.js?v=1.0.1-fastboot1"></script>';
 for (const oldLoader of oldLoaders) {
   if (html.includes(oldLoader)) html = html.replace(oldLoader, loader);
 }
-if (!html.includes('/full-app-loader.js?v=1.0.1-upcoming2')) html = html.replace('</html>', loader + '</html>');
+if (!html.includes('/full-app-loader.js?v=1.0.1-fastboot1')) html = html.replace('</html>', loader + '</html>');
 
 await fs.writeFile(file,html,'utf8');
-console.log('App shell patched to Massive Simulations 32 Companion App v1.0.1 with refreshed upcoming-event count loader');
+console.log('App shell patched to Massive Simulations 32 Companion App v1.0.1 with fast boot protection');
