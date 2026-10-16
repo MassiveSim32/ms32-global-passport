@@ -191,7 +191,7 @@ express.application.get = function appUserRegistryGet(path, ...handlers) {
 
 express.response.send = function appUserAdminSend(body) {
   if (this.req?.path === '/admin' && typeof body === 'string' && body.includes('</body>') && !body.includes('/admin-app-users.js')) {
-    body = body.replace('</body>', '<script src="/admin-app-users.js?v=20261014-1"></script><script src="/admin-persistent-history-fix.js?v=20261014-1"></script></body>');
+    body = body.replace('</body>', '<script src="/admin-app-users.js?v=20261016-pilotdetails1"></script><script src="/admin-persistent-history-fix.js?v=20261014-1"></script></body>');
   }
   return originalSend.call(this, body);
 };
