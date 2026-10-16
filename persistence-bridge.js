@@ -19,6 +19,7 @@ let hydrated = false;
 let registrationRouteDepth = 0;
 let syncTimer = null;
 let syncing = false;
+const exactPersistKeys = new Set();
 
 function key(userId, eventId) {
   return `${userId}:${eventId}`;
@@ -152,6 +153,8 @@ function hydrate(map) {
 
 async function saveRecord(record) {
   if (!db || !record?.userId || !record?.eventId || isFlyingNow(record)) return;
+  const recordKey = key(record.userId, record.eventId);
+  const exact = exactPersistKeys.has(recordKey);
   const attendanceMs = durableAttendance(record);
   const verified = !!record.verified || attendanceMs >= 30 * 60 * 1000;
   const active = record.active !== false;
@@ -164,9 +167,9 @@ async function saveRecord(record) {
       event_name=EXCLUDED.event_name,
       event_start=EXCLUDED.event_start,
       channel_id=EXCLUDED.channel_id,
-      attendance_ms=GREATEST(passport_registrations.attendance_ms,EXCLUDED.attendance_ms),
-      verified=(passport_registrations.verified OR EXCLUDED.verified),
-      claimed=(passport_registrations.claimed OR EXCLUDED.claimed),
+      attendance_ms=${exact ? 'EXCLUDED.attendance_ms' : 'GREATEST(passport_registrations.attendance_ms,EXCLUDED.attendance_ms)'},
+      verified=${exact ? 'EXCLUDED.verified' : '(passport_registrations.verified OR EXCLUDED.verified)'},
+      claimed=${exact ? 'EXCLUDED.claimed' : '(passport_registrations.claimed OR EXCLUDED.claimed)'},
       active=EXCLUDED.active,
       updated_at=NOW()
   `, [
@@ -174,6 +177,7 @@ async function saveRecord(record) {
     record.eventName || null, record.start || null, record.channelId || null,
     attendanceMs, verified, !!record.claimed, active
   ]);
+  if (exact) exactPersistKeys.delete(recordKey);
 }
 
 function scheduleSync(delay = 250) {
@@ -257,11 +261,19 @@ Map.prototype.delete = function persistentDelete(mapKey) {
   return result;
 };
 
-function wrapRegistrationHandler(handler) {
+function markAdminOverride(req) {
+  const userId = req?.body?.userId;
+  const eventId = req?.body?.eventId;
+  if (userId && eventId) exactPersistKeys.add(key(String(userId), String(eventId)));
+}
+
+function wrapRegistrationHandler(handler, exactAdminWrite = false) {
   return function persistentRegistrationHandler(req, res, next) {
     registrationRouteDepth++;
     try {
-      return handler(req, res, next);
+      const result = handler(req, res, next);
+      if (exactAdminWrite && res.statusCode < 400) markAdminOverride(req);
+      return result;
     } finally {
       registrationRouteDepth--;
       scheduleSync();
@@ -282,6 +294,10 @@ const postPaths = new Set([
   '/api/admin/attendance',
   '/api/admin/stamp'
 ]);
+const exactAdminPostPaths = new Set([
+  '/api/admin/attendance',
+  '/api/admin/stamp'
+]);
 
 const originalGet = express.application.get;
 express.application.get = function persistentGetRoute(path, ...handlers) {
@@ -296,7 +312,7 @@ const originalPost = express.application.post;
 express.application.post = function persistentPostRoute(path, ...handlers) {
   if (postPaths.has(path) && handlers.length) {
     const i = handlers.length - 1;
-    handlers[i] = wrapRegistrationHandler(handlers[i]);
+    handlers[i] = wrapRegistrationHandler(handlers[i], exactAdminPostPaths.has(path));
   }
   return originalPost.call(this, path, ...handlers);
 };
