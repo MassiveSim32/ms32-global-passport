@@ -24,9 +24,7 @@ await fs.writeFile(path.join(sponsorDir,'a2a.png'),a2aPng);
 
 let html = await fs.readFile(file,'utf8');
 
-// The HTML shell must already show the current release before enhancement scripts
-// load. Previously the base shell still said v1.0.0 and release-v1.js changed it a
-// moment later, which made the app appear to load an old version first.
+// The HTML shell must already show the current release before enhancement scripts load.
 html = html.replaceAll('v0.0.14','v1.0.1');
 html = html.replaceAll('v0.0.15','v1.0.1');
 html = html.replaceAll('v1.0.0-rc.1','v1.0.1');
@@ -91,13 +89,14 @@ const oldLoaders = [
   '<script src="/full-app-loader.js?v=20261014-rc15"></script>',
   '<script src="/full-app-loader.js?v=20261014-rc16"></script>',
   '<script src="/full-app-loader.js?v=20261014-rc17"></script>',
-  '<script src="/full-app-loader.js?v=1.0.0"></script>'
+  '<script src="/full-app-loader.js?v=1.0.0"></script>',
+  '<script src="/full-app-loader.js?v=1.0.1"></script>'
 ];
-const loader = '<script src="/full-app-loader.js?v=1.0.1"></script>';
+const loader = '<script src="/full-app-loader.js?v=1.0.1-upcoming2"></script>';
 for (const oldLoader of oldLoaders) {
   if (html.includes(oldLoader)) html = html.replace(oldLoader, loader);
 }
-if (!html.includes('/full-app-loader.js?v=1.0.1')) html = html.replace('</html>', loader + '</html>');
+if (!html.includes('/full-app-loader.js?v=1.0.1-upcoming2')) html = html.replace('</html>', loader + '</html>');
 
 await fs.writeFile(file,html,'utf8');
-console.log('App shell patched to Massive Simulations 32 Companion App v1.0.1 with responsive desktop layout');
+console.log('App shell patched to Massive Simulations 32 Companion App v1.0.1 with refreshed upcoming-event count loader');
