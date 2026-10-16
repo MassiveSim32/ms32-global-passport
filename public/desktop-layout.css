@@ -86,40 +86,111 @@
     box-shadow:inset 0 0 0 1px #31536d;
   }
 
+  /* Desktop home dashboard: explicit rows stop enhancement widgets from
+     auto-flowing into odd columns as they are injected after page load. */
   #home.active{
     display:grid;
-    grid-template-columns:minmax(0,1.45fr) minmax(320px,.8fr);
+    grid-template-columns:repeat(3,minmax(0,1fr));
     gap:14px 18px;
-    align-items:start;
+    align-items:stretch;
   }
 
-  #home > .beta-banner,
-  #home > .utc-clock,
-  #home > .eyebrow,
-  #home > #hello,
-  #home > .sub{
-    grid-column:1 / -1;
-  }
+  #home > .beta-banner{grid-column:1 / -1;grid-row:1}
 
-  #home > #nextFlight{
-    grid-column:1;
-    grid-row:auto;
+  /* Leaderboard and Journey Points share one clean header row. */
+  #home > #ms32LeaderboardBtn{
+    grid-column:1 / 3;
+    grid-row:2;
+    align-self:stretch;
+    width:100%;
+    min-height:78px;
+    height:100%;
     margin:0;
+    display:flex;
+    align-items:center;
+    justify-content:center;
   }
 
   #home > #rewardsHome{
-    grid-column:2;
+    grid-column:3;
+    grid-row:2;
     margin:0;
     height:100%;
-    min-height:130px;
+    min-height:78px;
     max-height:none;
+    align-self:stretch;
+  }
+
+  #home > .utc-clock{
+    grid-column:1 / -1;
+    grid-row:3;
+    margin:0;
+  }
+
+  #home > .eyebrow{
+    grid-column:1 / -1;
+    grid-row:4;
+    align-self:end;
+  }
+
+  #home > #hello{
+    grid-column:1 / -1;
+    grid-row:5;
+    margin-bottom:0!important;
+  }
+
+  #home > .sub{
+    grid-column:1 / -1;
+    grid-row:6;
+  }
+
+  /* Main desktop feature row: Next Community Flight, Flying Now and
+     Major Event Hub are equal-width, equal-height cards. */
+  #home > #nextFlight{
+    grid-column:1;
+    grid-row:7;
+    margin:0;
+    min-height:248px;
+    height:100%;
+    display:flex;
+    flex-direction:column;
+  }
+
+  #home > #nextFlight > .btn{
+    margin-top:auto;
+  }
+
+  #home > #homeFeatureTiles{
+    display:contents;
+  }
+
+  #home > #homeFeatureTiles > .flying-now-card{
+    grid-column:2;
+    grid-row:7;
+    margin:0;
+    min-height:248px!important;
+    height:100%;
+  }
+
+  #home > #homeFeatureTiles > .major-event-tile{
+    grid-column:3;
+    grid-row:7;
+    margin:0;
+    min-height:248px!important;
+    height:100%;
   }
 
   #home > .quick{
     grid-column:1 / -1;
+    grid-row:8;
     grid-template-columns:repeat(4,minmax(0,1fr));
     gap:12px;
     align-items:stretch;
+  }
+
+  /* Anything else injected on Home sits beneath the primary dashboard. */
+  #home > :not(.beta-banner):not(#ms32LeaderboardBtn):not(#rewardsHome):not(.utc-clock):not(.eyebrow):not(#hello):not(.sub):not(#nextFlight):not(#homeFeatureTiles):not(.quick){
+    grid-column:1 / -1;
   }
 
   #home > .card,
