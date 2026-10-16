@@ -27,8 +27,10 @@
   flights.dataset.ms32Flights='1';
 
   const upcomingNode=document.getElementById('upcomingCount');
+  const profileUpcomingNode=document.getElementById('profileFlights');
   const liveNode=document.getElementById('ms32LiveCount');
   let authoritativeStampCount=null;
+  let authoritativeUpcomingCount=null;
 
   function countFrom(node){
     const match=String(node?.textContent||'').match(/\d+/);
@@ -42,7 +44,7 @@
   }
 
   function paintFlights(){
-    const upcoming=countFrom(upcomingNode);
+    const upcoming=authoritativeUpcomingCount===null?countFrom(upcomingNode):authoritativeUpcomingCount;
     const liveText=String(liveNode?.textContent||'');
     const active=/\d+\s+LIVE/i.test(liveText)?countFrom(liveNode):null;
     fCount.innerHTML='<strong>'+(active===null?'–':active)+'</strong> active · <strong>'+upcoming+'</strong> upcoming';
@@ -64,10 +66,30 @@
     }catch{}
   }
 
-  const observer=new MutationObserver(paintFlights);
+  async function refreshUpcomingCount(){
+    try{
+      const response=await fetch('/api/events',{credentials:'same-origin',cache:'no-store'});
+      if(!response.ok)return;
+      const events=await response.json();
+      if(!Array.isArray(events))return;
+      authoritativeUpcomingCount=events.length;
+      if(upcomingNode)upcomingNode.textContent=String(authoritativeUpcomingCount);
+      if(profileUpcomingNode)profileUpcomingNode.textContent=String(authoritativeUpcomingCount);
+      paintFlights();
+    }catch{}
+  }
+
+  const observer=new MutationObserver(()=>{
+    if(authoritativeUpcomingCount!==null&&upcomingNode&&countFrom(upcomingNode)!==authoritativeUpcomingCount){
+      upcomingNode.textContent=String(authoritativeUpcomingCount);
+    }
+    paintFlights();
+  });
   for(const node of [upcomingNode,liveNode])if(node)observer.observe(node,{childList:true,characterData:true,subtree:true});
 
   paintFlights();
   refreshPassportCount();
+  refreshUpcomingCount();
   setInterval(refreshPassportCount,15000);
+  setInterval(refreshUpcomingCount,15000);
 })();
