@@ -152,12 +152,26 @@ function hydrate(map) {
 }
 
 async function saveRecord(record) {
-  if (!db || !record?.userId || !record?.eventId || isFlyingNow(record)) return;
+  if (!db || !record?.userId || !record?.eventId) return;
   const recordKey = key(record.userId, record.eventId);
   const exact = exactPersistKeys.has(recordKey);
+  if (isFlyingNow(record) && !exact) return;
+
   const attendanceMs = durableAttendance(record);
   const verified = !!record.verified || attendanceMs >= 30 * 60 * 1000;
   const active = record.active !== false;
+
+  // For a spontaneous flight, an explicit admin override that leaves no time and
+  // no stamp means the flight record should be removed completely rather than
+  // hanging around as a zero-minute history entry.
+  if (exact && isFlyingNow(record) && attendanceMs <= 0 && !record.claimed) {
+    await db.query('DELETE FROM passport_registrations WHERE user_id=$1 AND event_id=$2', [String(record.userId), String(record.eventId)]);
+    persistedRows = persistedRows.filter(r => key(r.user_id, r.event_id) !== recordKey);
+    if (registrationsMap) nativeDelete.call(registrationsMap, recordKey);
+    exactPersistKeys.delete(recordKey);
+    return;
+  }
+
   await db.query(`
     INSERT INTO passport_registrations
       (user_id,event_id,username,event_name,event_start,channel_id,attendance_ms,verified,claimed,active,updated_at)
