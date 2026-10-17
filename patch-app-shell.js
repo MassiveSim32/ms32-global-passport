@@ -109,13 +109,14 @@ const oldLoaders = [
   '<script src="/full-app-loader.js?v=1.0.1-activeflight8"></script>',
   '<script src="/full-app-loader.js?v=1.0.1-activeflight9"></script>',
   '<script src="/full-app-loader.js?v=1.0.1-activeflight10"></script>',
-  '<script src="/full-app-loader.js?v=1.0.1-spainstamp1"></script>'
+  '<script src="/full-app-loader.js?v=1.0.1-spainstamp1"></script>',
+  '<script src="/full-app-loader.js?v=1.0.1-spainstamp2"></script>'
 ];
-const loader = '<script src="/full-app-loader.js?v=1.0.1-spainstamp2"></script>';
+const loader = '<script src="/full-app-loader.js?v=1.0.1-egsu-country1"></script>';
 for (const oldLoader of oldLoaders) {
   if (html.includes(oldLoader)) html = html.replace(oldLoader, loader);
 }
-if (!html.includes('/full-app-loader.js?v=1.0.1-spainstamp2')) html = html.replace('</html>', loader + '</html>');
+if (!html.includes('/full-app-loader.js?v=1.0.1-egsu-country1')) html = html.replace('</html>', loader + '</html>');
 
 await fs.writeFile(file,html,'utf8');
 console.log('App shell patched to Massive Simulations 32 Companion App v1.0.1 with ABF81 spontaneous Spain passport stamp correction');
