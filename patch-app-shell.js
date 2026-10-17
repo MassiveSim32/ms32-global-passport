@@ -24,7 +24,6 @@ await fs.writeFile(path.join(sponsorDir,'a2a.png'),a2aPng);
 
 let html = await fs.readFile(file,'utf8');
 
-// The HTML shell must already show the current release before enhancement scripts load.
 html = html.replaceAll('v0.0.14','v1.0.1');
 html = html.replaceAll('v0.0.15','v1.0.1');
 html = html.replaceAll('v1.0.0-rc.1','v1.0.1');
@@ -49,9 +48,6 @@ if (!html.includes('http-equiv="Cache-Control"')) {
   );
 }
 
-// Do not paint the old base UI while the enhancement bundle is still loading.
-// A small branded boot screen is shown instead, then removed as soon as the
-// current bundle reports ready. The timeout is only a safety fallback.
 const bootStyle = `<style id="ms32BootStyle">
 html:not(.ms32-ready) .phone{visibility:hidden!important}
 html:not(.ms32-ready) body::before{content:"";position:fixed;inset:0;z-index:2147483646;background:radial-gradient(circle at top,#12314c,#06101b 52%,#02070c)}
@@ -102,13 +98,14 @@ const oldLoaders = [
   '<script src="/full-app-loader.js?v=1.0.0"></script>',
   '<script src="/full-app-loader.js?v=1.0.1"></script>',
   '<script src="/full-app-loader.js?v=1.0.1-upcoming2"></script>',
-  '<script src="/full-app-loader.js?v=1.0.1-fastboot1"></script>'
+  '<script src="/full-app-loader.js?v=1.0.1-fastboot1"></script>',
+  '<script src="/full-app-loader.js?v=1.0.1-activeflight1"></script>'
 ];
-const loader = '<script src="/full-app-loader.js?v=1.0.1-activeflight1"></script>';
+const loader = '<script src="/full-app-loader.js?v=1.0.1-activeflight2"></script>';
 for (const oldLoader of oldLoaders) {
   if (html.includes(oldLoader)) html = html.replace(oldLoader, loader);
 }
-if (!html.includes('/full-app-loader.js?v=1.0.1-activeflight1')) html = html.replace('</html>', loader + '</html>');
+if (!html.includes('/full-app-loader.js?v=1.0.1-activeflight2')) html = html.replace('</html>', loader + '</html>');
 
 await fs.writeFile(file,html,'utf8');
-console.log('App shell patched to Massive Simulations 32 Companion App v1.0.1 with active community flight Home card');
+console.log('App shell patched to Massive Simulations 32 Companion App v1.0.1 with pilot-scoped active community flight Home card');
