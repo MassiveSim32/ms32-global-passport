@@ -9,7 +9,7 @@
     '/rewards-prototype.js?v=20261015-v1fix',
     '/journey-leaderboard.js?v=20261016-sources1',
     '/dual-clock.js?v=20261014-4',
-    '/stamp-style-v2.js?v=20261017-canada1',
+    '/stamp-style-v2.js?v=20261017-canada2',
     '/bush-location-fix.js?v=20261014-4',
     '/airliner-location-fix.js?v=20261015-cartagena3',
     '/local-flight-stamp-fix.js?v=20261016-1',
