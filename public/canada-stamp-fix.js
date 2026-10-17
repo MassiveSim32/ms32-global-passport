@@ -3,6 +3,13 @@
   const originalData=window.stampData;
   if(typeof originalMarkup!=='function')return;
 
+  const style=document.createElement('style');
+  style.textContent=`
+    .passport-stamp .stamp-maple{position:relative;z-index:1;font-size:15px;line-height:1;margin:3px 0 0;filter:saturate(1.1)}
+    .stamp-modal-card .passport-stamp .stamp-maple{font-size:23px;margin-top:5px}
+  `;
+  document.head.appendChild(style);
+
   const cityByIcao={
     CYYT:"St. John's",
     CYYG:'Charlottetown',
@@ -26,6 +33,9 @@
       const route=`${hits[0]} → ${destination}`;
       out=out.replace(/(<div class="stamp-route">)[\s\S]*?(<\/div>)/,`$1${route}$2`);
     }
+    if(!out.includes('stamp-maple')){
+      out=out.replace(/(<div class="stamp-country">CANADA<\/div>)/,'$1<div class="stamp-maple" aria-hidden="true">🍁</div>');
+    }
     return out;
   }
 
@@ -46,4 +56,6 @@
       };
     };
   }
+
+  try{if(typeof renderStampBook==='function')renderStampBook()}catch{}
 })();
