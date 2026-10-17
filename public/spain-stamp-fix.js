@@ -3,12 +3,15 @@
   const originalData=window.stampData;
   if(typeof originalMarkup!=='function')return;
 
-  const ABF81_SPAIN_EVENT='1558597228065595504';
+  const SPAIN_EVENTS=new Set([
+    '1558597228065595504',
+    'flying-now:2026-10-17:mvbzda9a:9abc7f'
+  ]);
 
   function isSpainEvent(e){
     const id=String(e?.id||'');
     const text=`${e?.name||''} ${e?.description||''}`;
-    return id===ABF81_SPAIN_EVENT || /\bSpain\b/i.test(text);
+    return SPAIN_EVENTS.has(id) || /\bSpain\b/i.test(text);
   }
 
   function fixMarkup(markup,e){
