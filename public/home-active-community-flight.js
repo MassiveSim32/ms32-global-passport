@@ -41,10 +41,11 @@
     const threshold=Number(status.thresholdMinutes||0);
     const progress=pct(attendance,threshold);
     const voice=status.inVoice?'IN VOICE ✓':attendance>0?`WAITING · ${attendance} MIN BANKED`:'WAITING FOR VOICE';
+    const state=status.claimed?'PASSPORT STAMPED ✓':'You’re registered for this flight. Your attendance progress is shown below.';
     card.innerHTML=`
       <div class="active-live"><span class="active-dot"></span>Community flight in progress</div>
       <h2>${esc(event.name||'MS32 Community Flight')}</h2>
-      <div class="active-copy">You’re registered for this flight. Your attendance progress is shown below.</div>
+      <div class="active-copy">${esc(state)}</div>
       <div class="active-row"><span>Voice status</span><strong>${esc(voice)}</strong></div>
       <div class="active-row"><span>Attendance</span><strong>${attendance}/${threshold||'—'} min</strong></div>
       <div class="active-meter"><i style="width:${progress}%"></i></div>
@@ -57,14 +58,9 @@
       if(!r.ok){removeCard();return}
       const events=await r.json();
       if(!Array.isArray(events)||!events.length){removeCard();return}
-      for(const event of events){
-        try{
-          const s=await fetch(`/api/events/${encodeURIComponent(event.id)}/status`,{cache:'no-store',credentials:'same-origin'});
-          if(!s.ok)continue;
-          const status=await s.json();
-          if(status?.registered && !status?.claimed){render(event,status);return}
-        }catch{}
-      }
+      const event=events[0];
+      const status=event?.statusInfo;
+      if(status?.registered){render(event,status);return}
       removeCard();
     }catch{removeCard()}
   }
