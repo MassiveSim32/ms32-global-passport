@@ -105,13 +105,14 @@ const oldLoaders = [
   '<script src="/full-app-loader.js?v=1.0.1-activeflight4"></script>',
   '<script src="/full-app-loader.js?v=1.0.1-activeflight5"></script>',
   '<script src="/full-app-loader.js?v=1.0.1-activeflight6"></script>',
-  '<script src="/full-app-loader.js?v=1.0.1-activeflight7"></script>'
+  '<script src="/full-app-loader.js?v=1.0.1-activeflight7"></script>',
+  '<script src="/full-app-loader.js?v=1.0.1-activeflight8"></script>'
 ];
-const loader = '<script src="/full-app-loader.js?v=1.0.1-activeflight8"></script>';
+const loader = '<script src="/full-app-loader.js?v=1.0.1-activeflight9"></script>';
 for (const oldLoader of oldLoaders) {
   if (html.includes(oldLoader)) html = html.replace(oldLoader, loader);
 }
-if (!html.includes('/full-app-loader.js?v=1.0.1-activeflight8')) html = html.replace('</html>', loader + '</html>');
+if (!html.includes('/full-app-loader.js?v=1.0.1-activeflight9')) html = html.replace('</html>', loader + '</html>');
 
 await fs.writeFile(file,html,'utf8');
-console.log('App shell patched to Massive Simulations 32 Companion App v1.0.1 with live Sydney CYQY passport stamp and maple leaf');
+console.log('App shell patched to Massive Simulations 32 Companion App v1.0.1 with forced Sydney CYQY passport stamp and maple leaf');
