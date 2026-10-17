@@ -19,7 +19,7 @@
   document.head.appendChild(style);
 
   const PER_PAGE=6;
-  const RENDER_REV='20261017-canada-refresh1';
+  const RENDER_REV='20261017-canada-refresh3';
   let currentPage=0;
   let lastSignature='';
   let scrollTimer=null;
@@ -29,20 +29,26 @@
       const history=Array.isArray(window.passportHistoryEvents)?window.passportHistoryEvents:[];
       const live=Array.isArray(allEvents)?allEvents:[];
       const historyIds=new Set(history.filter(Boolean).map(e=>String(e.id||'')));
-      const merged=[...history,...live];
-      const seen=new Set();
-      return merged.filter(e=>{
+      const byId=new Map();
+      for(const e of history){
         const id=String(e?.id||'');
-        if(!id||seen.has(id))return false;
+        if(id)byId.set(id,e);
+      }
+      // Live Discord event metadata is authoritative for name/route changes.
+      // Override the historic event snapshot when the same event still exists live.
+      for(const e of live){
+        const id=String(e?.id||'');
+        if(id)byId.set(id,e);
+      }
+      return [...byId.values()].filter(e=>{
+        const id=String(e?.id||'');
+        if(!id)return false;
         // Flying Now stamps must exist in persistent Passport history. This keeps
         // deleted/superseded ad-hoc records from being resurrected by stale
         // allEvents/statuses data in an already-open browser session.
-        const claimed=id.startsWith('flying-now:')
+        return id.startsWith('flying-now:')
           ? historyIds.has(id)
           : (historyIds.has(id)||!!statuses?.[id]?.claimed);
-        if(!claimed)return false;
-        seen.add(id);
-        return true;
       }).sort((a,b)=>new Date(a.start||0)-new Date(b.start||0));
     }catch{return[]}
   }
@@ -56,7 +62,7 @@
   function eventSignature(e){
     const loc=e?.location&&typeof e.location==='object'?e.location:{};
     return [
-      e?.id,e?.start,e?.end,e?.title,e?.name,e?.route,e?.destination,
+      e?.id,e?.start,e?.end,e?.title,e?.name,e?.description,e?.route,e?.destination,
       e?.icao,e?.destIcao,e?.destinationIcao,loc.city,loc.country
     ].map(v=>String(v??'')).join('~');
   }
