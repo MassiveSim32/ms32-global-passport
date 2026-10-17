@@ -11,6 +11,7 @@
     '/dual-clock.js?v=20261014-4',
     '/stamp-style-v2.js?v=20261017-canada2',
     '/canada-stamp-fix.js?v=20261017-4',
+    '/spain-stamp-fix.js?v=20261018-1',
     '/bush-location-fix.js?v=20261014-4',
     '/airliner-location-fix.js?v=20261015-cartagena3',
     '/local-flight-stamp-fix.js?v=20261016-1',
