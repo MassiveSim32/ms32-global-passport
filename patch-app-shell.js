@@ -99,13 +99,14 @@ const oldLoaders = [
   '<script src="/full-app-loader.js?v=1.0.1"></script>',
   '<script src="/full-app-loader.js?v=1.0.1-upcoming2"></script>',
   '<script src="/full-app-loader.js?v=1.0.1-fastboot1"></script>',
-  '<script src="/full-app-loader.js?v=1.0.1-activeflight1"></script>'
+  '<script src="/full-app-loader.js?v=1.0.1-activeflight1"></script>',
+  '<script src="/full-app-loader.js?v=1.0.1-activeflight2"></script>'
 ];
-const loader = '<script src="/full-app-loader.js?v=1.0.1-activeflight2"></script>';
+const loader = '<script src="/full-app-loader.js?v=1.0.1-activeflight3"></script>';
 for (const oldLoader of oldLoaders) {
   if (html.includes(oldLoader)) html = html.replace(oldLoader, loader);
 }
-if (!html.includes('/full-app-loader.js?v=1.0.1-activeflight2')) html = html.replace('</html>', loader + '</html>');
+if (!html.includes('/full-app-loader.js?v=1.0.1-activeflight3')) html = html.replace('</html>', loader + '</html>');
 
 await fs.writeFile(file,html,'utf8');
-console.log('App shell patched to Massive Simulations 32 Companion App v1.0.1 with pilot-scoped active community flight Home card');
+console.log('App shell patched to Massive Simulations 32 Companion App v1.0.1 with stamp-ready active community flight Home card');
