@@ -73,7 +73,7 @@
       <div class="active-live"><span class="active-dot"></span>Community flight in progress</div>
       <h2>${esc(event.name||'MS32 Community Flight')}</h2>
       <div class="active-copy">${esc(state)}</div>
-      ${verified&&!claimed?'<div class="stamp-ready-banner">Stamp Ready ✓</div>':''}
+      ${verified&&!claimed?'<div class="stamp-ready-banner">Passport Stamp Ready ✓</div>':''}
       <div class="active-row"><span>Voice status</span><strong>${esc(voice)}</strong></div>
       <div class="active-row"><span>Attendance</span><strong>${attendance}/${threshold||'—'} min</strong></div>
       <div class="active-meter"><i style="width:${progress}%"></i></div>
