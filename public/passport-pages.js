@@ -19,7 +19,7 @@
   document.head.appendChild(style);
 
   const PER_PAGE=6;
-  const RENDER_REV='20261017-canada-refresh3';
+  const RENDER_REV='20261017-canada-refresh4';
   let currentPage=0;
   let lastSignature='';
   let scrollTimer=null;
@@ -34,8 +34,6 @@
         const id=String(e?.id||'');
         if(id)byId.set(id,e);
       }
-      // Live Discord event metadata is authoritative for name/route changes.
-      // Override the historic event snapshot when the same event still exists live.
       for(const e of live){
         const id=String(e?.id||'');
         if(id)byId.set(id,e);
@@ -43,9 +41,6 @@
       return [...byId.values()].filter(e=>{
         const id=String(e?.id||'');
         if(!id)return false;
-        // Flying Now stamps must exist in persistent Passport history. This keeps
-        // deleted/superseded ad-hoc records from being resurrected by stale
-        // allEvents/statuses data in an already-open browser session.
         return id.startsWith('flying-now:')
           ? historyIds.has(id)
           : (historyIds.has(id)||!!statuses?.[id]?.claimed);
