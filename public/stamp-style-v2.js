@@ -171,7 +171,7 @@
 
   const spontaneousCityByIcao={
     RPLL:'Manila',VVTS:'Ho Chi Minh City',VVNB:'Hanoi',WSSS:'Singapore',WMKK:'Kuala Lumpur',VTBS:'Bangkok',VHHH:'Hong Kong',RKSI:'Seoul',RJTT:'Tokyo',RJAA:'Tokyo',
-    YSSY:'Sydney',YMML:'Melbourne',YBBN:'Brisbane',YPAD:'Adelaide',YPPH:'Perth',YBCS:'Cairns',YMHB:'Hobart',YMLT:'Launceston',NZAA:'Auckland',NZWN:'Wellington',NZCH:'Christchurch',
+    EGSU:'Duxford',YSSY:'Sydney',YMML:'Melbourne',YBBN:'Brisbane',YPAD:'Adelaide',YPPH:'Perth',YBCS:'Cairns',YMHB:'Hobart',YMLT:'Launceston',NZAA:'Auckland',NZWN:'Wellington',NZCH:'Christchurch',
     KJFK:'New York',KLAX:'Los Angeles',KSFO:'San Francisco',KSEA:'Seattle',KORD:'Chicago',KATL:'Atlanta',EGLL:'London',LFPG:'Paris',EDDF:'Frankfurt',EHAM:'Amsterdam',
     OMDB:'Dubai',OMAA:'Abu Dhabi',FAOR:'Johannesburg'
   };
@@ -249,7 +249,7 @@
     const region=detectedRegion(e);
     const destinationIcao=Array.isArray(route.icaos)&&route.icaos.length?String(route.icaos[route.icaos.length-1]).toUpperCase():'';
     let country=normalCountry(loc?.country||'');
-    if(!country&&destinationIcao&&typeof countryFromIcao==='function')country=normalCountry(countryFromIcao(destinationIcao));
+    if(destinationIcao&&typeof countryFromIcao==='function'&&(family.family==='spontaneous'||!country))country=normalCountry(countryFromIcao(destinationIcao))||country;
     const explicit=explicitDestination(e);
     const localFlight=String(e?.name||'').match(/^Flying Now · (?:LOCAL FLIGHT|TEST FLIGHT) to (.+?), (.+)$/i);
     if(localFlight)country=localFlight[2].trim();
