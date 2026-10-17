@@ -4,6 +4,7 @@
   const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
   const pct=(n,d)=>d>0?Math.max(0,Math.min(100,Math.round((n/d)*100))):0;
   const graceKey=id=>`ms32-community-voice-left:${id}`;
+  const isSpontaneous=e=>String(e?.id||'').startsWith('flying-now:')||/^Flying Now\b/i.test(String(e?.name||''));
 
   function ensureStyles(){
     if(document.getElementById('activeCommunityFlightStyle'))return;
@@ -24,6 +25,15 @@
       #${CARD_ID} .active-meter{height:9px;border-radius:99px;background:#102b23;overflow:hidden;margin-top:7px}
       #${CARD_ID} .active-meter i{display:block;height:100%;background:linear-gradient(90deg,#45d18e,#9af0bc);transition:width .35s ease}
       #${CARD_ID} .claim-error{margin-top:8px;color:#ffb0a3;font-size:10px;text-align:center}
+
+      #${CARD_ID}.spontaneous{border-color:#d97720;background:radial-gradient(circle at top right,#5b3415,#34200f 54%,#16120d);box-shadow:0 0 0 1px #ff9b3d33,0 14px 34px #0004}
+      #${CARD_ID}.spontaneous.stamp-ready{border-color:#f39a3f;box-shadow:0 0 0 1px #f39a3f55,0 0 28px #ff8c2a22,0 14px 34px #0004}
+      #${CARD_ID}.spontaneous .active-live{color:#ffb261}
+      #${CARD_ID}.spontaneous .active-dot{background:#ff8c2a;box-shadow:0 0 0 4px #ff8c2a22}
+      #${CARD_ID}.spontaneous .active-copy{color:#dbc2aa}
+      #${CARD_ID}.spontaneous .active-row span{color:#c9aa8c}
+      #${CARD_ID}.spontaneous .active-meter{background:#3b2615}
+      #${CARD_ID}.spontaneous .active-meter i{background:linear-gradient(90deg,#f17821,#ffb261)}
       @keyframes ms32ActivePulse{0%,100%{transform:scale(1);opacity:1}50%{transform:scale(.78);opacity:.65}}
       @media(prefers-reduced-motion:reduce){#${CARD_ID} .active-dot{animation:none}}
     `;
@@ -35,22 +45,13 @@
   function graceState(event,status){
     const completed=!!(status?.verified||status?.claimed);
     const key=graceKey(event?.id||'');
-    if(!completed){
-      try{localStorage.removeItem(key)}catch{}
-      return {hide:false,rejoining:false,remainingMs:0};
-    }
-    if(status?.inVoice){
-      try{localStorage.removeItem(key)}catch{}
-      return {hide:false,rejoining:false,remainingMs:0};
-    }
+    if(!completed){try{localStorage.removeItem(key)}catch{};return{hide:false,rejoining:false,remainingMs:0}}
+    if(status?.inVoice){try{localStorage.removeItem(key)}catch{};return{hide:false,rejoining:false,remainingMs:0}}
     let leftAt=0;
     try{leftAt=Number(localStorage.getItem(key)||0)}catch{}
-    if(!leftAt){
-      leftAt=Date.now();
-      try{localStorage.setItem(key,String(leftAt))}catch{}
-    }
+    if(!leftAt){leftAt=Date.now();try{localStorage.setItem(key,String(leftAt))}catch{}}
     const remainingMs=Math.max(0,GRACE_MS-(Date.now()-leftAt));
-    return {hide:remainingMs<=0,rejoining:remainingMs>0,remainingMs};
+    return{hide:remainingMs<=0,rejoining:remainingMs>0,remainingMs};
   }
 
   async function claimStamp(eventId,button){
@@ -67,10 +68,7 @@
       window.dispatchEvent(new Event('ms32:stamp-claimed'));
     }catch(e){
       if(button){button.disabled=false;button.textContent=oldText}
-      const msg=document.createElement('div');
-      msg.className='claim-error';
-      msg.textContent=e?.message||'Could not claim stamp';
-      card.appendChild(msg);
+      const msg=document.createElement('div');msg.className='claim-error';msg.textContent=e?.message||'Could not claim stamp';card.appendChild(msg);
     }
   }
 
@@ -79,12 +77,8 @@
     if(!next)return;
     ensureStyles();
     let card=document.getElementById(CARD_ID);
-    if(!card){
-      card=document.createElement('div');
-      card.id=CARD_ID;
-      card.className='hero';
-      next.parentNode.insertBefore(card,next);
-    }
+    if(!card){card=document.createElement('div');card.id=CARD_ID;card.className='hero';next.parentNode.insertBefore(card,next)}
+    const spontaneous=isSpontaneous(event);
     const attendance=Number(status.attendanceMinutes||0);
     const threshold=Number(status.thresholdMinutes||0);
     const verified=!!status.verified;
@@ -96,9 +90,12 @@
     const voice=status.inVoice?'IN VOICE ✓':grace.rejoining?`REJOIN GRACE · ${countdown}`:attendance>0?`WAITING · ${attendance} MIN BANKED`:'WAITING FOR VOICE';
     const state=claimed?'PASSPORT STAMPED ✓':verified?'Attendance complete — your Passport stamp is ready to claim.':'You’re registered for this flight. Your attendance progress is shown below.';
     card.classList.toggle('stamp-ready',verified&&!claimed);
+    card.classList.toggle('spontaneous',spontaneous);
+    const label=spontaneous?'Spontaneous flight in progress':'Community flight in progress';
+    const fallback=spontaneous?'MS32 Spontaneous Flight':'MS32 Community Flight';
     card.innerHTML=`
-      <div class="active-live"><span class="active-dot"></span>Community flight in progress</div>
-      <h2>${esc(event.name||'MS32 Community Flight')}</h2>
+      <div class="active-live"><span class="active-dot"></span>${label}</div>
+      <h2>${esc(event.name||fallback)}</h2>
       <div class="active-copy">${esc(state)}</div>
       ${verified&&!claimed?'<div class="stamp-ready-banner">Passport Stamp Ready ✓</div>':''}
       ${grace.rejoining?`<div class="rejoin-banner">Left voice? Rejoin within ${esc(countdown)} to keep this flight active.</div>`:''}
@@ -106,10 +103,7 @@
       <div class="active-row"><span>Attendance</span><strong>${attendance}/${threshold||'—'} min</strong></div>
       <div class="active-meter"><i style="width:${progress}%"></i></div>
       ${claimed?'<button class="btn registered" type="button" onclick="showPage(\'passport\')">VIEW PASSPORT</button>':verified?'<button id="activeFlightClaimBtn" class="btn ready" type="button">CLAIM STAMP</button>':'<button class="btn ready" type="button" onclick="showPage(\'flights\')">VIEW FLIGHT</button>'}`;
-    if(verified&&!claimed){
-      const button=document.getElementById('activeFlightClaimBtn');
-      button?.addEventListener('click',()=>claimStamp(event.id,button),{once:true});
-    }
+    if(verified&&!claimed){const button=document.getElementById('activeFlightClaimBtn');button?.addEventListener('click',()=>claimStamp(event.id,button),{once:true})}
   }
 
   async function refresh(){
@@ -120,12 +114,7 @@
       if(!Array.isArray(events)||!events.length){removeCard();return}
       const event=events[0];
       const status=event?.statusInfo;
-      if(status?.registered){
-        const grace=graceState(event,status);
-        if(grace.hide){removeCard();return}
-        render(event,status,grace);
-        return;
-      }
+      if(status?.registered){const grace=graceState(event,status);if(grace.hide){removeCard();return}render(event,status,grace);return}
       removeCard();
     }catch{removeCard()}
   }
