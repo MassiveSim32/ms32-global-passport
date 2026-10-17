@@ -4,8 +4,8 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "start": "node patch-app-shell.js && node patch-flying-now-flight-ids.js && node patch-flying-now-radios.js && node patch-scheduled-attendance-window.js && node patch-upcoming-discord-events.js && node patch-active-community-flight.js && node patch-canada-stamp-country.js && FLYING_NOW_VOICE_CHANNEL_ID=1395185791709483049 node passport-history-entry.js",
-    "dev": "node patch-app-shell.js && node patch-flying-now-flight-ids.js && node patch-flying-now-radios.js && node patch-scheduled-attendance-window.js && node patch-upcoming-discord-events.js && node patch-active-community-flight.js && node patch-canada-stamp-country.js && FLYING_NOW_VOICE_CHANNEL_ID=1395185791709483049 node --watch passport-history-entry.js"
+    "start": "node patch-app-shell.js && node patch-active-flight-loader-version.js && node patch-flying-now-flight-ids.js && node patch-flying-now-radios.js && node patch-scheduled-attendance-window.js && node patch-upcoming-discord-events.js && node patch-active-community-flight.js && node patch-canada-stamp-country.js && FLYING_NOW_VOICE_CHANNEL_ID=1395185791709483049 node passport-history-entry.js",
+    "dev": "node patch-app-shell.js && node patch-active-flight-loader-version.js && node patch-flying-now-flight-ids.js && node patch-flying-now-radios.js && node patch-scheduled-attendance-window.js && node patch-upcoming-discord-events.js && node patch-active-community-flight.js && node patch-canada-stamp-country.js && FLYING_NOW_VOICE_CHANNEL_ID=1395185791709483049 node --watch passport-history-entry.js"
   },
   "dependencies": {
     "discord.js": "^14.22.1",
