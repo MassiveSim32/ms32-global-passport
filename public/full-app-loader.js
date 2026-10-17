@@ -16,7 +16,7 @@
     '/flying-now.js?v=20261016-radio1',
     '/live-community-flights.js?v=20261016-access1',
     '/dynamic-home-flight-hero.js?v=20261014-1',
-    '/home-active-community-flight.js?v=20261017-2',
+    '/home-active-community-flight.js?v=20261017-3',
     '/app-header-brand.js?v=20261014-2',
     '/home-feature-tiles.js?v=20261014-6',
     '/ybrm-airfield-weather.js?v=20261014-1',
