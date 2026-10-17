@@ -6,7 +6,10 @@ let src=await fs.readFile(file,'utf8');
 const countryTarget="    let country=normalCountry(loc?.country||'');\n    if(!country&&destinationIcao&&typeof countryFromIcao==='function')country=normalCountry(countryFromIcao(destinationIcao));";
 const countryReplacement="    let country=normalCountry(loc?.country||'');\n    if(destinationIcao&&/^C[A-Z0-9]{3}$/i.test(destinationIcao))country='Canada';\n    else if(!country&&destinationIcao&&typeof countryFromIcao==='function')country=normalCountry(countryFromIcao(destinationIcao));";
 
-if(src.includes(countryTarget)){
+const updatedCountryTarget="    if(destinationIcao&&typeof countryFromIcao==='function'&&(family.family==='spontaneous'||!country))country=normalCountry(countryFromIcao(destinationIcao))||country;";
+if(src.includes(updatedCountryTarget)){
+  src=src.replace(updatedCountryTarget,"    if(destinationIcao&&/^C[A-Z0-9]{3}$/i.test(destinationIcao))country='Canada';\n    else "+updatedCountryTarget.trim());
+}else if(src.includes(countryTarget)){
   src=src.replace(countryTarget,countryReplacement);
 }else if(!src.includes("/^C[A-Z0-9]{3}$/i.test(destinationIcao)")){
   throw new Error('Could not find stamp country resolution target');
