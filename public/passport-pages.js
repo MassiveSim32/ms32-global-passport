@@ -19,6 +19,7 @@
   document.head.appendChild(style);
 
   const PER_PAGE=6;
+  const RENDER_REV='20261017-canada-refresh1';
   let currentPage=0;
   let lastSignature='';
   let scrollTimer=null;
@@ -50,6 +51,14 @@
     const out=[];
     for(let i=0;i<items.length;i+=size)out.push(items.slice(i,i+size));
     return out;
+  }
+
+  function eventSignature(e){
+    const loc=e?.location&&typeof e.location==='object'?e.location:{};
+    return [
+      e?.id,e?.start,e?.end,e?.title,e?.name,e?.route,e?.destination,
+      e?.icao,e?.destIcao,e?.destinationIcao,loc.city,loc.country
+    ].map(v=>String(v??'')).join('~');
   }
 
   function controls(total){
@@ -96,7 +105,7 @@
     const host=document.getElementById('stampBook');
     if(!host)return;
     const claimed=claimedEvents();
-    const signature=claimed.map(e=>e.id).join('|');
+    const signature=`${RENDER_REV}|${claimed.map(eventSignature).join('|')}`;
     if(signature===lastSignature&&host.querySelector('.passport-carousel'))return;
     lastSignature=signature;
 
