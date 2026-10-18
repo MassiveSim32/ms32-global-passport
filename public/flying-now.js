@@ -194,7 +194,12 @@
     }catch{}
   }
 
+  let statusRequestRunning=false;
+  let stampSyncAt=0;
+  let statusTimer=null;
   async function syncStatus(){
+    if(document.hidden||statusRequestRunning)return;
+    statusRequestRunning=true;
     try{
       const r=await fetch('/api/flying-now/status',{credentials:'same-origin',cache:'no-store'});
       if(!r.ok)return;
@@ -202,9 +207,11 @@
       lastFlyingNowData=d;
       mergeJourneyStatuses(d);
       renderState(d);
-      await mergeBonusStamps();
+      const now=Date.now();
+      // Stamp history changes much less frequently than flight attendance.
+      if(now-stampSyncAt>=30000){stampSyncAt=now;await mergeBonusStamps()}
       renderHomeFlight(d);
-    }catch{}
+    }catch{}finally{statusRequestRunning=false}
   }
 
   $('flyingNowOpen')?.addEventListener('click',open);
@@ -251,6 +258,16 @@
   }
 
   renderState({state:'idle'});
-  setTimeout(()=>{syncStatus()},800);
-  setInterval(syncStatus,3000);
+  function scheduleStatus(){
+    clearTimeout(statusTimer);
+    if(document.hidden)return;
+    const active=lastFlyingNowData?.state==='active';
+    statusTimer=setTimeout(async()=>{await syncStatus();scheduleStatus()},active?5000:20000);
+  }
+  document.addEventListener('visibilitychange',()=>{
+    if(document.hidden){clearTimeout(statusTimer);return}
+    stampSyncAt=0;
+    syncStatus().finally(scheduleStatus);
+  });
+  setTimeout(()=>{syncStatus().finally(scheduleStatus)},800);
 })();
