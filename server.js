@@ -504,10 +504,10 @@ app.get('/',async(req,res,next)=>{
 
 app.use(express.static(path.join(__dirname,'public'),{
   setHeaders(res, filePath){
-    if(/[/\\\\]index\\.html$/i.test(filePath)||/[/\\\\]sw\\.js$/i.test(filePath)){
+    const ext=path.extname(filePath).toLowerCase();
+    if(filePath.endsWith('/index.html')||filePath.endsWith('/sw.js')){
       res.setHeader('Cache-Control','no-cache, must-revalidate');
-    }else if(/\\.(?:js|css|png|jpg|jpeg|webp|svg|ico|woff2?)$/i.test(filePath)){
-      // Cache revalidatable assets; versioned script URLs get refreshed by the loader.
+    }else if(['.js','.css','.png','.jpg','.jpeg','.webp','.svg','.ico','.woff','.woff2'].includes(ext)){
       res.setHeader('Cache-Control','public, max-age=3600, must-revalidate');
     }
   }
