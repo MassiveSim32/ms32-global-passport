@@ -32,27 +32,16 @@
     indicator(spontaneous,'Spontaneous Flights',spontaneousActive);
     none.hidden=communityActive!==false||spontaneousActive!==false;
   }
-  function scheduledInProgress(event,now){
-    // Discord status 2 indicates an event has been started. Exclude completed/cancelled
-    // events and spontaneous Flying Now records from the scheduled-flight indicator.
-    if(!event||String(event.id||'').startsWith('flying-now:'))return false;
-    const start=Date.parse(event.start||'');
-    const end=Date.parse(event.end||'');
-    if(!Number.isFinite(start)||now<start)return false;
-    if(Number.isFinite(end)&&now>=end)return false;
-    return Number(event.status)===2;
-  }
   async function refresh(){
     if(document.hidden||loading)return;
     loading=true;
     try{
       const results=await Promise.allSettled([
-        fetch('/api/events',{credentials:'same-origin',cache:'no-store'}).then(async r=>{if(!r.ok)throw Error('community unavailable');return r.json()}),
+        fetch('/api/events/activity',{credentials:'same-origin',cache:'no-store'}).then(async r=>{if(!r.ok)throw Error('community unavailable');return r.json()}),
         fetch('/api/community/live-flights',{credentials:'same-origin',cache:'no-store'}).then(async r=>{if(!r.ok)throw Error('spontaneous unavailable');return r.json()})
       ]);
-      if(results[0].status==='fulfilled'&&Array.isArray(results[0].value)){
-        communityActive=results[0].value.some(e=>scheduledInProgress(e,Date.now()));
-      }else communityActive=null;
+      const activity=results[0].status==='fulfilled'?results[0].value:null;
+      communityActive=typeof activity?.communityActive==='boolean'?activity.communityActive:null;
       const data=results[1].status==='fulfilled'?results[1].value:null;
       spontaneousActive=Array.isArray(data?.flights)?data.flights.length>0:null;
       render();
