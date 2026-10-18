@@ -502,7 +502,16 @@ app.get('/',async(req,res,next)=>{
   }catch{ next(); }
 });
 
-app.use(express.static(path.join(__dirname,'public')));
+app.use(express.static(path.join(__dirname,'public'),{
+  setHeaders(res, filePath){
+    if(/[/\\\\]index\\.html$/i.test(filePath)||/[/\\\\]sw\\.js$/i.test(filePath)){
+      res.setHeader('Cache-Control','no-cache, must-revalidate');
+    }else if(/\\.(?:js|css|png|jpg|jpeg|webp|svg|ico|woff2?)$/i.test(filePath)){
+      // Cache revalidatable assets; versioned script URLs get refreshed by the loader.
+      res.setHeader('Cache-Control','public, max-age=3600, must-revalidate');
+    }
+  }
+}));
 
 const port=process.env.PORT||3000;
 app.listen(port,()=>console.log(`MS32 Global Passport v0.0.15 admin+gateway listening on ${port}`));
