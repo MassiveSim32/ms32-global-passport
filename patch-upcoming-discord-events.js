@@ -26,15 +26,19 @@ if(src.includes(target)){
 const activityMarker="app.get('/api/events/activity',";
 const activityRoute=`app.get('/api/events/activity',(req,res)=>{
   const now=Date.now();
-  const active=cachedEvents.some(e=>{
+  const candidates=cachedEvents.filter(e=>{
     const status=Number(e?.status);
     if(status!==1&&status!==2)return false;
     const start=Date.parse(e?.scheduled_start_time||'');
-    const end=Date.parse(e?.scheduled_end_time||'');
-    return Number.isFinite(start)&&start<=now&&Number.isFinite(end)&&now<end;
+    if(!Number.isFinite(start)||now<start)return false;
+    const explicitEnd=Date.parse(e?.scheduled_end_time||'');
+    // Discord voice-channel events often omit scheduled_end_time. In that case,
+    // use a conservative two-hour display window, not an unlimited active state.
+    const end=Number.isFinite(explicitEnd)?explicitEnd:start+2*60*60*1000;
+    return now<end;
   });
   res.set('Cache-Control','no-store');
-  res.json({communityActive:active});
+  res.json({communityActive:candidates.length>0,activeCommunityCount:candidates.length,cacheEventCount:cachedEvents.length});
 });
 
 `;
