@@ -85,6 +85,12 @@
       const data=results[1].status==='fulfilled'?results[1].value:null;
       spontaneousFlights=Array.isArray(data?.flights)?data.flights:[];
       spontaneousActive=Array.isArray(data?.flights)?spontaneousFlights.length>0:null;
+      const activitySummary={
+        communityCount:typeof activity?.activeCommunityCount==='number'?activity.activeCommunityCount:communityActive===false?0:null,
+        spontaneousCount:spontaneousActive===null?null:spontaneousFlights.length
+      };
+      window.ms32FlightActivitySummary=activitySummary;
+      window.dispatchEvent(new CustomEvent('ms32:flight-activity',{detail:activitySummary}));
       render();
     }finally{loading=false}
   }
