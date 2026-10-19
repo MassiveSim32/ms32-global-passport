@@ -3,7 +3,7 @@ import express from 'express';
 import {Pool} from 'pg';
 
 const db=process.env.DATABASE_URL?new Pool({connectionString:process.env.DATABASE_URL,ssl:{rejectUnauthorized:false},max:3}):null;
-const DURATION_MS=10000;
+const DURATION_MS=20000;
 const questions=[
   ['On an ILS approach, what does the glideslope primarily provide?',['Lateral runway alignment','Vertical descent guidance','Distance to the threshold','Missed approach altitude'],1],
   ['What does a standard-rate turn change heading by in one minute?',['90 degrees','120 degrees','180 degrees','360 degrees'],2],
