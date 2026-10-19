@@ -28,7 +28,7 @@
 
   const upcomingNode=document.getElementById('upcomingCount');
   const profileUpcomingNode=document.getElementById('profileFlights');
-  const liveNode=document.getElementById('ms32LiveCount');
+  let flightActivity=window.ms32FlightActivitySummary||null;
   let authoritativeStampCount=null;
   let authoritativeUpcomingCount=null;
 
@@ -45,8 +45,9 @@
 
   function paintFlights(){
     const upcoming=authoritativeUpcomingCount===null?countFrom(upcomingNode):authoritativeUpcomingCount;
-    const liveText=String(liveNode?.textContent||'');
-    const active=/\d+\s+LIVE/i.test(liveText)?countFrom(liveNode):null;
+    const community=flightActivity?.communityCount;
+    const spontaneous=flightActivity?.spontaneousCount;
+    const active=Number.isFinite(community)&&Number.isFinite(spontaneous)?community+spontaneous:null;
     fCount.innerHTML='<strong>'+(active===null?'–':active)+'</strong> active · <strong>'+upcoming+'</strong> upcoming';
   }
 
@@ -85,7 +86,11 @@
     }
     paintFlights();
   });
-  for(const node of [upcomingNode,liveNode])if(node)observer.observe(node,{childList:true,characterData:true,subtree:true});
+  if(upcomingNode)observer.observe(upcomingNode,{childList:true,characterData:true,subtree:true});
+  window.addEventListener('ms32:flight-activity',event=>{
+    flightActivity=event.detail||null;
+    paintFlights();
+  });
 
   paintFlights();
   refreshPassportCount();
