@@ -125,7 +125,9 @@ async function answer(req,res){
     await schema();
     const day=String(req.body?.day||'');
     const choice=Number(req.body?.choice);
-    if(!/^\d{4}-\d{2}-\d{2}$/.test(day)||day!==utcDay()||!Number.isInteger(choice)||choice<0||choice>3)return res.status(400).json({error:'Invalid or expired question'});
+    const isToday=day===utcDay();
+    const isYesterday=Date.parse(day+'T00:00:00Z')===Date.parse(utcDay()+'T00:00:00Z')-86400000;
+    if(!/^\d{4}-\d{2}-\d{2}$/.test(day)||(!isToday&&!isYesterday)||!Number.isInteger(choice)||choice<0||choice>3)return res.status(400).json({error:'Invalid or expired question'});
     const row=await settle(user.id,day,choice);
     if(!row)return res.status(409).json({error:'Start the challenge first'});
     res.json({completed:row.jp_delta!==null,correct:row.correct,reward:row.jp_delta,correctAnswer:row.jp_delta!==null?dayQuestion(day)[2]:null});
