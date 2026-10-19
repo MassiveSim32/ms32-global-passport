@@ -16,7 +16,7 @@
     '/airliner-location-fix.js?v=20261015-cartagena3',
     '/local-flight-stamp-fix.js?v=20261016-1',
     '/flying-now.js?v=20261018-adaptive1',
-    '/live-community-flights.js?v=20261019-community-roster1',
+    '/live-community-flights.js?v=20261019-shared-count1',
     '/dynamic-home-flight-hero.js?v=20261014-1',
     '/home-active-community-flight.js?v=20261018-flighttype1',
     '/app-header-brand.js?v=20261014-2',
@@ -38,7 +38,7 @@
     '/globe-coming-soon.js?v=20261014-1',
     '/home-quick-colors.js?v=20261014-4',
     '/home-stat-links.js?v=20261014-4',
-    '/home-quick-counts.js?v=20261016-upcoming2',
+    '/home-quick-counts.js?v=20261019-live-total1',
     '/release-v1.js?v=1.0.1'
   ];
 
