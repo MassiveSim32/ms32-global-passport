@@ -3,6 +3,7 @@ import express from 'express';
 import {Pool} from 'pg';
 
 const db=process.env.DATABASE_URL?new Pool({connectionString:process.env.DATABASE_URL,ssl:{rejectUnauthorized:false},max:2}):null;
+// Installed before routes by risk-for-reward-server.js; schema is created on first trivia access.
 const originalGet=express.application.get;
 const installed=new WeakSet();
 
@@ -54,6 +55,15 @@ async function build(){
     if(r.username)x.username=r.username;
     if(String(r.event_id||'').startsWith('flying-now:'))x.spontaneousPoints+=points; else x.communityPoints+=points;
     x.overallPoints=x.communityPoints+x.spontaneousPoints;
+    byUser.set(id,x);
+  }
+  // Trivia adjustments are a separate permanent ledger. Flight attendance is untouched.
+  const trivia=await db.query('SELECT user_id,COALESCE(SUM(jp_delta),0)::int AS delta FROM ms32_trivia_attempts WHERE jp_delta IS NOT NULL GROUP BY user_id');
+  for(const r of trivia.rows){
+    const id=String(r.user_id);
+    const x=byUser.get(id)||{userId:id,username:`Discord ${id}`,communityPoints:0,spontaneousPoints:0,overallPoints:0};
+    x.triviaPoints=Number(r.delta)||0;
+    x.overallPoints=Math.max(0,x.communityPoints+x.spontaneousPoints+x.triviaPoints);
     byUser.set(id,x);
   }
   const users=[...byUser.values()];
