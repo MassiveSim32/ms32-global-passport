@@ -104,10 +104,18 @@ function installRoutes(app) {
         FROM passport_registrations p
         LEFT JOIN app_users u ON u.user_id=p.user_id
         GROUP BY p.user_id
+      ), trivia AS (
+        SELECT user_id,COALESCE(SUM(jp_delta),0)::int AS points
+        FROM ms32_trivia_attempts WHERE jp_delta IS NOT NULL GROUP BY user_id
+      ), combined AS (
+        SELECT COALESCE(s.user_id,t.user_id) AS user_id,
+          COALESCE(s.username,'MS32 Pilot') AS username,
+          GREATEST(0,COALESCE(s.points,0)+COALESCE(t.points,0))::int AS points
+        FROM scores s FULL OUTER JOIN trivia t ON s.user_id=t.user_id
       ), ranked AS (
         SELECT user_id,username,points,
           RANK() OVER (ORDER BY points DESC)::int AS rank
-        FROM scores WHERE points>0
+        FROM combined WHERE points>0
       )
       SELECT user_id AS "userId",username,points,rank
       FROM ranked WHERE rank<=20 OR user_id=$1
