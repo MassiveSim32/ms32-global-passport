@@ -140,3 +140,5 @@ function install(app){
 }
 express.application.get=function(path,...handlers){install(this);return get.call(this,path,...handlers)};
 express.application.post=function(path,...handlers){install(this);return post.call(this,path,...handlers)};
+
+void schema().catch(e=>console.error('Trivia database setup failed:',e?.message||e));
