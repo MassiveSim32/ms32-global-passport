@@ -24,11 +24,12 @@
   const board=document.createElement('section');
   board.id='ms32LiveFlights';
   board.className='ms32-live-board';
-  board.innerHTML='<div class="eyebrow">Community activity</div><h2>Active Flights</h2><div class="ms32-live-statuses"><span class="ms32-live-status" id="ms32CommunityIndicator"><span class="ms32-status-dot"></span><span>Community Flights · Checking…</span></span><span class="ms32-live-status" id="ms32SpontaneousIndicator"><span class="ms32-status-dot"></span><span>Spontaneous Flights · Checking…</span></span></div><span class="ms32-live-none" id="ms32NoActiveFlights" hidden>● No Active Flights</span><div class="ms32-live-roster" id="ms32SpontaneousRoster" hidden></div>';
+  board.innerHTML='<div class="eyebrow">Community activity</div><h2>Active Flights</h2><div class="ms32-live-statuses"><span class="ms32-live-status" id="ms32CommunityIndicator"><span class="ms32-status-dot"></span><span>Community Flights · Checking…</span></span><span class="ms32-live-status" id="ms32SpontaneousIndicator"><span class="ms32-status-dot"></span><span>Spontaneous Flights · Checking…</span></span></div><span class="ms32-live-none" id="ms32NoActiveFlights" hidden>● No Active Flights</span><div class="ms32-live-roster" id="ms32CommunityRoster" hidden></div><div class="ms32-live-roster" id="ms32SpontaneousRoster" hidden></div>';
   page.insertBefore(board,page.firstChild);
   const community=board.querySelector('#ms32CommunityIndicator');
   const spontaneous=board.querySelector('#ms32SpontaneousIndicator');
   const none=board.querySelector('#ms32NoActiveFlights');
+  const communityRoster=board.querySelector('#ms32CommunityRoster');
   const roster=board.querySelector('#ms32SpontaneousRoster');
   const radioNames={
     '1560271519387615262':'Free Flight Radio 1',
@@ -39,6 +40,7 @@
     '1560271715261747290':'Solo Flight Radio 3'
   };
   const escape=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+  let communityFlights=[];
   let spontaneousFlights=[];
   let communityActive=null,spontaneousActive=null,loading=false;
   function indicator(el,label,active){
@@ -49,6 +51,16 @@
     indicator(community,'Community Flights',communityActive);
     indicator(spontaneous,'Spontaneous Flights',spontaneousActive);
     none.hidden=communityActive!==false||spontaneousActive!==false;
+    communityRoster.hidden=!communityFlights.length;
+    communityRoster.innerHTML=communityFlights.map(f=>{
+      const name=escape(f.name||'Community Flight');
+      const start=Date.parse(f.start||'');
+      const end=Date.parse(f.end||'');
+      const fmt=t=>new Date(t).toLocaleTimeString('en-GB',{timeZone:'UTC',hour:'2-digit',minute:'2-digit'});
+      const time=Number.isFinite(start)?fmt(start)+(Number.isFinite(end)?'–'+fmt(end):'')+' UTC':'Time unavailable';
+      const channel=f.channelId?'Voice channel linked':'Discord scheduled event';
+      return '<div class="ms32-live-entry"><div class="ms32-live-entry-top"><span>✈ '+name+'</span><span class="ms32-live-entry-access">🟢 In progress</span></div><div class="ms32-live-entry-route">'+escape(time)+' · '+escape(channel)+'</div></div>';
+    }).join('');
     roster.hidden=!spontaneousFlights.length;
     roster.innerHTML=spontaneousFlights.map(f=>{
       const solo=String(f.joinPolicy||'open').toLowerCase()==='solo';
@@ -69,6 +81,7 @@
       ]);
       const activity=results[0].status==='fulfilled'?results[0].value:null;
       communityActive=typeof activity?.communityActive==='boolean'?activity.communityActive:null;
+      communityFlights=Array.isArray(activity?.flights)?activity.flights:[];
       const data=results[1].status==='fulfilled'?results[1].value:null;
       spontaneousFlights=Array.isArray(data?.flights)?data.flights:[];
       spontaneousActive=Array.isArray(data?.flights)?spontaneousFlights.length>0:null;
