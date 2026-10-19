@@ -256,10 +256,13 @@
     if(destinationIcao==='LSZH')country='Switzerland';
     const cartagenaArrival=family.family==='airliner'&&/(?:SKCG|Cartagena)/i.test(`${e?.name||''} ${e?.description||''}`);
     if(cartagenaArrival)country='Colombia';
+    const patagoniaHelicopter=String(e?.id||'')==='1560515159242571826';
+    if(patagoniaHelicopter)country='Argentina';
     let city=family.family==='spontaneous'&&destinationIcao?spontaneousCityByIcao[destinationIcao]||'':'';
     if(destinationIcao==='LSZH')city='Zurich';
     if(localFlight)city=localFlight[1].trim();
     if(cartagenaArrival)city='Cartagena';
+    if(patagoniaHelicopter)city='Chile & Argentina';
     if(!city)city=cleanDestination(explicit,country);
     if(!city&&route?.destination&&!/^\w{4}$/.test(route.destination))city=cleanDestination(route.destination,country);
     if(!city&&country&&String(loc?.place||'').toLowerCase()!==country.toLowerCase())city=cleanDestination(loc.place,country);
@@ -268,6 +271,7 @@
     if(Array.isArray(route.icaos)&&route.icaos.length>=2)displayRoute=`${route.icaos[0]} → ${route.icaos[1]}`;
     else if(parenRoute)displayRoute=`${parenRoute.from} → ${parenRoute.to}`;
     else displayRoute=route?.route||loc?.route||'COMMUNITY FLIGHT';
+    if(patagoniaHelicopter)displayRoute='Chile → Argentina';
     const hero=country||'GLOBAL PASSPORT';
     const bushPlace=city||region||((!country&&loc?.place)?loc.place:'BUSH DESTINATION');
     const secondary=family.family==='bush'?bushPlace:(city||((!country&&loc?.place)?loc.place:'MS32 DESTINATION'));
