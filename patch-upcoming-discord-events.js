@@ -38,7 +38,19 @@ const activityRoute=`app.get('/api/events/activity',(req,res)=>{
     return now<end;
   });
   res.set('Cache-Control','no-store');
-  res.json({communityActive:candidates.length>0,activeCommunityCount:candidates.length,cacheEventCount:cachedEvents.length});
+  res.json({
+    communityActive:candidates.length>0,
+    activeCommunityCount:candidates.length,
+    cacheEventCount:cachedEvents.length,
+    flights:candidates.map(e=>({
+      id:String(e.id||''),
+      name:String(e.name||'Community Flight').slice(0,120),
+      start:e.scheduled_start_time||null,
+      end:e.scheduled_end_time||null,
+      description:String(e.description||'').slice(0,1000),
+      channelId:String(e.channel_id||'')
+    }))
+  });
 });
 
 `;
