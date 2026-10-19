@@ -25,7 +25,7 @@
  document.head.appendChild(css);
  const box=document.createElement('section');
  box.id='ms32RiskForReward';
- box.innerHTML='<div class="rr-heading">🎯 Risk for Reward · Daily Aviation Trivia</div><div class="rr-sub">10 seconds · 1 attempt per day · Win +200 JP or lose up to 200 JP (never below zero)</div><button type="button" id="ms32RiskOpen">CHECK TODAY’S CHALLENGE</button><div class="rr-stats" id="ms32RiskStats">Yesterday’s anonymous results loading…</div>';
+ box.innerHTML='<div class="rr-heading">🎯 Risk for Reward · Daily Aviation Trivia</div><div class="rr-sub">10 seconds · 1 attempt per day · Win +200 JP or risk losing 200 JP</div><button type="button" id="ms32RiskOpen">CHECK TODAY’S CHALLENGE</button><div class="rr-stats" id="ms32RiskStats">Yesterday’s anonymous results loading…</div>';
  const quick=home.querySelector('.quick');
  if(quick)quick.insertAdjacentElement('afterend',box);else home.appendChild(box);
  const button=box.querySelector('#ms32RiskOpen'),stats=box.querySelector('#ms32RiskStats');
@@ -55,7 +55,7 @@
  }
  function message(panel,msg){const p=document.createElement('p');p.className='rr-note';p.textContent=msg;panel.appendChild(p);return p}
  function completed(panel,attempt){
-  message(panel,attempt.correct?'✅ Correct! +200 JP earned.':'Challenge complete. '+(Number(attempt.reward||0)<0?'You lost '+Math.abs(attempt.reward)+' JP.':'No JP deducted; your balance cannot go below zero.'));
+  message(panel,attempt.correct?'✅ Correct! +200 JP earned.':'Challenge complete. '+(Number(attempt.reward||0)<0?'You lost '+Math.abs(attempt.reward)+' JP.':'No JP deducted.'));
   message(panel,'Come back after 00:00 UTC for a new question.');
  }
  async function show(){
@@ -66,7 +66,7 @@
    if(d.attempt?.completed){completed(panel,d.attempt);return}
    if(d.attempt){question(panel,d.question,d.day,d.attempt.expiresAt);return}
    message(panel,'One difficult aviation question. Four choices. Only 10 seconds to answer after you press Start.');
-   const risk=message(panel,'Correct: +200 JP. Incorrect or timeout: lose up to 200 JP (your balance never goes negative). One attempt per UTC day.');
+   const risk=message(panel,'Correct: +200 JP. Incorrect or timeout: risk losing 200 JP. One attempt per UTC day.');
    risk.classList.add('rr-danger');
    const start=document.createElement('button');start.type='button';start.className='rr-go';start.textContent='I ACCEPT THE RISK — START';
    panel.appendChild(start);
