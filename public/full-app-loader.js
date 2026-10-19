@@ -21,6 +21,7 @@
     '/home-active-community-flight.js?v=20261018-flighttype1',
     '/app-header-brand.js?v=20261014-2',
     '/home-feature-tiles.js?v=20261014-6',
+    '/risk-for-reward.js?v=20261019-launch1',
     '/ybrm-airfield-weather.js?v=20261014-1',
     '/event-sponsors.js?v=20261014-3',
     '/nza-sponsor.js?v=20261014-1',
