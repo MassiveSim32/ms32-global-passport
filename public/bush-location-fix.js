@@ -41,6 +41,8 @@
   function fixedBushData(e){
     const s=oldStampData(e);
     if(s?.family!=='bush')return s;
+    // Today's Bush Club event: use the event ID so inconsistent Discord titles do not affect the stamp.
+    if(String(e?.id)==='1560515419637547028')return {...s,hero:'USA',city:'IDAHO'};
     const generic=/^(BUSH DESTINATION|MS32 DESTINATION|GLOBAL PASSPORT)$/i.test(String(s.city||''));
     const region=detectRegion(e);
     return {
