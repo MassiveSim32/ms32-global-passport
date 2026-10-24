@@ -9,7 +9,7 @@
     '/rewards-prototype.js?v=20261015-v1fix',
     '/journey-leaderboard.js?v=20261016-sources1',
     '/dual-clock.js?v=20261014-4',
-    '/stamp-style-v2.js?v=20261019-heli-argentina1',
+    '/stamp-style-v2.js?v=20261024-happy-hour-toyama1',
     '/canada-stamp-fix.js?v=20261019-club-fix1',
     '/spain-stamp-fix.js?v=20261018-2',
     '/bush-location-fix.js?v=20261014-4',
