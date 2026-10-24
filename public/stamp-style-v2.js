@@ -263,6 +263,8 @@
     if(localFlight)city=localFlight[1].trim();
     if(cartagenaArrival)city='Cartagena';
     if(patagoniaHelicopter)city='Chile & Argentina';
+    // Happy Hour Fridays With Zed, 23 Oct 2026: verified destination.
+    if(String(e?.id||'')==='1561332884265115738'){country='Japan';city='Toyama';}
     if(!city)city=cleanDestination(explicit,country);
     if(!city&&route?.destination&&!/^\w{4}$/.test(route.destination))city=cleanDestination(route.destination,country);
     if(!city&&country&&String(loc?.place||'').toLowerCase()!==country.toLowerCase())city=cleanDestination(loc.place,country);
