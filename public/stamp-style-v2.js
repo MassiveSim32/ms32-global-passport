@@ -176,6 +176,12 @@
     OMDB:'Dubai',OMAA:'Abu Dhabi',FAOR:'Johannesburg'
   };
 
+  // Destination ICAO takes precedence for spontaneous flights; aircraft identifiers (e.g. C750) are not airports.
+  const destinationByIcao={
+    MBSC:['Turks and Caicos Islands','South Caicos'],LFLX:['France','Châteauroux'],EHRD:['Netherlands','Rotterdam'],ENZV:['Norway','Stavanger'],EKCH:['Denmark','Copenhagen'],EGLC:['United Kingdom','London'],EGPD:['United Kingdom','Aberdeen'],VTPM:['Thailand','Mae Sot'],
+    EKHA:['Denmark','Haslev'],GCTS:['Spain','Tenerife'],LPMA:['Portugal','Funchal'],GMML:['Morocco','Laayoune'],TNCC:['Curaçao','Willemstad'],TNCM:['Sint Maarten','Philipsburg'],LPFR:['Portugal','Faro'],LEVT:['Spain','Vitoria-Gasteiz'],ENBR:['Norway','Bergen'],ENAL:['Norway','Ålesund'],EGQL:['United Kingdom','Leuchars'],LIBD:['Italy','Bari'],LKMT:['Czechia','Ostrava'],LSGG:['Switzerland','Geneva'],EFHK:['Finland','Helsinki'],EGBB:['United Kingdom','Birmingham'],HUKS:['Uganda','Kasese'],EDDB:['Germany','Berlin'],EPWA:['Poland','Warsaw'],MYSM:['Bahamas','San Salvador'],WSSS:['Singapore','Singapore'],VTBD:['Thailand','Bangkok'],EDDM:['Germany','Munich'],KDAB:['United States','Daytona Beach'],HBBA:['Burundi','Bujumbura'],LFSB:['France','Basel'],
+  };
+
   const familyRules=[
     {family:'spontaneous',label:'SPONTANEOUS FLIGHT · MS32 VERIFIED',keywords:['flying now','spontaneous flight']},
     {family:'warbirds',label:'WARBIRDS · SORTIE VERIFIED',keywords:['warbird','warbirds','sortie','heritage flight','memorial flight','squadron']},
@@ -254,12 +260,14 @@
     const localFlight=String(e?.name||'').match(/^Flying Now · (?:LOCAL FLIGHT|TEST FLIGHT) to (.+?), (.+)$/i);
     if(localFlight)country=localFlight[2].trim();
     if(destinationIcao==='LSZH')country='Switzerland';
+    if(family.family==='spontaneous'&&destinationByIcao[destinationIcao])country=destinationByIcao[destinationIcao][0];
     const cartagenaArrival=family.family==='airliner'&&/(?:SKCG|Cartagena)/i.test(`${e?.name||''} ${e?.description||''}`);
     if(cartagenaArrival)country='Colombia';
     const patagoniaHelicopter=String(e?.id||'')==='1560515159242571826';
     if(patagoniaHelicopter)country='Argentina';
     let city=family.family==='spontaneous'&&destinationIcao?spontaneousCityByIcao[destinationIcao]||'':'';
     if(destinationIcao==='LSZH')city='Zurich';
+    if(family.family==='spontaneous'&&destinationByIcao[destinationIcao])city=destinationByIcao[destinationIcao][1];
     if(localFlight)city=localFlight[1].trim();
     if(cartagenaArrival)city='Cartagena';
     if(patagoniaHelicopter)city='Chile & Argentina';
