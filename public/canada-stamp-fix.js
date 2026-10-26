@@ -32,7 +32,7 @@
     const forced=correctedRoute(e);
     if(forced)return[forced.from,forced.to];
     const text=`${e?.name||''} ${e?.description||''}`.toUpperCase();
-    return (text.match(/\bC[A-Z0-9]{3}\b/g)||[]).filter(code=>code!=='CLUB');
+    return (text.match(/\bC[A-Z]{3}\b/g)||[]).filter(code=>code!=='CLUB');
   }
 
   function resolvedStamp(e){
