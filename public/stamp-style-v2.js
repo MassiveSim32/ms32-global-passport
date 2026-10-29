@@ -271,7 +271,7 @@
     if(localFlight)city=localFlight[1].trim();
     if(cartagenaArrival)city='Cartagena';
     if(patagoniaHelicopter)city='Chile & Argentina';
-    if(String(e?.id||'')==='1563385780074971236'){country='Australia';city='Brisbane';}
+    if(String(e?.id||'')==='1563385780074971236'||(/airliner thursday/i.test(String(e?.name||e?.title||''))&&/2026-10-29/.test(String(e?.start||e?.event_start||'')))){country='Australia';city='Brisbane';}
     // Happy Hour Fridays With Zed, 23 Oct 2026: verified destination.
     if(String(e?.id||'')==='1561332884265115738'){country='Japan';city='Toyama';}
     if(!city)city=cleanDestination(explicit,country);
