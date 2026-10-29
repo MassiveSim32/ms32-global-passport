@@ -13,7 +13,7 @@
     '/canada-stamp-fix.js?v=20261026-icao-aircraft-fix1',
     '/spain-stamp-fix.js?v=20261018-2',
     '/bush-location-fix.js?v=20261014-4',
-    '/airliner-location-fix.js?v=20261015-cartagena3',
+    '/airliner-location-fix.js?v=20261029-brisbane-fix2',
     '/local-flight-stamp-fix.js?v=20261016-1',
     '/flying-now.js?v=20261018-adaptive1',
     '/live-community-flights.js?v=20261019-shared-count1',
