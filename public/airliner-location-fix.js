@@ -60,6 +60,7 @@
   function fixedAirlinerData(e){
     const s=oldStampData(e);
     if(s?.family!=='airliner')return s;
+    if(String(e?.id||'')==='1563385780074971236')return {...s,hero:'AUSTRALIA',city:'BRISBANE'};
     const flightText=textOf(e);
     const eventDate=String(e?.start||e?.scheduled_start||'');
     const isCartagena=/(?:SKCG|Cartagena)/i.test(flightText)||(/2026-10-15/.test(eventDate)&&/(?:airliner|mini fly.in|world tour)/i.test(flightText));
