@@ -201,6 +201,9 @@ express.response.send = function appUserAdminSend(body) {
   if (this.req?.path === '/admin' && typeof body === 'string' && body.includes('</body>') && !body.includes('/admin-app-users.js')) {
     body = body.replace('</body>', '<script src="/admin-app-users.js?v=20261016-pilotdetails1"></script><script src="/admin-persistent-history-fix.js?v=20261014-1"></script></body>');
   }
+  if (this.req?.path === '/admin' && typeof body === 'string' && body.includes('</body>') && !body.includes('admin-event-registration-overlay.js')) {
+    body = body.replace('</body>', '<script src="/admin-event-registration-overlay.js?v=20261103-2"></script></body>');
+  }
   return originalSend.call(this, body);
 };
 
