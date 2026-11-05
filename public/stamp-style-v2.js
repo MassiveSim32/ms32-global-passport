@@ -283,9 +283,9 @@
     else if(parenRoute)displayRoute=`${parenRoute.from} → ${parenRoute.to}`;
     else displayRoute=route?.route||loc?.route||'COMMUNITY FLIGHT';
     if(patagoniaHelicopter)displayRoute='Chile → Argentina';
-    const hero=country||'GLOBAL PASSPORT';
+    const hero=String(e?.id||'')==='1567047762510618664'?'POLAND, KRAKOW':(country||'GLOBAL PASSPORT');
     const bushPlace=city||region||((!country&&loc?.place)?loc.place:'BUSH DESTINATION');
-    const secondary=family.family==='bush'?bushPlace:(city||((!country&&loc?.place)?loc.place:'MS32 DESTINATION'));
+    const secondary=String(e?.id||'')==='1567047762510618664'?'':(family.family==='bush'?bushPlace:(city||((!country&&loc?.place)?loc.place:'MS32 DESTINATION')));
     const accent=family.family==='spontaneous'?'#a51f2d':(accentByCountry[country]||'#63d6c4');
     return{
       hero:String(hero).toUpperCase(),
