@@ -61,7 +61,7 @@
     const s=oldStampData(e);
     if(String(e?.id||'')==='1563385780074971236'||(/airliner thursday/i.test(String(e?.name||e?.title||''))&&/2026-10-29/.test(String(e?.start||e?.event_start||''))))return {...s,hero:'AUSTRALIA',city:'BRISBANE'};
     // 8 Nov 2026 Bali → Darwin: show the full arrival destination as the hero for every pilot.
-    if(String(e?.id||'')==='1567861479712104458')return {...s,hero:'AUSTRALIA, DARWIN',city:''};
+    if((String(e?.id||'')==='1567861479712104458'||/airliner\s+world\s+tour\s*[-–—:]?\s*bali\s+to\s+darwin/i.test(String(e?.name||e?.title||''))))return {...s,hero:'AUSTRALIA, DARWIN',city:'',accent:'#f3bf44'};
     if(s?.family!=='airliner')return s;
     const flightText=textOf(e);
     const eventDate=String(e?.start||e?.scheduled_start||'');
