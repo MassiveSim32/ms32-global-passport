@@ -133,5 +133,32 @@ for (const oldLoader of oldLoaders) {
 }
 if (!html.includes('/full-app-loader.js?v=1.0.1-darwin-stamp-cache4')) html = html.replace('</html>', loader + '</html>');
 
+// Render-level safeguard for the verified 8 Nov Bali-to-Darwin stamp.
+// This operates on the displayed stamp, independent of historical event metadata.
+const darwinStampGuard = `<script id="ms32DarwinStampGuard">
+(()=>{
+  function fixDarwinStamps(){
+    document.querySelectorAll('.passport-stamp.stamp-airliner').forEach(stamp=>{
+      const route=stamp.querySelector('.stamp-route')?.textContent||'';
+      const date=stamp.querySelector('.stamp-date')?.textContent||'';
+      if(!/BALI\\s*(?:→|->|TO)\\s*DARWIN/i.test(route)||!/08\\s+NOV\\s+2026/i.test(date))return;
+      const hero=stamp.querySelector('.stamp-country');
+      const city=stamp.querySelector('.stamp-city');
+      if(hero&&hero.textContent!=='AUSTRALIA, DARWIN')hero.textContent='AUSTRALIA, DARWIN';
+      if(city&&city.textContent)city.textContent='';
+    });
+  }
+  let busy=false;
+  const observer=new MutationObserver(()=>{
+    if(busy)return;
+    busy=true;
+    try{fixDarwinStamps()}finally{busy=false}
+  });
+  observer.observe(document.documentElement,{childList:true,subtree:true,characterData:true});
+  fixDarwinStamps();
+})();
+</script>`;
+if (!html.includes('id="ms32DarwinStampGuard"')) html=html.replace('</body>',darwinStampGuard+'\\n</body>');
+
 await fs.writeFile(file,html,'utf8');
 console.log('App shell patched to Massive Simulations 32 Companion App v1.0.1 with ABF81 spontaneous Spain passport stamp correction');
