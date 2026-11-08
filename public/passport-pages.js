@@ -19,7 +19,7 @@
   document.head.appendChild(style);
 
   const PER_PAGE=6;
-  const RENDER_REV='20261029-brisbane-refresh2';
+  const RENDER_REV='20261108-darwin-refresh3';
   let currentPage=0;
   let lastSignature='';
   let scrollTimer=null;
