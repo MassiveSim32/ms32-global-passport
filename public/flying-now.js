@@ -56,6 +56,16 @@
   card.className='card flying-now-card';
   card.innerHTML=`<div class="eyebrow">Spontaneous flying</div><h3>Flying Now</h3><p>Heading up outside a scheduled event? Let other MS32 pilots know where you're going and what you're flying.</p><button class="btn primary" id="flyingNowOpen">✈ I'M FLYING NOW</button><div class="flying-now-active-line" id="flyingNowActiveLine">● PILOT ACTIVE · EARNING JOURNEY POINTS</div><div class="flying-now-auto-finish">Your flight will finish automatically when you leave Champagne Voice.</div><div class="flying-now-meta" id="flyingNowMeta">Posts to #spontaneous-flights · join Champagne Voice to earn Journey Points</div>`;
   if(next?.parentNode)next.insertAdjacentElement('afterend',card); else home.appendChild(card);
+  const cancelFlightButton=document.createElement('button');
+  cancelFlightButton.id='flyingNowCancelFlight';
+  cancelFlightButton.type='button';
+  cancelFlightButton.className='btn secondary';
+  cancelFlightButton.textContent='✕ CANCEL MY FLIGHT';
+  cancelFlightButton.style.cssText='display:none;margin-top:10px;border:1px solid #a45c54;color:#ffc4bd;background:#321c20;font-size:11px';
+  const cancelFlightMessage=document.createElement('div');
+  cancelFlightMessage.setAttribute('role','status');
+  cancelFlightMessage.style.cssText='font-size:11px;margin-top:7px;color:#ffc4bd';
+  card.append(cancelFlightButton,cancelFlightMessage);
 
   const modal=document.createElement('div');
   modal.className='flying-now-modal hidden';
@@ -139,6 +149,7 @@
     lastFlyingNowData=data||{state:'idle'};
     const state=data?.state||'idle';
     lastServerState=state;
+    cancelFlightButton.style.display=['pending','active','recovered'].includes(state)?'inline-flex':'none';
     card.classList.toggle('is-pending',state==='pending');
     card.classList.toggle('is-active',state==='active');
 
@@ -214,6 +225,22 @@
     }catch{}finally{statusRequestRunning=false}
   }
 
+  cancelFlightButton.addEventListener('click',async()=>{
+    if(cancelFlightButton.disabled||!window.confirm('Cancel your spontaneous flight? It will disappear from Active Flights and stop earning Journey Points.'))return;
+    cancelFlightButton.disabled=true;
+    cancelFlightButton.textContent='CANCELLING…';
+    cancelFlightMessage.textContent='';
+    try{
+      const r=await fetch('/api/flying-now/cancel',{method:'POST',credentials:'same-origin',headers:{'content-type':'application/json'},body:'{}'});
+      const d=await r.json().catch(()=>({}));
+      if(!r.ok)throw Error(d.error||'Could not cancel flight');
+      renderState(d);
+      renderHomeFlight(d);
+      cancelFlightMessage.textContent='Flight cancelled. It is no longer active.';
+      document.dispatchEvent(new Event('visibilitychange'));
+    }catch(e){cancelFlightMessage.textContent=e.message||'Cancellation failed';}
+    finally{cancelFlightButton.disabled=false;cancelFlightButton.textContent='✕ CANCEL MY FLIGHT';}
+  });
   $('flyingNowOpen')?.addEventListener('click',open);
   $('flyingNowClose')?.addEventListener('click',close);
   modal.addEventListener('click',e=>{if(e.target===modal)close()});
