@@ -161,5 +161,21 @@ const darwinStampGuard = `<script id="ms32DarwinStampGuard">
 </script>`;
 if (!html.includes('id="ms32DarwinStampGuard"')) html=html.replace('</body>',darwinStampGuard+'\\n</body>');
 
+// Ensure old Flying Now wording cannot survive a legacy or cached UI script.
+const spontaneousChannelGuard = `<script id="ms32SpontaneousChannelGuard">
+(()=>{
+  const fix=()=>{
+    document.querySelectorAll('#flyingNowMeta, #flyingNowModal p, #flyingNowStatus').forEach(el=>{
+      if(el.textContent && el.textContent.includes('#champagne-chat')){
+        el.textContent=el.textContent.replaceAll('#champagne-chat','#spontaneous-flights');
+      }
+    });
+  };
+  new MutationObserver(fix).observe(document.documentElement,{subtree:true,childList:true,characterData:true});
+  fix();
+})();
+</script>`;
+if(!html.includes('id="ms32SpontaneousChannelGuard"')) html=html.replace('</body>',spontaneousChannelGuard+'\\n</body>');
+
 await fs.writeFile(file,html,'utf8');
 console.log('App shell patched to Massive Simulations 32 Companion App v1.0.1 with ABF81 spontaneous Spain passport stamp correction');
