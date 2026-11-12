@@ -127,11 +127,12 @@ const oldLoaders = [
   '<script src="/full-app-loader.js?v=1.0.1-risk-reward-copy3"></script>',
   '<script src="/full-app-loader.js?v=1.0.1-risk-reward-20s1"></script>'
 ];
-const loader = '<script src="/full-app-loader.js?v=1.0.2-spontaneous-channel2"></script>';
-for (const oldLoader of oldLoaders) {
-  if (html.includes(oldLoader)) html = html.replace(oldLoader, loader);
-}
-if (!html.includes('/full-app-loader.js?v=1.0.2-spontaneous-channel2')) html = html.replace('</html>', loader + '</html>');
+// Replace every historical loader reference with exactly one current loader.
+// Multiple loaders can race: an old loader may inject an outdated Flying Now script
+// before the new loader, whose alreadyLoaded check then skips the new version.
+const loader = '<script src="/full-app-loader.js?v=1.0.2-spontaneous-channel3"></script>';
+html = html.replace(/<script\\s+src=["']\\/full-app-loader\\.js\\?v=[^"']+["']><\\/script>/g, '');
+html = html.replace('</html>', loader + '</html>');
 
 // Render-level safeguard for the verified 8 Nov Bali-to-Darwin stamp.
 // This operates on the displayed stamp, independent of historical event metadata.
