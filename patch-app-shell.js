@@ -131,7 +131,7 @@ const oldLoaders = [
 // Multiple loaders can race: an old loader may inject an outdated Flying Now script
 // before the new loader, whose alreadyLoaded check then skips the new version.
 const loader = '<script src="/full-app-loader.js?v=1.0.2-spontaneous-channel3"></script>';
-html = html.replace(/<script\\s+src=["']\\/full-app-loader\\.js\\?v=[^"']+["']><\\/script>/g, '');
+html = html.replace(/<script\s+src=["']\/full-app-loader\.js\?v=[^"']+["']><\/script>/g, '');
 html = html.replace('</html>', loader + '</html>');
 
 // Render-level safeguard for the verified 8 Nov Bali-to-Darwin stamp.
