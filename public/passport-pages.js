@@ -19,7 +19,7 @@
   document.head.appendChild(style);
 
   const PER_PAGE=6;
-  const RENDER_REV='20261108-darwin-refresh3';
+  const RENDER_REV='20261112-new-orleans-force1';
   let currentPage=0;
   let lastSignature='';
   let scrollTimer=null;
@@ -118,7 +118,7 @@
 
     const pages=chunks(claimed,PER_PAGE);
     currentPage=Math.max(0,Math.min(currentPage,pages.length-1));
-    host.innerHTML=`<div class="passport-carousel"><div class="passport-track" id="passportTrack">${pages.map((page,i)=>`<section class="passport-sheet" aria-label="Passport page ${i+1} of ${pages.length}"><div class="stamp-grid">${page.map(stampMarkup).join('')}</div></section>`).join('')}</div>${controls(pages.length)}</div>`;
+    host.innerHTML=`<div class="passport-carousel"><div class="passport-track" id="passportTrack">${pages.map((page,i)=>`<section class="passport-sheet" aria-label="Passport page ${i+1} of ${pages.length}"><div class="stamp-grid">${page.map(e=>{const html=stampMarkup(e);if(String(e?.id||e?.event_id||'')!=='1568954760554483763')return html;return html.replace(/(<div class="stamp-country">)[\s\S]*?(<\/div>)/,'$1USA - NEW ORLEANS$2').replace(/(<div class="stamp-city">)[\s\S]*?(<\/div>)/,'$1$2');}).join('')}</div></section>`).join('')}</div>${controls(pages.length)}</div>`;
     attachScroll(pages.length);
     updateControls(pages.length);
     requestAnimationFrame(()=>{
