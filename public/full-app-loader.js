@@ -15,7 +15,7 @@
     '/bush-location-fix.js?v=20261014-4',
     '/airliner-location-fix.js?v=20261112-new-orleans2',
     '/local-flight-stamp-fix.js?v=20261016-1',
-    '/flying-now.js?v=20261018-adaptive1',
+    '/flying-now.js?v=20261112-spontaneous-flights1',
     '/live-community-flights.js?v=20261019-shared-count1',
     '/dynamic-home-flight-hero.js?v=20261014-1',
     '/home-active-community-flight.js?v=20261018-flighttype1',
