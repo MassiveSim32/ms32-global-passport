@@ -76,7 +76,7 @@ async function patchUi(){
   let src=await fs.readFile(file,'utf8');
   if(src.includes('flyingNowJoinPolicy'))return;
   src=src.replace('Your flight will finish automatically when you leave Champagne Voice.','Your flight will finish automatically when you leave your selected radio channel.');
-  src=src.replace('Posts to #champagne-chat · join Champagne Voice to earn Journey Points','Posts to #champagne-chat · select a radio channel to earn Journey Points');
+  src=src.replace('Posts to #spontaneous-flights · join Champagne Voice to earn Journey Points','Posts to #spontaneous-flights · select a radio channel to earn Journey Points');
   src=must(src,
     '<label class="flying-now-field"><span>Aircraft type</span><input id="flyingNowAircraft" maxlength="48" placeholder="E.G. CESSNA 208B"></label><div id="flyingNowStatus" class="flying-now-status">Post your flight, then join the Champagne Voice Channel to activate it and start earning Journey Points.</div>',
     '<label class="flying-now-field"><span>Aircraft type</span><input id="flyingNowAircraft" maxlength="48" placeholder="E.G. CESSNA 208B"></label><label class="flying-now-field"><span>Flight access</span><select id="flyingNowJoinPolicy" style="width:100%;padding:12px;background:#07131f;color:white;border:1px solid #29475f;border-radius:13px"><option value="open">🟢 Open to Join</option><option value="solo">🔒 Solo Flight</option></select></label><label class="flying-now-field"><span>Radio channel</span><select id="flyingNowRadio" style="width:100%;padding:12px;background:#07131f;color:white;border:1px solid #29475f;border-radius:13px"></select></label><div id="flyingNowStatus" class="flying-now-status">Post your flight, then join the selected Radio channel to activate it and start earning Journey Points.</div>',
@@ -89,11 +89,12 @@ async function patchUi(){
   $('flyingNowJoinPolicy')?.addEventListener('change',refreshRadios);refreshRadios();`);
   src=src.replace('● PILOT ACTIVE · IN CHAMPAGNE VOICE','● PILOT ACTIVE · IN SELECTED RADIO');
   src=src.replace("      meta.textContent='JOIN THE CHAMPAGNE VOICE CHANNEL TO START EARNING JOURNEY POINTS';","      meta.textContent=`JOIN ${radioName(data.channelId)} TO START EARNING JOURNEY POINTS`; ");
-  src=src.replace("    meta.textContent='Posts to #champagne-chat · join Champagne Voice to earn Journey Points';","    meta.textContent='Posts to #champagne-chat · select a radio channel to earn Journey Points';");
+  src=src.replace("    meta.textContent='Posts to #spontaneous-flights · join Champagne Voice to earn Journey Points';","    meta.textContent='Posts to #spontaneous-flights · select a radio channel to earn Journey Points';");
   src=src.replace("    const status=$('flyingNowStatus');","    const joinPolicy=String($('flyingNowJoinPolicy')?.value||'open');\n    const channelId=String($('flyingNowRadio')?.value||'');\n    const status=$('flyingNowStatus');");
   src=src.replace("body:JSON.stringify({departure,destination,aircraft})","body:JSON.stringify({departure,destination,aircraft,channelId,joinPolicy})");
   src=src.replace("const immediate={state:d.voiceEligible?'active':'pending',departure,destination,aircraft,attendanceMinutes:0,points:0};","const immediate={state:d.voiceEligible?'active':'pending',departure,destination,aircraft,channelId,joinPolicy,attendanceMinutes:0,points:0};");
   src=src.replace("'Join the Champagne Voice Channel to start earning Journey Points.'","`Join ${radioName(channelId)} to start earning Journey Points.`");
+  src=src.replaceAll('#champagne-chat','#spontaneous-flights');
   await fs.writeFile(file,src);
 }
 
