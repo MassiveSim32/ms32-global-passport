@@ -27,8 +27,8 @@ let html = await fs.readFile(file,'utf8');
 html = html.replaceAll('v0.0.14','v1.0.1');
 html = html.replaceAll('v0.0.15','v1.0.1');
 html = html.replaceAll('v1.0.0-rc.1','v1.0.1');
-html = html.replaceAll('COMPANION APP · V1.0.0','COMPANION APP · V1.0.1');
-html = html.replaceAll('<strong>v1.0.0</strong>','<strong>v1.0.1</strong>');
+html = html.replaceAll('COMPANION APP · V1.0.0','COMPANION APP · V1.0.2');
+html = html.replaceAll('<strong>v1.0.0</strong>','<strong>v1.0.2</strong>');
 html = html.replaceAll('<span class="beta-pill">BETA</span>','<span class="beta-pill">V1</span>');
 html = html.replaceAll('<span class="beta-pill">RC</span>','<span class="beta-pill">V1</span>');
 
@@ -51,7 +51,7 @@ if (!html.includes('http-equiv="Cache-Control"')) {
 const bootStyle = `<style id="ms32BootStyle">
 html:not(.ms32-ready) .phone{visibility:hidden!important}
 html:not(.ms32-ready) body::before{content:"";position:fixed;inset:0;z-index:2147483646;background:radial-gradient(circle at top,#12314c,#06101b 52%,#02070c)}
-html:not(.ms32-ready) body::after{content:"MS32 COMPANION APP  ·  V1.0.1\\A Loading latest app…";white-space:pre;position:fixed;z-index:2147483647;left:50%;top:50%;transform:translate(-50%,-50%);color:#f5f8fb;text-align:center;font:800 13px/1.8 system-ui,-apple-system,Segoe UI,sans-serif;letter-spacing:.08em;text-transform:uppercase;padding:18px 24px;border:1px solid #2b506d;border-radius:18px;background:#0b1927e8;box-shadow:0 22px 60px #0008}
+html:not(.ms32-ready) body::after{content:"MS32 COMPANION APP  ·  V1.0.2\\A Loading latest app…";white-space:pre;position:fixed;z-index:2147483647;left:50%;top:50%;transform:translate(-50%,-50%);color:#f5f8fb;text-align:center;font:800 13px/1.8 system-ui,-apple-system,Segoe UI,sans-serif;letter-spacing:.08em;text-transform:uppercase;padding:18px 24px;border:1px solid #2b506d;border-radius:18px;background:#0b1927e8;box-shadow:0 22px 60px #0008}
 </style><script>setTimeout(()=>document.documentElement.classList.add('ms32-ready'),8000)</script>`;
 if (!html.includes('id="ms32BootStyle"')) html = html.replace('</head>', bootStyle + '\n</head>');
 
@@ -130,7 +130,7 @@ const oldLoaders = [
 // Replace every historical loader reference with exactly one current loader.
 // Multiple loaders can race: an old loader may inject an outdated Flying Now script
 // before the new loader, whose alreadyLoaded check then skips the new version.
-const loader = '<script src="/full-app-loader.js?v=1.0.2-join-comms1"></script>';
+const loader = '<script src="/full-app-loader.js?v=1.0.2-version-label1"></script>';
 html = html.replace(/<script\s+src=["']\/full-app-loader\.js\?v=[^"']+["']><\/script>/g, '');
 html = html.replace('</html>', loader + '</html>');
 
@@ -178,4 +178,4 @@ const spontaneousChannelGuard = `<script id="ms32SpontaneousChannelGuard">
 if(!html.includes('id="ms32SpontaneousChannelGuard"')) html=html.replace('</body>',spontaneousChannelGuard+'\\n</body>');
 
 await fs.writeFile(file,html,'utf8');
-console.log('App shell patched to Massive Simulations 32 Companion App v1.0.1 with ABF81 spontaneous Spain passport stamp correction');
+console.log('App shell patched to Massive Simulations 32 Companion App v1.0.2 with ABF81 spontaneous Spain passport stamp correction');
