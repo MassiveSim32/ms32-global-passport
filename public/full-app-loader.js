@@ -40,7 +40,7 @@
     '/home-quick-colors.js?v=20261014-4',
     '/home-stat-links.js?v=20261014-4',
     '/home-quick-counts.js?v=20261019-live-total1',
-    '/release-v1.js?v=1.0.1'
+    '/release-v1.js?v=1.0.2'
   ];
 
   const pathname=src=>String(src).split('?')[0];
