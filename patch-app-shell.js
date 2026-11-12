@@ -127,11 +127,11 @@ const oldLoaders = [
   '<script src="/full-app-loader.js?v=1.0.1-risk-reward-copy3"></script>',
   '<script src="/full-app-loader.js?v=1.0.1-risk-reward-20s1"></script>'
 ];
-const loader = '<script src="/full-app-loader.js?v=1.0.1-darwin-stamp-cache4"></script>';
+const loader = '<script src="/full-app-loader.js?v=1.0.2-spontaneous-channel2"></script>';
 for (const oldLoader of oldLoaders) {
   if (html.includes(oldLoader)) html = html.replace(oldLoader, loader);
 }
-if (!html.includes('/full-app-loader.js?v=1.0.1-darwin-stamp-cache4')) html = html.replace('</html>', loader + '</html>');
+if (!html.includes('/full-app-loader.js?v=1.0.2-spontaneous-channel2')) html = html.replace('</html>', loader + '</html>');
 
 // Render-level safeguard for the verified 8 Nov Bali-to-Darwin stamp.
 // This operates on the displayed stamp, independent of historical event metadata.
