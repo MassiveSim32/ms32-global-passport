@@ -16,7 +16,7 @@ const cutoffTimers = new Map();
 const EVENT_WINDOW_MS = 3 * 60 * 60 * 1000;
 
 // Flying Now / Ad Hoc Flights
-const FLYING_NOW_TEXT_CHANNEL_ID = '1395186045846290452';
+const FLYING_NOW_TEXT_CHANNEL_ID = '1570398808141992096';
 const FLYING_NOW_VOICE_CHANNEL_ID = String(process.env.FLYING_NOW_VOICE_CHANNEL_ID || '');
 const FLYING_NOW_COOLDOWN_MS = 15 * 60 * 1000;
 const flyingNowCooldowns = new Map();
