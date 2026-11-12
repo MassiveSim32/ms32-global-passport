@@ -277,6 +277,19 @@ function installRoutes(app){
     res.set('Cache-Control','no-store, no-cache, must-revalidate, proxy-revalidate');
     res.json(await buildStatus(user.id));
   });
+  // Pilot-owned cancellation: stops attendance and removes the flight from live rosters.
+  originalPost.call(app,'/api/flying-now/cancel',async(req,res)=>{
+    const user=auth(req);
+    if(!user)return res.status(401).json({error:'Please sign in with Discord first'});
+    const session=sessions.get(String(user.id));
+    if(!session||!['pending','active','recovered'].includes(session.state)){
+      return res.status(409).json({error:'No active spontaneous flight to cancel'});
+    }
+    finishSession(user.id,'cancelled_by_pilot');
+    await persistSession(session);
+    res.set('Cache-Control','no-store');
+    res.json({ok:true,...await buildStatus(user.id)});
+  });
   originalPost.call(app,'/api/flying-now/finish',async(req,res)=>{
     const user=auth(req);
     if(!user)return res.status(401).json({error:'Please sign in with Discord first'});
