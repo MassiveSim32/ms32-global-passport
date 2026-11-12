@@ -18,7 +18,7 @@
     '/flying-now.js?v=20261112-cancel-flight1',
     '/live-community-flights.js?v=20261112-join-comms1',
     '/dynamic-home-flight-hero.js?v=20261014-1',
-    '/home-active-community-flight.js?v=20261018-flighttype1',
+    '/home-active-community-flight.js?v=20261112-cancel-card1',
     '/app-header-brand.js?v=20261014-2',
     '/home-feature-tiles.js?v=20261014-6',
     '/risk-for-reward.js?v=20261019-timer20s1',
