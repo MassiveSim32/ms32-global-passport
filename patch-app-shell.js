@@ -26,7 +26,9 @@ let html = await fs.readFile(file,'utf8');
 
 html = html.replaceAll('v0.0.14','v1.0.1');
 html = html.replaceAll('v0.0.15','v1.0.1');
-html = html.replaceAll('v1.0.0-rc.1','v1.0.1');
+html = html.replaceAll('v1.0.0-rc.1','v1.0.2');
+html = html.replaceAll('COMPANION APP · V1.0.1','COMPANION APP · V1.0.2');
+html = html.replaceAll('<strong>v1.0.1</strong>','<strong>v1.0.2</strong>');
 html = html.replaceAll('COMPANION APP · V1.0.0','COMPANION APP · V1.0.2');
 html = html.replaceAll('<strong>v1.0.0</strong>','<strong>v1.0.2</strong>');
 html = html.replaceAll('<span class="beta-pill">BETA</span>','<span class="beta-pill">V1</span>');
@@ -130,7 +132,7 @@ const oldLoaders = [
 // Replace every historical loader reference with exactly one current loader.
 // Multiple loaders can race: an old loader may inject an outdated Flying Now script
 // before the new loader, whose alreadyLoaded check then skips the new version.
-const loader = '<script src="/full-app-loader.js?v=1.0.2-version-label1"></script>';
+const loader = '<script src="/full-app-loader.js?v=1.0.2-version-label2"></script>';
 html = html.replace(/<script\s+src=["']\/full-app-loader\.js\?v=[^"']+["']><\/script>/g, '');
 html = html.replace('</html>', loader + '</html>');
 
