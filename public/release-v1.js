@@ -1,5 +1,5 @@
 (()=>{
-  const VERSION='v1.0.1';
+  const VERSION='v1.0.2';
 
   function applyReleaseBranding(){
     const subtitle=document.querySelector('.top .brand small');
