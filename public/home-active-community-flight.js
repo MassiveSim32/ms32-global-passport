@@ -24,6 +24,8 @@
       #${CARD_ID} .active-row strong{text-align:right;color:#fff}
       #${CARD_ID} .active-meter{height:9px;border-radius:99px;background:#102b23;overflow:hidden;margin-top:7px}
       #${CARD_ID} .active-meter i{display:block;height:100%;background:linear-gradient(90deg,#45d18e,#9af0bc);transition:width .35s ease}
+      #${CARD_ID} .cancel-flight-btn{display:block;width:100%;margin-top:9px;padding:11px;border-radius:12px;border:1px solid #b66a60;background:#3a1d1d;color:#ffcbc4;font-size:12px;font-weight:900;cursor:pointer}
+      #${CARD_ID} .cancel-flight-btn:disabled{opacity:.6;cursor:wait}
       #${CARD_ID} .claim-error{margin-top:8px;color:#ffb0a3;font-size:10px;text-align:center}
 
       #${CARD_ID}.spontaneous{border-color:#d97720;background:radial-gradient(circle at top right,#5b3415,#34200f 54%,#16120d);box-shadow:0 0 0 1px #ff9b3d33,0 14px 34px #0004}
@@ -72,6 +74,27 @@
     }
   }
 
+  let ownFlyingNowEventId=null;
+  async function loadOwnFlight(){
+    try{
+      const r=await fetch('/api/flying-now/status',{cache:'no-store',credentials:'same-origin'});
+      if(!r.ok)return null;
+      const d=await r.json();
+      return ['pending','active','recovered'].includes(d.state)?String(d.eventId||''):null;
+    }catch{return null}
+  }
+  async function cancelOwnFlight(button){
+    if(!window.confirm('Cancel your spontaneous flight? This ends your flight and stops Journey Points accumulation.'))return;
+    button.disabled=true;button.textContent='CANCELLING…';
+    try{
+      const r=await fetch('/api/flying-now/cancel',{method:'POST',credentials:'same-origin',headers:{'content-type':'application/json'},body:'{}'});
+      const d=await r.json().catch(()=>({}));
+      if(!r.ok)throw Error(d.error||'Could not cancel flight');
+      ownFlyingNowEventId=null;
+      removeCard();
+      window.dispatchEvent(new Event('ms32:flight-cancelled'));
+    }catch(e){button.disabled=false;button.textContent='✕ CANCEL MY FLIGHT';window.alert(e.message||'Cancellation failed')}
+  }
   function render(event,status,grace){
     const next=document.getElementById('nextFlight');
     if(!next)return;
@@ -103,6 +126,13 @@
       <div class="active-row"><span>Attendance</span><strong>${attendance}/${threshold||'—'} min</strong></div>
       <div class="active-meter"><i style="width:${progress}%"></i></div>
       ${claimed?'<button class="btn registered" type="button" onclick="showPage(\'passport\')">VIEW PASSPORT</button>':verified?'<button id="activeFlightClaimBtn" class="btn ready" type="button">CLAIM STAMP</button>':'<button class="btn ready" type="button" onclick="showPage(\'flights\')">VIEW FLIGHT</button>'}`;
+    if(spontaneous&&ownFlyingNowEventId===String(event.id)&&!claimed){
+      const button=document.createElement('button');
+      button.type='button';button.className='cancel-flight-btn';
+      button.textContent='✕ CANCEL MY FLIGHT';
+      card.appendChild(button);
+      button.addEventListener('click',()=>cancelOwnFlight(button));
+    }
     if(verified&&!claimed){const button=document.getElementById('activeFlightClaimBtn');button?.addEventListener('click',()=>claimStamp(event.id,button),{once:true})}
   }
 
@@ -113,6 +143,7 @@
       const events=await r.json();
       if(!Array.isArray(events)||!events.length){removeCard();return}
       const event=events[0];
+      ownFlyingNowEventId=await loadOwnFlight();
       const status=event?.statusInfo;
       if(status?.registered){const grace=graceState(event,status);if(grace.hide){removeCard();return}render(event,status,grace);return}
       removeCard();
