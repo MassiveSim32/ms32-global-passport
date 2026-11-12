@@ -19,6 +19,8 @@
     .ms32-live-entry-route{color:#b4cede;font-size:11px;margin-top:4px;line-height:1.45}
     .ms32-live-entry-access{font-size:10px;font-weight:800;color:#82e8b1}
     .ms32-live-entry-access.solo{color:#ffb0a8}
+    .ms32-live-join{display:inline-flex;align-items:center;justify-content:center;margin-top:9px;padding:8px 13px;border-radius:9px;border:1px solid #358b66;background:#164934;color:#b3ffda;font-size:11px;font-weight:900;text-decoration:none;letter-spacing:.04em}
+    .ms32-live-join:hover,.ms32-live-join:focus-visible{background:#216347;color:#fff}
   `;
   document.head.appendChild(style);
   const board=document.createElement('section');
@@ -39,6 +41,8 @@
     '1560271759792410696':'Solo Flight Radio 2',
     '1560271715261747290':'Solo Flight Radio 3'
   };
+  const MS32_DISCORD_GUILD_ID='838642528315506728';
+  const freeRadioIds=new Set(['1560271519387615262','1560271563901771836','1560271637796884530']);
   const escape=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
   let communityFlights=[];
   let spontaneousFlights=[];
@@ -64,11 +68,13 @@
     roster.hidden=!spontaneousFlights.length;
     roster.innerHTML=spontaneousFlights.map(f=>{
       const solo=String(f.joinPolicy||'open').toLowerCase()==='solo';
-      const radio=radioNames[String(f.channelId||'')]||'Radio channel unavailable';
+      const channelId=String(f.channelId||'');
+      const radio=radioNames[channelId]||'Radio channel unavailable';
+      const joinButton=!solo&&freeRadioIds.has(channelId)?'<a class="ms32-live-join" href="https://discord.com/channels/'+MS32_DISCORD_GUILD_ID+'/'+channelId+'" target="_blank" rel="noopener noreferrer" aria-label="Join '+escape(radio)+' on Discord">🎧 JOIN COMMS ↗</a>':'';
       const pilot=escape(f.pilot||'MS32 Pilot');
       const departure=escape(f.departure||'—');
       const destination=escape(f.destination||'—');
-      return '<div class="ms32-live-entry"><div class="ms32-live-entry-top"><span>✈ '+pilot+'</span><span class="ms32-live-entry-access '+(solo?'solo':'')+'">'+(solo?'🔒 Solo':'🟢 Free to join')+'</span></div><div class="ms32-live-entry-route">'+departure+' → '+destination+' · '+escape(radio)+'</div></div>';
+      return '<div class="ms32-live-entry"><div class="ms32-live-entry-top"><span>✈ '+pilot+'</span><span class="ms32-live-entry-access '+(solo?'solo':'')+'">'+(solo?'🔒 Solo':'🟢 Free to join')+'</span></div><div class="ms32-live-entry-route">'+departure+' → '+destination+' · '+escape(radio)+'</div>'+joinButton+'</div>';
     }).join('');
   }
   async function refresh(){
