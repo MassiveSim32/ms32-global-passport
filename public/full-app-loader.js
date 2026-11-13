@@ -34,7 +34,7 @@
     '/asobo-event-sponsor.js?v=20261015-1',
     '/a2a-new-logo.js?v=20261015-2',
     '/balanced-sponsor-grid.js?v=20261113-original-sponsor-logos1',
-    '/passport-pages.js?v=20261112-new-orleans-force1',
+    '/passport-pages.js?v=20261113-broome-arrival1',
     '/passport-history.js?v=20261017-live-metadata1',
     '/globe-coming-soon.js?v=20261014-1',
     '/home-quick-colors.js?v=20261014-4',
