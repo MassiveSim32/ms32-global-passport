@@ -38,7 +38,15 @@
     .event-registration-grid button:active{transform:translateY(1px)}
     .major-event-roster{margin-top:12px;border:1px solid #385c78;background:#0b1d2d;border-radius:14px;padding:14px}
     .major-event-roster h4{margin:0 0 10px;font-size:13px;color:#fff}
-    .major-event-roster ul{margin:0;padding-left:20px;line-height:1.8;font-size:12px}
+    .major-event-roster{margin:0 0 5px;border-color:#2d756b;background:linear-gradient(145deg,#12332f,#0b201f);box-shadow:inset 0 0 0 1px #3c987022}
+    .major-event-roster[hidden]{display:none}
+    .major-event-roster h4{color:#b8f5d4}
+    .major-event-roster ul{margin:0;padding:0;list-style:none;display:grid;gap:6px}
+    .major-event-roster li{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:8px 10px;border:1px solid #2d756b;border-radius:9px;background:#09251e;color:#f0fff7;font-size:12px}
+    .major-event-odds{flex-shrink:0;font-weight:900;color:#c4ffb4;border:1px solid #468e5b;border-radius:7px;padding:3px 7px;background:#183c27}
+    .major-event-odds-note{margin:0 0 10px;color:#a9d9c3;font-size:10px}
+    .event-registration-grid button[aria-expanded="true"]{border-color:#48a77c;background:linear-gradient(145deg,#174f49,#102f31)}
+
     .major-event-schedule{display:grid;gap:10px;margin-top:13px}
     .major-event-schedule-row{display:grid;grid-template-columns:82px 1fr;gap:12px;align-items:center;border:1px solid #2d756b;background:linear-gradient(145deg,#12332f,#0b201f);border-radius:14px;padding:13px 14px}
     .major-event-schedule-row strong{font-size:13px;color:#73e1c5;letter-spacing:.05em}
@@ -94,6 +102,26 @@
     if(nav)app.insertBefore(page,nav);else app.appendChild(page);
 
     page.querySelector('.major-event-back')?.addEventListener('click',()=>{if(typeof showPage==='function')showPage('home')});
+    // Keep each roster directly beneath its own event button.
+    page.querySelectorAll('[data-major-registration]').forEach((button,eventIndex)=>{
+      const roster=page.querySelector('#major-'+button.dataset.majorRegistration+'-roster');
+      if(!roster)return;
+      button.insertAdjacentElement('afterend',roster);
+      button.setAttribute('aria-expanded','false');
+      button.setAttribute('aria-controls',roster.id);
+      const note=document.createElement('p');
+      note.className='major-event-odds-note';
+      note.textContent='Just-for-fun fictional odds — no real betting.';
+      roster.querySelector('h4')?.insertAdjacentElement('afterend',note);
+      roster.querySelectorAll('li').forEach((li,pilotIndex)=>{
+        const odds=document.createElement('span');
+        odds.className='major-event-odds';
+        odds.textContent=(2+((eventIndex*13+pilotIndex*7+3)%29)/4).toFixed(2)+'×';
+        odds.setAttribute('aria-label','Fictional odds '+odds.textContent);
+        li.appendChild(odds);
+      });
+      button.addEventListener('click',()=>button.setAttribute('aria-expanded',String(!roster.hidden)));
+    });
     page.querySelector('[data-major-registration="stol-comp"]')?.addEventListener('click',()=>{
       const roster=page.querySelector('#major-stol-comp-roster');
       if(roster)roster.hidden=!roster.hidden;
