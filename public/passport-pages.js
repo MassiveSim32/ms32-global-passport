@@ -17,16 +17,19 @@
     @media(min-width:700px){.passport-swipehint{display:none}}
   `;
   style.textContent+=`
-    .passport-stamp.ms32-broome-stamp{min-height:152px;border:3px double #f8d985;border-radius:20px;transform:rotate(-2deg);background:radial-gradient(circle at 80% 10%,#7443a0,#381b68 58%,#1a103b);color:#ffe9a2;box-shadow:inset 0 0 0 3px #ad8b43,0 4px 15px #0005;padding:12px 8px;gap:8px}
-    .ms32-broome-kicker{font-size:9px;letter-spacing:.12em;font-weight:900}
-    .ms32-broome-title{font-size:15px;font-weight:1000;line-height:1.12;max-width:100%}
-    .ms32-broome-message{font-size:14px;color:#fff;font-weight:900;text-transform:none}
-    .ms32-broome-date{font-size:8px;letter-spacing:.08em}
+    .passport-stamp.ms32-broome-stamp{position:relative;isolation:isolate;min-height:152px;border:4px dashed #fff1b0;border-radius:22px;transform:rotate(-3deg);background:radial-gradient(circle at 80% 15%,#237e81 0,#07575c 40%,#103e50 75%,#10233c 100%);color:#fff5cb;box-shadow:inset 0 0 0 3px #ed564f,inset 0 0 0 7px #ffe2a0,0 5px 16px #0005;padding:13px 8px;gap:6px;overflow:hidden;text-shadow:0 1px 2px #123b49}
+    .passport-stamp.ms32-broome-stamp:before{content:"🎄";position:absolute;left:5px;bottom:4px;font-size:27px;opacity:.95;transform:rotate(-12deg)}
+    .passport-stamp.ms32-broome-stamp:after{content:"🎅";position:absolute;right:5px;top:3px;font-size:27px;transform:rotate(15deg)}
+    .ms32-broome-kicker{font-size:9px;letter-spacing:.09em;font-weight:1000;color:#ffdd8a}
+    .ms32-broome-title{font-size:15px;font-weight:1000;line-height:1.1;max-width:100%;color:#fff}
+    .ms32-broome-message{font-size:15px;color:#ffe68e;font-weight:1000;text-transform:none}
+    .ms32-broome-xmas{font-size:10px;font-weight:1000;letter-spacing:.06em;color:#fff;text-transform:uppercase;background:#bf353c;border-radius:15px;padding:3px 9px;max-width:92%}
+    .ms32-broome-date{font-size:8px;letter-spacing:.08em;color:#f4e3ba}
   `;
   document.head.appendChild(style);
 
   const PER_PAGE=6;
-  const RENDER_REV='20261113-broome-permanent1';
+  const RENDER_REV='20261113-broome-xmas1';
   let currentPage=0;
   let lastSignature='';
   let scrollTimer=null;
@@ -147,7 +150,7 @@
 
     const pages=chunks(claimed,PER_PAGE);
     currentPage=Math.max(0,Math.min(currentPage,pages.length-1));
-    host.innerHTML=`<div class="passport-carousel"><div class="passport-track" id="passportTrack">${pages.map((page,i)=>`<section class="passport-sheet" aria-label="Passport page ${i+1} of ${pages.length}"><div class="stamp-grid">${page.map(e=>{const html=(e?.ms32BroomeCommemorative||String(e?.id||'')==='ms32-broome-flyin-2026')?'<div class="passport-stamp ms32-broome-stamp"><div class="ms32-broome-kicker">✈ MS32 · YBRM ✈</div><div class="ms32-broome-title">MASSIVE FLY IN BROOME!</div><div class="ms32-broome-message">You made it!</div><div class="ms32-broome-date">14 NOV 2026 · VERIFIED</div></div>':stampMarkup(e);if(String(e?.id||e?.event_id||'')!=='1568954760554483763')return html;return html.replace(/(<div class="stamp-country">)[\s\S]*?(<\/div>)/,'$1USA - NEW ORLEANS$2').replace(/(<div class="stamp-city">)[\s\S]*?(<\/div>)/,'$1$2');}).join('')}</div></section>`).join('')}</div>${controls(pages.length)}</div>`;
+    host.innerHTML=`<div class="passport-carousel"><div class="passport-track" id="passportTrack">${pages.map((page,i)=>`<section class="passport-sheet" aria-label="Passport page ${i+1} of ${pages.length}"><div class="stamp-grid">${page.map(e=>{const html=(e?.ms32BroomeCommemorative||String(e?.id||'')==='ms32-broome-flyin-2026')?'<div class="passport-stamp ms32-broome-stamp"><div class="ms32-broome-kicker">✈ MS32 · YBRM ✈</div><div class="ms32-broome-title">MASSIVE FLY IN BROOME!</div><div class="ms32-broome-message">You made it! 🎉</div><div class="ms32-broome-xmas">🎁 MS32 Christmas Party 🎁</div><div class="ms32-broome-date">14 NOV 2026 · VERIFIED</div></div>':stampMarkup(e);if(String(e?.id||e?.event_id||'')!=='1568954760554483763')return html;return html.replace(/(<div class="stamp-country">)[\s\S]*?(<\/div>)/,'$1USA - NEW ORLEANS$2').replace(/(<div class="stamp-city">)[\s\S]*?(<\/div>)/,'$1$2');}).join('')}</div></section>`).join('')}</div>${controls(pages.length)}</div>`;
     attachScroll(pages.length);
     updateControls(pages.length);
     requestAnimationFrame(()=>{
