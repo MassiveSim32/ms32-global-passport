@@ -36,6 +36,9 @@
     .event-registration-grid{display:grid;grid-template-columns:1fr;gap:9px;margin-top:13px}
     .event-registration-grid button{width:100%;border:1px solid #385c78;background:linear-gradient(145deg,#12304a,#0b1d2d);color:#fff;border-radius:14px;padding:13px 14px;text-align:left;font-size:11px;font-weight:900;letter-spacing:.035em;cursor:pointer}
     .event-registration-grid button:active{transform:translateY(1px)}
+    .major-event-roster{margin-top:12px;border:1px solid #385c78;background:#0b1d2d;border-radius:14px;padding:14px}
+    .major-event-roster h4{margin:0 0 10px;font-size:13px;color:#fff}
+    .major-event-roster ul{margin:0;padding-left:20px;line-height:1.8;font-size:12px}
     .major-event-schedule{display:grid;gap:10px;margin-top:13px}
     .major-event-schedule-row{display:grid;grid-template-columns:82px 1fr;gap:12px;align-items:center;border:1px solid #2d756b;background:linear-gradient(145deg,#12332f,#0b201f);border-radius:14px;padding:13px 14px}
     .major-event-schedule-row strong{font-size:13px;color:#73e1c5;letter-spacing:.05em}
@@ -85,12 +88,16 @@
         <button type="button" data-major-section="airfield"><span>◎</span>YBRM AIRFIELD INFO<small>Broome airport information for pilots</small></button>
       </div>
       <div id="major-sponsors" class="card major-event-info"><div class="eyebrow">Sponsors</div><h3>Massive Fly In Broome Sponsors</h3><p class="sub">Sponsor information will be added here as event partners are confirmed.</p></div>
-      <div id="major-events" class="card major-event-info"><div class="eyebrow">Events &amp; Registrations</div><h3>Choose an Event</h3><p class="sub">Select an event below to continue to its registration area.</p><div class="event-registration-grid"><button type="button" data-major-registration="drag-racing">DRAG RACING</button><button type="button" data-major-registration="landing-challenge">LANDING CHALLENGE</button><button type="button" data-major-registration="helicopter-precision">HELICOPTER PRECISION</button><button type="button" data-major-registration="jetson-super-cup">JETSON SUPER CUP</button><button type="button" data-major-registration="stol-comp">STOL COMP.</button></div></div>
+      <div id="major-events" class="card major-event-info"><div class="eyebrow">Events &amp; Registrations</div><h3>Choose an Event</h3><p class="sub">Select an event below to continue to its registration area.</p><div class="event-registration-grid"><button type="button" data-major-registration="drag-racing">DRAG RACING</button><button type="button" data-major-registration="landing-challenge">LANDING CHALLENGE</button><button type="button" data-major-registration="helicopter-precision">HELICOPTER PRECISION</button><button type="button" data-major-registration="jetson-super-cup">JETSON SUPER CUP</button><button type="button" data-major-registration="stol-comp">STOL COMP.</button></div><div id="major-drag-racing-roster" class="major-event-roster" hidden><h4>Drag Racing · 1130 UTC</h4><ul><li>Treetops Trev</li><li>Bryan</li><li>ABF</li><li>Zed</li><li>Srinoob</li><li>Hookalaya James</li><li>Horus</li><li>Kevin</li></ul></div></div>
       <div id="major-times" class="card major-event-info"><div class="eyebrow">Times</div><h3>14th November 2026</h3><div class="major-event-schedule"><div class="major-event-schedule-row"><strong>0400 UTC</strong><span>Global Fly In to Broome</span></div><div class="major-event-schedule-row"><strong>0930 UTC</strong><span>Competitions Commence</span></div></div></div>
       <div id="major-airfield" class="card major-event-info"><div class="eyebrow">YBRM</div><h3>Broome Airfield Information</h3><p class="sub">Dedicated YBRM pilot information, arrival notes and useful airfield details will be added here for the event.</p></div>`;
     if(nav)app.insertBefore(page,nav);else app.appendChild(page);
 
     page.querySelector('.major-event-back')?.addEventListener('click',()=>{if(typeof showPage==='function')showPage('home')});
+    page.querySelector('[data-major-registration="drag-racing"]')?.addEventListener('click',()=>{
+      const roster=page.querySelector('#major-drag-racing-roster');
+      if(roster)roster.hidden=!roster.hidden;
+    });
     page.querySelectorAll('[data-major-section]').forEach(btn=>btn.addEventListener('click',()=>{
       page.querySelectorAll('.major-event-info').forEach(x=>x.classList.remove('active'));
       document.getElementById(`major-${btn.dataset.majorSection}`)?.classList.add('active');
