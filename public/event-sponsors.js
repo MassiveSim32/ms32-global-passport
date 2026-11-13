@@ -23,9 +23,9 @@
   document.head.appendChild(style);
 
   host.innerHTML=`
-    <div class="eyebrow">Sponsors</div>
-    <h3>Massive Fly In Broome Sponsors</h3>
-    <p class="sponsor-intro">Proudly supported by our event partners. Sponsor logos will appear here together as they are confirmed.</p>
+    <div class="eyebrow">Sponsors &amp; Prizes</div>
+    <h3>Massive Fly In Broome Sponsors &amp; Prizes</h3>
+    <p class="sponsor-intro">Tap a sponsor logo to reveal their prize pack.</p>
     <div class="event-sponsor-grid" aria-label="Event sponsors">
       <div class="event-sponsor-tile orbx">
         <img src="/images/orbx.svg?v=20261014-1" alt="ORBX">
