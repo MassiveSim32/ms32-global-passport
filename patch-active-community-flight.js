@@ -14,5 +14,11 @@ if(existing.test(src)){
   src=src.replace(marker,route+marker);
 }
 
+// Preserve YBRM eligibility from Discord event descriptions in the persisted registration title.
+const broomeJoinMarker="  r.username=req.authUser.username;\n  registrations.set(k,r);";
+if(src.includes(broomeJoinMarker)){
+  src=src.replace(broomeJoinMarker,
+    "  r.username=req.authUser.username;\n  if(/\\bYBRM\\b/i.test(String(e.description||''))&&!/\\bYBRM\\b/i.test(String(r.eventName||'')))r.eventName+= ' · YBRM';\n  registrations.set(k,r);");
+}
 await fs.writeFile(file,src,'utf8');
 console.log('Active community flight endpoint now follows the signed-in pilot registration and event time window');
