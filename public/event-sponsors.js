@@ -35,6 +35,5 @@
         <img src="${a2aLogo}" alt="A2A Simulations">
         <div class="event-sponsor-label">Event Sponsor</div>
       </div>
-      <div class="event-sponsor-tile placeholder">More event partners<br>to be announced</div>
     </div>`;
 })();
