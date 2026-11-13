@@ -57,7 +57,7 @@
 
   // Commemorative stamp: issued from verified, claimed flight history only.
   // The event timestamp is the recorded flight time, not independently verified landing telemetry.
-  const BROOME_START=Date.parse('2026-11-14T00:00:00Z');
+  const BROOME_START=Date.parse('2026-11-13T00:00:00Z');
   const BROOME_CUTOFF=Date.parse('2026-11-14T11:30:00Z');
   function broomeArrivalStamp(events){
     const candidates=[...events,...(Array.isArray(allEvents)?allEvents:[]),...(Array.isArray(window.passportHistoryEvents)?window.passportHistoryEvents:[])];
