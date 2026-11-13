@@ -74,7 +74,7 @@ const journeyStyle = '<link rel="stylesheet" href="/journey-banner-colours.css?v
 if (!html.includes('/journey-banner-colours.css?v=20261014-3')) html = html.replace('</head>', journeyStyle + '\n</head>');
 
 const oldLoaders = [
-  '<script src="/full-app-loader.js?v=1.0.1-heli-stamp-fix1"></script>',
+  '<script src="/full-app-loader.js?v=20261113-event-times2"></script>',
   '<script src="/full-app-loader.js?v=1.0.1-krakow-stamp-cache2"></script>',
   '<script src="/full-app-loader.js?v=1.0.1-darwin-stamp-cache3"></script>',
   '<script src="/full-app-loader.js?v=20261013-15"></script>',
