@@ -5,7 +5,10 @@
 
   const style=document.createElement('style');
   style.textContent=`
-    .home-feature-tiles{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:11px 0}
+    .home-feature-tiles{display:grid;grid-template-columns:1fr;gap:10px;margin:11px 0}
+    #home>.major-event-tile{min-height:0;margin:0 0 14px;padding:18px;border-color:#a28cf0;box-shadow:inset 0 0 28px #8f7cff18,0 8px 24px #1e174033}
+    #home>.major-event-tile .major-event-title{font-size:23px}
+    #home>.major-event-tile .major-event-action{font-size:13px}
     .home-feature-tiles .flying-now-card{margin:0;min-height:190px;display:flex;flex-direction:column;justify-content:space-between;border-radius:20px}
     .home-feature-tiles .flying-now-card p{font-size:10px;line-height:1.4}
     .home-feature-tiles .flying-now-card .flying-now-meta{font-size:8px;line-height:1.35}
@@ -86,7 +89,8 @@
       <div class="major-event-copy">Featured MS32 community event with dedicated event information.</div>
     </div>
     <button class="major-event-action" type="button">MAJOR EVENT HUB</button>`;
-  wrap.appendChild(major);
+  // Make the significant Broome Fly-In the first feature on the Home page.
+  home.insertBefore(major,home.firstElementChild);
 
   const app=document.getElementById('app');
   const nav=app?.querySelector('.nav');
