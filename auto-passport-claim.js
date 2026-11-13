@@ -39,7 +39,7 @@ async function autoClaimSweep() {
         channel_id,$1,true,true,false,NOW()
       FROM passport_registrations
       WHERE event_id <> 'ms32-broome-flyin-2026'
-        AND event_start >= '2026-11-14T00:00:00Z'::timestamptz
+        AND event_start >= '2026-11-13T00:00:00Z'::timestamptz
         AND event_start <= '2026-11-14T11:30:00Z'::timestamptz
         AND event_name ILIKE '%YBRM%'
         AND attendance_ms >= $1
