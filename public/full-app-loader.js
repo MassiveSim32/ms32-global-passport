@@ -23,7 +23,7 @@
     '/home-feature-tiles.js?v=20261113-original-sponsor-logos1',
     '/risk-for-reward.js?v=20261019-timer20s1',
     '/ybrm-airfield-weather.js?v=20261014-1',
-    '/event-sponsors.js?v=20261113-original-sponsor-logos1',
+    '/event-sponsors.js?v=20261113-no-placeholder1',
     '/nza-sponsor.js?v=20261014-1',
     '/hangar713-sponsor.js?v=20261014-1',
     '/hangar713-replacement-logo.js?v=20261015-1',
