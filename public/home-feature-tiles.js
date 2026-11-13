@@ -27,6 +27,10 @@
     .major-event-title{font-size:18px;line-height:1.08;font-weight:1000;margin:3px 0 5px;position:relative;z-index:1}
     .major-event-date{font-size:10px;font-weight:900;color:#a99cff;letter-spacing:.05em;text-transform:uppercase;position:relative;z-index:1}
     .major-event-copy{font-size:9px;color:#bbb6cf;line-height:1.4;margin-top:8px;position:relative;z-index:1}
+    .major-event-countdown{margin-top:12px;padding:12px 10px;border:1px solid #a58be077;border-radius:14px;background:#110f28a8;text-align:center;position:relative;z-index:1}
+    .major-event-countdown-label{font-size:10px;font-weight:900;letter-spacing:.12em;color:#e6d5ff;text-transform:uppercase}
+    .major-event-countdown-clock{font-size:clamp(23px,5vw,34px);font-weight:1000;letter-spacing:.08em;color:#fff4cc;font-variant-numeric:tabular-nums;line-height:1.4}
+    .major-event-countdown-note{font-size:10px;color:#c8bde5}
     .major-event-action{width:100%;margin-top:12px;border:1px solid #7462c5;background:linear-gradient(135deg,#8f7cff,#6f5de0);color:#fff;border-radius:13px;padding:11px;font-weight:900;cursor:pointer;position:relative;z-index:1;box-shadow:0 6px 16px #392f7b44}
     .major-event-action:active{transform:translateY(1px)}
     .major-event-page .event-hub-head{border:1px solid #6655a8;background:radial-gradient(circle at top right,#46367f,#211d35 55%,#0b1725);border-radius:22px;padding:16px;margin:8px 0 12px}
@@ -94,6 +98,11 @@
       <div class="major-event-title">Massive Fly In “Broome”</div>
       <div class="major-event-date">14th November 2026</div>
       <div class="major-event-copy">Featured MS32 community event with dedicated event information.</div>
+      <div class="major-event-countdown" role="timer" aria-label="Countdown to 14 November 2026 at 0900 UTC">
+        <div class="major-event-countdown-label">Countdown to Fly In · 0900 UTC</div>
+        <div class="major-event-countdown-clock" id="broomeEventCountdown">--d --h --m --s</div>
+        <div class="major-event-countdown-note">Saturday 14 November 2026</div>
+      </div>
     </div>
     <button class="major-event-action" type="button">MAJOR EVENT HUB</button>`;
   // Make the significant Broome Fly-In the first feature on the Home page.
@@ -182,5 +191,23 @@
     }));
   }
 
+  const countdown=major.querySelector('#broomeEventCountdown');
+  const countdownTarget=Date.UTC(2026,10,14,9,0,0);
+  function updateBroomeCountdown(){
+    if(!countdown?.isConnected){clearInterval(countdownInterval);return;}
+    const remaining=Math.max(0,Math.ceil((countdownTarget-Date.now())/1000));
+    if(remaining===0){
+      countdown.textContent='FLY IN STARTED!';
+      clearInterval(countdownInterval);
+      return;
+    }
+    const days=Math.floor(remaining/86400);
+    const hours=Math.floor((remaining%86400)/3600);
+    const minutes=Math.floor((remaining%3600)/60);
+    const seconds=remaining%60;
+    countdown.textContent=days+'d '+String(hours).padStart(2,'0')+'h '+String(minutes).padStart(2,'0')+'m '+String(seconds).padStart(2,'0')+'s';
+  }
+  const countdownInterval=setInterval(updateBroomeCountdown,1000);
+  updateBroomeCountdown();
   major.querySelector('button')?.addEventListener('click',()=>{if(typeof showPage==='function')showPage('majorEvent')});
 })();
