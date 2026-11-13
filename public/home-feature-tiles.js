@@ -9,9 +9,9 @@
     #home>.major-event-tile{min-height:0;margin:0 0 14px;padding:18px;border-color:#a28cf0;box-shadow:inset 0 0 28px #8f7cff18,0 8px 24px #1e174033}
     /* Soft rotating violet/gold light tracing the event card border. */
     #home>.major-event-tile{isolation:isolate}
-    #home>.major-event-tile:before{content:'';position:absolute;inset:0;border-radius:inherit;padding:3px;background:conic-gradient(from 0deg,#9c80ff,#4b367a 22%,#d8b96d 42%,#fff0bd 50%,#7d66da 70%,#9c80ff);-webkit-mask:linear-gradient(#fff 0 0) content-box,linear-gradient(#fff 0 0);-webkit-mask-composite:xor;mask:linear-gradient(#fff 0 0) content-box,linear-gradient(#fff 0 0);mask-composite:exclude;pointer-events:none;z-index:2;animation:ms32-event-border-spin 7s linear infinite}
+    #home>.major-event-tile:before{content:'';position:absolute;inset:0;border-radius:inherit;padding:3px;background:linear-gradient(115deg,#9c80ff,#4b367a,#d8b96d,#fff0bd,#7d66da,#9c80ff);background-size:300% 300%;-webkit-mask:linear-gradient(#fff 0 0) content-box,linear-gradient(#fff 0 0);-webkit-mask-composite:xor;mask:linear-gradient(#fff 0 0) content-box,linear-gradient(#fff 0 0);mask-composite:exclude;pointer-events:none;z-index:2;animation:ms32-event-border-spin 7s ease-in-out infinite}
     #home>.major-event-tile{animation:ms32-event-border-glow 3.5s ease-in-out infinite alternate}
-    @keyframes ms32-event-border-spin{to{transform:rotate(360deg) scale(1.7)}}
+    @keyframes ms32-event-border-spin{0%,100%{background-position:0% 50%}50%{background-position:100% 50%}}
     @keyframes ms32-event-border-glow{from{box-shadow:0 0 10px #8f7cff35,0 8px 24px #1e174033}to{box-shadow:0 0 24px #b79bff65,0 0 9px #d8b96d55,0 8px 24px #1e174033}}
     @media(prefers-reduced-motion:reduce){#home>.major-event-tile,#home>.major-event-tile:before{animation:none!important}}
     #home>.major-event-tile .major-event-title{font-size:23px}
