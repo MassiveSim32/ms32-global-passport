@@ -44,6 +44,9 @@
     .major-event-roster ul{margin:0;padding:0;list-style:none;display:grid;gap:6px}
     .major-event-roster li{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:8px 10px;border:1px solid #2d756b;border-radius:9px;background:#09251e;color:#f0fff7;font-size:12px}
     .major-event-odds{flex-shrink:0;font-weight:900;color:#c4ffb4;border:1px solid #468e5b;border-radius:7px;padding:3px 7px;background:#183c27}
+    .major-event-roster li.major-event-favourite{border-color:#c6a34e;background:linear-gradient(105deg,#59461f 0%,#3e371f 38%,#09251e 100%);box-shadow:inset 3px 0 0 #e6c66a,0 0 12px #c69b2d22}
+    .major-event-favourite .major-event-odds{color:#ffe8a0;border-color:#c6a34e;background:linear-gradient(135deg,#79571e,#3a2c14)}
+    .major-event-favourite-label{font-size:9px;font-weight:900;color:#ffe29a;letter-spacing:.05em;margin-left:7px}
     .major-event-odds-note{margin:0 0 10px;color:#a9d9c3;font-size:10px}
     .event-registration-grid button[aria-expanded="true"]{border-color:#48a77c;background:linear-gradient(145deg,#174f49,#102f31)}
 
@@ -113,13 +116,24 @@
       note.className='major-event-odds-note';
       note.textContent='Just-for-fun fictional odds — no real betting.';
       roster.querySelector('h4')?.insertAdjacentElement('afterend',note);
+      let favourite=null;
+      let lowestOdds=Infinity;
       roster.querySelectorAll('li').forEach((li,pilotIndex)=>{
+        const value=2+((eventIndex*13+pilotIndex*7+3)%29)/4;
         const odds=document.createElement('span');
         odds.className='major-event-odds';
-        odds.textContent=(2+((eventIndex*13+pilotIndex*7+3)%29)/4).toFixed(2)+'×';
+        odds.textContent=value.toFixed(2)+'×';
         odds.setAttribute('aria-label','Fictional odds '+odds.textContent);
         li.appendChild(odds);
+        if(value<lowestOdds){lowestOdds=value;favourite=li;}
       });
+      if(favourite){
+        favourite.classList.add('major-event-favourite');
+        const label=document.createElement('span');
+        label.className='major-event-favourite-label';
+        label.textContent='★ FAVOURITE';
+        favourite.insertBefore(label,favourite.querySelector('.major-event-odds'));
+      }
       button.addEventListener('click',()=>button.setAttribute('aria-expanded',String(!roster.hidden)));
     });
     page.querySelector('[data-major-registration="stol-comp"]')?.addEventListener('click',()=>{
