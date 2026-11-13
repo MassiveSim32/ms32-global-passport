@@ -80,7 +80,7 @@
       </div>
       <div class="major-event-menu">
         <button type="button" data-major-section="sponsors"><span>★</span>SPONSORS<small>Event supporters and featured partners</small></button>
-        <button type="button" data-major-section="events"><span>✈</span>EVENTS AND REGISTRATIONS<small>Choose an event and manage registration</small></button>
+        <button type="button" data-major-section="events"><span>✈</span>EVENTS<small>Choose an event and manage registration</small></button>
         <button type="button" data-major-section="times"><span>◷</span>TIMES<small>Event schedule and operating times</small></button>
         <button type="button" data-major-section="airfield"><span>◎</span>YBRM AIRFIELD INFO<small>Broome airport information for pilots</small></button>
       </div>
