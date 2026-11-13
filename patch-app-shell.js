@@ -161,7 +161,7 @@ const darwinStampGuard = `<script id="ms32DarwinStampGuard">
   fixDarwinStamps();
 })();
 </script>`;
-if (!html.includes('id="ms32DarwinStampGuard"')) html=html.replace('</body>',darwinStampGuard+'\\n</body>');
+if (!html.includes('id="ms32DarwinStampGuard"')) html=html.replace('</body>',darwinStampGuard+'\n</body>');
 
 // Ensure old Flying Now wording cannot survive a legacy or cached UI script.
 const spontaneousChannelGuard = `<script id="ms32SpontaneousChannelGuard">
@@ -177,7 +177,7 @@ const spontaneousChannelGuard = `<script id="ms32SpontaneousChannelGuard">
   fix();
 })();
 </script>`;
-if(!html.includes('id="ms32SpontaneousChannelGuard"')) html=html.replace('</body>',spontaneousChannelGuard+'\\n</body>');
+if(!html.includes('id="ms32SpontaneousChannelGuard"')) html=html.replace('</body>',spontaneousChannelGuard+'\n</body>');
 
 await fs.writeFile(file,html,'utf8');
 console.log('App shell patched to Massive Simulations 32 Companion App v1.0.2 with ABF81 spontaneous Spain passport stamp correction');
