@@ -46,6 +46,57 @@
     }
   `;
   document.head.appendChild(style);
+  const prizePacks={"orbx":["2 Copies of Jurassic World Archipelago","2 Copies of YPPH Perth International Airport for MSFS2024"],"a2a":["1 Copy of the Comanche","1 Copy of the Aerostar"],"nza":["2 Copies of Mt Cook Region Scenery for MSFS2024"],"hangar713":["Six (6) Hangar Studios 713 Digital Gift Cards valued at $25 USD each"],"flightfx":["2 Copies of the Citation X","2 Copies of the Piaggio","2 Copies of the H-Jet","2 Copies of the Hawker 800XP"],"taogs":["1 Copy of the AS365 Dauphin"],"fss":["2 Copies of each product in their current MSFS2024 product line"],"asobo":["2 Copies of any MSFS2024 Marketplace item"]};
+  const sponsorNames={"orbx":"ORBX","a2a":"A2A Simulations","nza":"NZA Simulations","hangar713":"Hangar Studios 713","flightfx":"Flight FX","taogs":"TAOGS Hangar","fss":"FSS","asobo":"ASOBO"};
+  const prizeStyle=document.createElement('style');
+  prizeStyle.textContent=`
+    #major-sponsors .event-sponsor-tile[data-prize-sponsor]{cursor:pointer}
+    #major-sponsors .event-sponsor-tile[data-prize-sponsor]:focus-visible{outline:2px solid #e8c47a;outline-offset:3px}
+    #major-sponsors .event-sponsor-tile[data-prize-sponsor][aria-expanded="true"]{border-color:#d6ae57!important;box-shadow:0 0 0 2px #d6ae5733!important}
+    #major-sponsors .sponsor-prize-panel{grid-column:1/-1;border:1px solid #ad8745;border-radius:14px;background:linear-gradient(140deg,#3b3020,#17241f);padding:14px;color:#fff}
+    #major-sponsors .sponsor-prize-panel[hidden]{display:none!important}
+    #major-sponsors .sponsor-prize-panel h4{margin:0 0 9px;color:#ffe0a0;font-size:13px}
+    #major-sponsors .sponsor-prize-panel ul{margin:0;padding-left:20px;font-size:12px;line-height:1.7}
+  `;
+  document.head.appendChild(prizeStyle);
+  const sponsorGrid=document.querySelector('#major-sponsors .event-sponsor-grid');
+  if(sponsorGrid){
+    const sponsorTiles=[...sponsorGrid.querySelectorAll('.event-sponsor-tile:not(.placeholder)')];
+    sponsorTiles.forEach(tile=>{
+      const key=Object.keys(prizePacks).find(name=>tile.classList.contains(name)||tile.id.toLowerCase().includes(name));
+      if(!key)return;
+      tile.dataset.prizeSponsor=key;
+      tile.setAttribute('role','button');
+      tile.setAttribute('tabindex','0');
+      tile.setAttribute('aria-label',sponsorNames[key]+' — view prize pack');
+      const panel=document.createElement('div');
+      panel.className='sponsor-prize-panel';
+      panel.id='major-prizes-'+key;
+      panel.hidden=true;
+      const heading=document.createElement('h4');
+      heading.textContent=sponsorNames[key]+' Prize Pack';
+      panel.appendChild(heading);
+      const list=document.createElement('ul');
+      prizePacks[key].forEach(prize=>{
+        const item=document.createElement('li');
+        item.textContent=prize;
+        list.appendChild(item);
+      });
+      panel.appendChild(list);
+      tile.setAttribute('aria-controls',panel.id);
+      tile.setAttribute('aria-expanded','false');
+      tile.insertAdjacentElement('afterend',panel);
+      const toggle=()=>{
+        panel.hidden=!panel.hidden;
+        tile.setAttribute('aria-expanded',String(!panel.hidden));
+      };
+      tile.addEventListener('click',toggle);
+      tile.addEventListener('keydown',event=>{
+        if(event.key==='Enter'||event.key===' '){event.preventDefault();toggle();}
+      });
+    });
+  }
+
   const svg=document.createElementNS('http://www.w3.org/2000/svg','svg');
   svg.setAttribute('width','0');svg.setAttribute('height','0');svg.setAttribute('aria-hidden','true');
   svg.style.cssText='position:absolute;width:0;height:0;overflow:hidden;pointer-events:none';
