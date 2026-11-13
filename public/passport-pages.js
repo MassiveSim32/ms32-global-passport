@@ -26,7 +26,7 @@
   document.head.appendChild(style);
 
   const PER_PAGE=6;
-  const RENDER_REV='20261113-broome-arrival1';
+  const RENDER_REV='20261113-broome-30min2';
   let currentPage=0;
   let lastSignature='';
   let scrollTimer=null;
@@ -60,10 +60,11 @@
   const BROOME_START=Date.parse('2026-11-14T00:00:00Z');
   const BROOME_CUTOFF=Date.parse('2026-11-14T11:30:00Z');
   function broomeArrivalStamp(events){
-    const eligible=events.some(e=>{
+    const candidates=[...events,...(Array.isArray(allEvents)?allEvents:[]),...(Array.isArray(window.passportHistoryEvents)?window.passportHistoryEvents:[])];
+    const eligible=candidates.some(e=>{
       const id=String(e?.id||'');
       const status=statuses?.[id]||{};
-      if(!status.claimed||!status.verified)return false;
+      if(!(status.claimed&&status.verified)&&Number(status.attendanceMinutes||0)<30)return false;
       const time=Date.parse(e?.start||'');
       if(!Number.isFinite(time)||time<BROOME_START||time>BROOME_CUTOFF)return false;
       const destination=String(e?.destination||e?.destIcao||e?.destinationIcao||e?.route?.to||'').toUpperCase();
