@@ -16,10 +16,17 @@
     .passport-swipehint{text-align:center;font-size:8px;letter-spacing:.08em;text-transform:uppercase;color:#7c7467;margin-top:4px}
     @media(min-width:700px){.passport-swipehint{display:none}}
   `;
+  style.textContent+=`
+    .passport-stamp.ms32-broome-stamp{min-height:152px;border:3px double #f8d985;border-radius:20px;transform:rotate(-2deg);background:radial-gradient(circle at 80% 10%,#7443a0,#381b68 58%,#1a103b);color:#ffe9a2;box-shadow:inset 0 0 0 3px #ad8b43,0 4px 15px #0005;padding:12px 8px;gap:8px}
+    .ms32-broome-kicker{font-size:9px;letter-spacing:.12em;font-weight:900}
+    .ms32-broome-title{font-size:15px;font-weight:1000;line-height:1.12;max-width:100%}
+    .ms32-broome-message{font-size:14px;color:#fff;font-weight:900;text-transform:none}
+    .ms32-broome-date{font-size:8px;letter-spacing:.08em}
+  `;
   document.head.appendChild(style);
 
   const PER_PAGE=6;
-  const RENDER_REV='20261112-new-orleans-force1';
+  const RENDER_REV='20261113-broome-arrival1';
   let currentPage=0;
   let lastSignature='';
   let scrollTimer=null;
@@ -46,6 +53,24 @@
           : (historyIds.has(id)||!!statuses?.[id]?.claimed);
       }).sort((a,b)=>new Date(a.start||0)-new Date(b.start||0));
     }catch{return[]}
+  }
+
+  // Commemorative stamp: issued from verified, claimed flight history only.
+  // The event timestamp is the recorded flight time, not independently verified landing telemetry.
+  const BROOME_START=Date.parse('2026-11-14T00:00:00Z');
+  const BROOME_CUTOFF=Date.parse('2026-11-14T11:30:00Z');
+  function broomeArrivalStamp(events){
+    const eligible=events.some(e=>{
+      const id=String(e?.id||'');
+      const status=statuses?.[id]||{};
+      if(!status.claimed||!status.verified)return false;
+      const time=Date.parse(e?.start||'');
+      if(!Number.isFinite(time)||time<BROOME_START||time>BROOME_CUTOFF)return false;
+      const destination=String(e?.destination||e?.destIcao||e?.destinationIcao||e?.route?.to||'').toUpperCase();
+      const name=String(e?.name||e?.title||'').toUpperCase();
+      return /\\bYBRM\\b/.test(destination)||/\\b(?:TO|→|DESTINATION[: ]+)\\s*YBRM\\b/.test(name);
+    });
+    return eligible?[{id:'ms32-broome-flyin-2026',name:'MASSIVE FLY IN BROOME! You made it!',start:'2026-11-14T09:00:00Z',ms32BroomeCommemorative:true}]:[];
   }
 
   function chunks(items,size){
@@ -105,7 +130,8 @@
   window.renderStampBook=function(){
     const host=document.getElementById('stampBook');
     if(!host)return;
-    const claimed=claimedEvents();
+    const verifiedFlights=claimedEvents();
+    const claimed=[...verifiedFlights,...broomeArrivalStamp(verifiedFlights)];
     const signature=`${RENDER_REV}|${claimed.map(eventSignature).join('|')}`;
     if(signature===lastSignature&&host.querySelector('.passport-carousel'))return;
     lastSignature=signature;
@@ -118,7 +144,7 @@
 
     const pages=chunks(claimed,PER_PAGE);
     currentPage=Math.max(0,Math.min(currentPage,pages.length-1));
-    host.innerHTML=`<div class="passport-carousel"><div class="passport-track" id="passportTrack">${pages.map((page,i)=>`<section class="passport-sheet" aria-label="Passport page ${i+1} of ${pages.length}"><div class="stamp-grid">${page.map(e=>{const html=stampMarkup(e);if(String(e?.id||e?.event_id||'')!=='1568954760554483763')return html;return html.replace(/(<div class="stamp-country">)[\s\S]*?(<\/div>)/,'$1USA - NEW ORLEANS$2').replace(/(<div class="stamp-city">)[\s\S]*?(<\/div>)/,'$1$2');}).join('')}</div></section>`).join('')}</div>${controls(pages.length)}</div>`;
+    host.innerHTML=`<div class="passport-carousel"><div class="passport-track" id="passportTrack">${pages.map((page,i)=>`<section class="passport-sheet" aria-label="Passport page ${i+1} of ${pages.length}"><div class="stamp-grid">${page.map(e=>{const html=e?.ms32BroomeCommemorative?'<div class="passport-stamp ms32-broome-stamp"><div class="ms32-broome-kicker">✈ MS32 · YBRM ✈</div><div class="ms32-broome-title">MASSIVE FLY IN BROOME!</div><div class="ms32-broome-message">You made it!</div><div class="ms32-broome-date">14 NOV 2026 · VERIFIED</div></div>':stampMarkup(e);if(String(e?.id||e?.event_id||'')!=='1568954760554483763')return html;return html.replace(/(<div class="stamp-country">)[\s\S]*?(<\/div>)/,'$1USA - NEW ORLEANS$2').replace(/(<div class="stamp-city">)[\s\S]*?(<\/div>)/,'$1$2');}).join('')}</div></section>`).join('')}</div>${controls(pages.length)}</div>`;
     attachScroll(pages.length);
     updateControls(pages.length);
     requestAnimationFrame(()=>{
