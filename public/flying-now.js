@@ -70,12 +70,12 @@
   const broomePreviewButton=document.createElement('button');
   broomePreviewButton.type='button';
   broomePreviewButton.className='btn secondary';
-  broomePreviewButton.textContent='🏅 PREVIEW BROOME FLY IN STAMP';
+  broomePreviewButton.textContent='🎄 PREVIEW BROOME XMAS STAMP';
   broomePreviewButton.style.cssText='margin-top:9px;border:1px solid #c39c55;color:#ffe7a0;background:#302045;font-size:11px';
   card.appendChild(broomePreviewButton);
   const broomePreview=document.createElement('div');
   broomePreview.className='flying-now-modal hidden';
-  broomePreview.innerHTML='<div class="flying-now-panel" role="dialog" aria-modal="true" aria-label="Broome commemorative stamp preview" style="text-align:center"><div class="eyebrow">Special Passport Stamp Preview</div><h2>MASSIVE FLY IN BROOME!</h2><div class="passport-stamp ms32-broome-stamp" style="margin:18px auto;max-width:245px;min-height:210px"><div class="ms32-broome-kicker">✈ MS32 · YBRM ✈</div><div class="ms32-broome-title">MASSIVE FLY IN BROOME!</div><div class="ms32-broome-message">You made it!</div><div class="ms32-broome-date">14 NOV 2026 · VERIFIED</div></div><p>Permanent stamp awarded automatically after 30 verified minutes on an eligible YBRM flight, until 11:30 UTC 14 November.</p><button type="button" class="btn secondary" id="broomeStampPreviewClose">CLOSE PREVIEW</button></div>';
+  broomePreview.innerHTML='<div class="flying-now-panel" role="dialog" aria-modal="true" aria-label="Broome commemorative stamp preview" style="text-align:center"><div class="eyebrow">Special Passport Stamp Preview</div><h2>MASSIVE FLY IN BROOME!</h2><div class="passport-stamp ms32-broome-stamp" style="margin:18px auto;max-width:245px;min-height:210px"><div class="ms32-broome-kicker">✈ MS32 · YBRM ✈</div><div class="ms32-broome-title">MASSIVE FLY IN BROOME!</div><div class="ms32-broome-message">You made it! 🎉</div><div class="ms32-broome-xmas">🎁 MS32 Christmas Party 🎁</div><div class="ms32-broome-date">14 NOV 2026 · VERIFIED</div></div><p>Permanent stamp awarded automatically after 30 verified minutes on an eligible YBRM flight, until 11:30 UTC 14 November.</p><button type="button" class="btn secondary" id="broomeStampPreviewClose">CLOSE PREVIEW</button></div>';
   document.body.appendChild(broomePreview);
   const closeBroomePreview=()=>broomePreview.classList.add('hidden');
   broomePreviewButton.addEventListener('click',()=>broomePreview.classList.remove('hidden'));
