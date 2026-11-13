@@ -132,7 +132,7 @@ const oldLoaders = [
 // Replace every historical loader reference with exactly one current loader.
 // Multiple loaders can race: an old loader may inject an outdated Flying Now script
 // before the new loader, whose alreadyLoaded check then skips the new version.
-const loader = '<script src="/full-app-loader.js?v=20261113-broome-arrival1"></script>';
+const loader = '<script src="/full-app-loader.js?v=20261113-broome-30min2"></script>';
 html = html.replace(/<script\s+src=["']\/full-app-loader\.js\?v=[^"']+["']><\/script>/g, '');
 html = html.replace('</html>', loader + '</html>');
 
