@@ -20,7 +20,7 @@
     '/dynamic-home-flight-hero.js?v=20261014-1',
     '/home-active-community-flight.js?v=20261112-cancel-card1',
     '/app-header-brand.js?v=20261014-2',
-    '/home-feature-tiles.js?v=20261113-original-sponsor-logos1',
+    '/home-feature-tiles.js?v=20261113-broome-top1',
     '/risk-for-reward.js?v=20261019-timer20s1',
     '/ybrm-airfield-weather.js?v=20261014-1',
     '/event-sponsors.js?v=20261113-no-placeholder1',
