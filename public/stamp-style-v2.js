@@ -288,7 +288,10 @@
     // Use the actual destination city on the stamp face, never the generic GLOBAL PASSPORT label.
     // YBCS is Cairns; recognize the airport code even when the event title omits the city.
     const eventDestinationText=[e?.name,e?.title,e?.description,e?.destination,e?.destinationIcao,e?.arrivalAirport,route?.destination,loc?.place].filter(Boolean).join(' ');
-    if(destinationIcao==='YBCS'||/\\b(?:YBCS|Cairns)\\b/i.test(eventDestinationText)){country='Australia';city='Cairns';}
+    // Match the arrival city in the event title, description or route (e.g. "DARWIN TO CAIRNS").
+    // Use a real regex word boundary: the previous double-escaped boundary never matched.
+    const cairnsArrival=destinationIcao==='YBCS'||/\b(?:YBCS|Cairns)\b/i.test(eventDestinationText)||/\b(?:TO|→|->)\s*CAIRNS\b/i.test(String(displayRoute||''));
+    if(cairnsArrival){country='Australia';city='Cairns';}
     // The 15 November Cairns arrival can lack destination metadata in saved passport history.
     // Only supply Cairns when the stamp would otherwise have no identifiable destination.
     const flightDay=String(e?.start||e?.event_start||'').slice(0,10);
