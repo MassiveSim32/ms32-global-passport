@@ -287,7 +287,12 @@
     const isNewOrleans=String(e?.id||e?.event_id||'')==='1568954760554483763'||/airliner\s+thursday\s*[-–—:]\s*new\s+orleans/i.test(String(e?.name||e?.title||''));
     // Use the actual destination city on the stamp face, never the generic GLOBAL PASSPORT label.
     // YBCS is Cairns; recognize the airport code even when the event title omits the city.
-    if(destinationIcao==='YBCS'||/\b(?:YBCS|Cairns)\b/i.test(String(explicit||''))){country='Australia';city='Cairns';}
+    const eventDestinationText=[e?.name,e?.title,e?.description,e?.destination,e?.destinationIcao,e?.arrivalAirport,route?.destination,loc?.place].filter(Boolean).join(' ');
+    if(destinationIcao==='YBCS'||/\\b(?:YBCS|Cairns)\\b/i.test(eventDestinationText)){country='Australia';city='Cairns';}
+    // The 15 November Cairns arrival can lack destination metadata in saved passport history.
+    // Only supply Cairns when the stamp would otherwise have no identifiable destination.
+    const flightDay=String(e?.start||e?.event_start||'').slice(0,10);
+    if(flightDay==='2026-11-15'&&!city&&!country&&!explicit&&!destinationIcao){country='Australia';city='Cairns';}
     const destinationCountry=country||(destinationIcao==='YBCS'?'Australia':'');
     const destinationCity=city||cleanDestination(explicit,destinationCountry)||'';
     const hero=isNewOrleans?'USA - NEW ORLEANS':String(e?.id||'')==='1567047762510618664'?'POLAND, KRAKOW':(isDarwinAirliner?'AUSTRALIA, DARWIN':(destinationCountry&&destinationCity?destinationCountry+', '+destinationCity:destinationCity||destinationCountry||'DESTINATION PENDING'));
@@ -319,7 +324,7 @@
       bush:'BUSH FLIGHT · EXPEDITION',
       community:'COMMUNITY FLIGHT'
     }[s.family]||'COMMUNITY FLIGHT';
-    return `<div class="passport-stamp arrival-stamp stamp-${s.family}" style="--stamp-accent:${s.accent}"><div class="stamp-brand"><img src="/icon-192.png" alt=""><span>MS32 GLOBAL PASSPORT</span></div><div class="stamp-family">${esc(familyText)}</div><div class="stamp-country">${esc(s.hero)}</div><div class="stamp-city">${esc(s.city)}</div><div class="stamp-route">${esc(s.route)}</div><div class="stamp-date">${esc(s.date)}</div><div class="stamp-series">${esc(s.series)} · ${esc(s.familyLabel)}</div></div>`;
+    return `<div class="passport-stamp arrival-stamp stamp-${s.family}" style="--stamp-accent:${s.accent}"><div class="stamp-brand"><img src="/icon-192.png" alt=""><span>MS32 VERIFIED ARRIVAL</span></div><div class="stamp-family">${esc(familyText)}</div><div class="stamp-country">${esc(s.hero)}</div><div class="stamp-city">${esc(s.city)}</div><div class="stamp-route">${esc(s.route)}</div><div class="stamp-date">${esc(s.date)}</div><div class="stamp-series">${esc(s.series)} · ${esc(s.familyLabel)}</div></div>`;
   };
 
   try{if(typeof renderStampBook==='function')renderStampBook()}catch{}
