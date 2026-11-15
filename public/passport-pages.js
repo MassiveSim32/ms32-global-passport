@@ -88,7 +88,8 @@
     const isCairns=/\bDARWIN\s*(?:TO|→|->)\s*CAIRNS\b/i.test(routeText) ||
       /\bYBCS\b/i.test(routeText) ||
       (/\bCAIRNS\b/i.test(routeText)&&/\bDARWIN\b/i.test(routeText));
-    if(date!=='2026-11-15'||!isCairns)return html;
+    const visibleCairns=/DARWIN\s*(?:TO|→|->)\s*CAIRNS/i.test(html) && /15\s+NOV\s+2026/i.test(html);
+    if(!visibleCairns && (date!=='2026-11-15'||!isCairns))return html;
     return html.replace(/(<div class="stamp-country">)[\s\S]*?(<\/div>)/,'$1AUSTRALIA, CAIRNS$2')
       .replace(/(<div class="stamp-city">)[\s\S]*?(<\/div>)/,'$1$2');
   }
