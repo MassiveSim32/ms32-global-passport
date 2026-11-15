@@ -81,14 +81,16 @@
 
   // Route-based correction for verified Cairns arrival stamps. The legacy
   // stamp renderer may already be loaded before the enhancement bundle.
+  // Correct the visible 15 Nov Darwin-to-Cairns stamp even with legacy stamp markup.
   function correctArrivalStamp(html,e){
     const date=String(e?.start||e?.event_start||'').slice(0,10);
     const routeText=[e?.name,e?.title,e?.description,e?.route,e?.destination,e?.destinationIcao].filter(Boolean).join(' ');
-    const isCairns= /\\b(?:DARWIN\\s*(?:TO|→|->)\\s*CAIRNS|YBCS)\\b/i.test(routeText) ||
-      (/\\bCAIRNS\\b/i.test(routeText)&&/\\bDARWIN\\b/i.test(routeText));
+    const isCairns=/\bDARWIN\s*(?:TO|→|->)\s*CAIRNS\b/i.test(routeText) ||
+      /\bYBCS\b/i.test(routeText) ||
+      (/\bCAIRNS\b/i.test(routeText)&&/\bDARWIN\b/i.test(routeText));
     if(date!=='2026-11-15'||!isCairns)return html;
-    return html.replace(/(<div class="stamp-country">)[\\s\\S]*?(<\\/div>)/,'$1AUSTRALIA, CAIRNS$2')
-      .replace(/(<div class="stamp-city">)[\\s\\S]*?(<\\/div>)/,'$1$2');
+    return html.replace(/(<div class="stamp-country">)[\s\S]*?(<\/div>)/,'$1AUSTRALIA, CAIRNS$2')
+      .replace(/(<div class="stamp-city">)[\s\S]*?(<\/div>)/,'$1$2');
   }
 
   function chunks(items,size){
