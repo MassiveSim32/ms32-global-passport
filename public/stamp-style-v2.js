@@ -285,7 +285,12 @@
     if(patagoniaHelicopter)displayRoute='Chile → Argentina';
     const isDarwinAirliner=family.family==='airliner'&&(String(e?.id||'')==='1567861479712104458'||/airliner\s+world\s+tour\s*[-–—:]?\s*bali\s+to\s+darwin/i.test(String(e?.name||e?.title||'')));
     const isNewOrleans=String(e?.id||e?.event_id||'')==='1568954760554483763'||/airliner\s+thursday\s*[-–—:]\s*new\s+orleans/i.test(String(e?.name||e?.title||''));
-    const hero=isNewOrleans?'USA - NEW ORLEANS':String(e?.id||'')==='1567047762510618664'?'POLAND, KRAKOW':(isDarwinAirliner?'AUSTRALIA, DARWIN':(country||'GLOBAL PASSPORT'));
+    // Use the actual destination city on the stamp face, never the generic GLOBAL PASSPORT label.
+    // YBCS is Cairns; recognize the airport code even when the event title omits the city.
+    if(destinationIcao==='YBCS'||/\b(?:YBCS|Cairns)\b/i.test(String(explicit||''))){country='Australia';city='Cairns';}
+    const destinationCountry=country||(destinationIcao==='YBCS'?'Australia':'');
+    const destinationCity=city||cleanDestination(explicit,destinationCountry)||'';
+    const hero=isNewOrleans?'USA - NEW ORLEANS':String(e?.id||'')==='1567047762510618664'?'POLAND, KRAKOW':(isDarwinAirliner?'AUSTRALIA, DARWIN':(destinationCountry&&destinationCity?destinationCountry+', '+destinationCity:destinationCity||destinationCountry||'DESTINATION PENDING'));
     const bushPlace=city||region||((!country&&loc?.place)?loc.place:'BUSH DESTINATION');
     const secondary=isNewOrleans?'':String(e?.id||'')==='1567047762510618664'?'':isDarwinAirliner?'':(family.family==='bush'?bushPlace:(city||((!country&&loc?.place)?loc.place:'MS32 DESTINATION')));
     const accent=family.family==='spontaneous'?'#a51f2d':(accentByCountry[country]||'#63d6c4');
