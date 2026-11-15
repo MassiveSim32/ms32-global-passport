@@ -179,5 +179,26 @@ const spontaneousChannelGuard = `<script id="ms32SpontaneousChannelGuard">
 </script>`;
 if(!html.includes('id="ms32SpontaneousChannelGuard"')) html=html.replace('</body>',spontaneousChannelGuard+'\n</body>');
 
+// Correct the rendered Cairns stamp after any passport redraw.
+const cairnsStampGuard = `<script id="ms32CairnsStampGuard">
+(()=>{
+  const fix=()=>{
+    document.querySelectorAll('.passport-stamp').forEach(stamp=>{
+      const route=stamp.querySelector('.stamp-route')?.textContent||'';
+      const date=stamp.querySelector('.stamp-date')?.textContent||'';
+      if(!/DARWIN\\s*(?:TO|→|->)\\s*CAIRNS/i.test(route)||!/15\\s+NOV\\s+2026/i.test(date))return;
+      const heading=stamp.querySelector('.stamp-country');
+      const city=stamp.querySelector('.stamp-city');
+      if(heading&&heading.textContent!=='AUSTRALIA, CAIRNS')heading.textContent='AUSTRALIA, CAIRNS';
+      if(city&&city.textContent)city.textContent='';
+    });
+  };
+  let busy=false;
+  new MutationObserver(()=>{if(busy)return;busy=true;try{fix()}finally{busy=false}}).observe(document.documentElement,{childList:true,subtree:true,characterData:true});
+  fix();
+})();
+</script>`;
+if(!html.includes('id="ms32CairnsStampGuard"'))html=html.replace('</body>',cairnsStampGuard+'\n</body>');
+
 await fs.writeFile(file,html,'utf8');
 console.log('App shell patched to Massive Simulations 32 Companion App v1.0.2 with ABF81 spontaneous Spain passport stamp correction');
