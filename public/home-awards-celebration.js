@@ -26,6 +26,7 @@
       <div class="award"><div class="award-label">🏆 Ultimate Clubmen 2027</div><div class="award-names">ABF (Andrew) &amp; Bill</div></div>
       <div class="award"><div class="award-label">⭐ Hall of Fame Inductees</div><div class="award-names">Kevin, Bill &amp; Triton</div></div>
       <div class="award"><div class="award-label">🎖️ Life Membership</div><div class="award-names">Mick</div></div>
+      <div class="award"><div class="award-label">🥛 Milo Award</div><div class="award-names">Trevor</div></div>
     </div>
     <p class="awards-outro">Congratulations and thank you for everything you bring to our MS32 community!</p>`;
   const nextFlight=document.getElementById('nextFlight');
