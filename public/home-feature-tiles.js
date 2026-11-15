@@ -89,6 +89,10 @@
   flying.parentNode.insertBefore(wrap,flying);
   wrap.appendChild(flying);
 
+  // Retire the completed Broome event from Home and the Major Event Hub after its end time.
+  // Passport history and earned commemorative stamps remain untouched.
+  if(Date.now()>=Date.parse('2026-11-14T11:30:00Z'))return;
+
   const major=document.createElement('div');
   major.className='major-event-tile';
   major.innerHTML=`
