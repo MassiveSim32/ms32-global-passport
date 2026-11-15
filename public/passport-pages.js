@@ -29,7 +29,7 @@
   document.head.appendChild(style);
 
   const PER_PAGE=6;
-  const RENDER_REV='20261115-cairns-route3';
+  const RENDER_REV='20261115-cairns-route4';
   let currentPage=0;
   let lastSignature='';
   let scrollTimer=null;
@@ -77,6 +77,18 @@
       return /\\bYBRM\\b/.test(destination)||/\\b(?:TO|→|DESTINATION[: ]+)\\s*YBRM\\b/.test(name);
     });
     return eligible?[{id:'ms32-broome-flyin-2026',name:'MASSIVE FLY IN BROOME! You made it!',start:'2026-11-14T09:00:00Z',ms32BroomeCommemorative:true}]:[];
+  }
+
+  // Route-based correction for verified Cairns arrival stamps. The legacy
+  // stamp renderer may already be loaded before the enhancement bundle.
+  function correctArrivalStamp(html,e){
+    const date=String(e?.start||e?.event_start||'').slice(0,10);
+    const routeText=[e?.name,e?.title,e?.description,e?.route,e?.destination,e?.destinationIcao].filter(Boolean).join(' ');
+    const isCairns= /\\b(?:DARWIN\\s*(?:TO|→|->)\\s*CAIRNS|YBCS)\\b/i.test(routeText) ||
+      (/\\bCAIRNS\\b/i.test(routeText)&&/\\bDARWIN\\b/i.test(routeText));
+    if(date!=='2026-11-15'||!isCairns)return html;
+    return html.replace(/(<div class="stamp-country">)[\\s\\S]*?(<\\/div>)/,'$1AUSTRALIA, CAIRNS$2')
+      .replace(/(<div class="stamp-city">)[\\s\\S]*?(<\\/div>)/,'$1$2');
   }
 
   function chunks(items,size){
@@ -150,7 +162,7 @@
 
     const pages=chunks(claimed,PER_PAGE);
     currentPage=Math.max(0,Math.min(currentPage,pages.length-1));
-    host.innerHTML=`<div class="passport-carousel"><div class="passport-track" id="passportTrack">${pages.map((page,i)=>`<section class="passport-sheet" aria-label="Passport page ${i+1} of ${pages.length}"><div class="stamp-grid">${page.map(e=>{const html=(e?.ms32BroomeCommemorative||String(e?.id||'')==='ms32-broome-flyin-2026')?'<div class="passport-stamp ms32-broome-stamp"><div class="ms32-broome-kicker">✈ MS32 · YBRM ✈</div><div class="ms32-broome-title">MASSIVE FLY IN BROOME!</div><div class="ms32-broome-message">You made it! 🎉</div><div class="ms32-broome-xmas">🎁 MS32 Christmas Party 🎁</div><div class="ms32-broome-date">14 NOV 2026 · VERIFIED</div></div>':stampMarkup(e);if(String(e?.id||e?.event_id||'')!=='1568954760554483763')return html;return html.replace(/(<div class="stamp-country">)[\s\S]*?(<\/div>)/,'$1USA - NEW ORLEANS$2').replace(/(<div class="stamp-city">)[\s\S]*?(<\/div>)/,'$1$2');}).join('')}</div></section>`).join('')}</div>${controls(pages.length)}</div>`;
+    host.innerHTML=`<div class="passport-carousel"><div class="passport-track" id="passportTrack">${pages.map((page,i)=>`<section class="passport-sheet" aria-label="Passport page ${i+1} of ${pages.length}"><div class="stamp-grid">${page.map(e=>{const html=(e?.ms32BroomeCommemorative||String(e?.id||'')==='ms32-broome-flyin-2026')?'<div class="passport-stamp ms32-broome-stamp"><div class="ms32-broome-kicker">✈ MS32 · YBRM ✈</div><div class="ms32-broome-title">MASSIVE FLY IN BROOME!</div><div class="ms32-broome-message">You made it! 🎉</div><div class="ms32-broome-xmas">🎁 MS32 Christmas Party 🎁</div><div class="ms32-broome-date">14 NOV 2026 · VERIFIED</div></div>':stampMarkup(e);if(String(e?.id||e?.event_id||'')!=='1568954760554483763')return correctArrivalStamp(html,e);return html.replace(/(<div class="stamp-country">)[\s\S]*?(<\/div>)/,'$1USA - NEW ORLEANS$2').replace(/(<div class="stamp-city">)[\s\S]*?(<\/div>)/,'$1$2');}).join('')}</div></section>`).join('')}</div>${controls(pages.length)}</div>`;
     attachScroll(pages.length);
     updateControls(pages.length);
     requestAnimationFrame(()=>{
