@@ -22,7 +22,7 @@
     '/app-header-brand.js?v=20261014-2',
     '/home-feature-tiles.js?v=20261115-retire-broome1',
     '/home-awards-celebration.js?v=20261115-awards2',
-    '/honor-board.js?v=20261115-honor1',
+    '/honor-board.js?v=20261115-honor2',
     '/risk-for-reward.js?v=20261019-timer20s1',
     '/ybrm-airfield-weather.js?v=20261014-1',
     '/event-sponsors.js?v=20261113-no-placeholder1',
