@@ -100,7 +100,7 @@
     if(!next)return;
     ensureStyles();
     let card=document.getElementById(CARD_ID);
-    if(!card){card=document.createElement('div');card.id=CARD_ID;card.className='hero';next.parentNode.insertBefore(card,next)}
+    if(!card){card=document.createElement('div');card.id=CARD_ID;card.className='hero';const grid=next.closest('#homeFeatureTiles');if(grid&&grid.parentNode)grid.parentNode.insertBefore(card,grid);else next.parentNode.insertBefore(card,next)}else{const grid=card.closest('#homeFeatureTiles');if(grid&&grid.parentNode)grid.parentNode.insertBefore(card,grid)}
     const spontaneous=isSpontaneous(event);
     const attendance=Number(status.attendanceMinutes||0);
     const threshold=Number(status.thresholdMinutes||0);
