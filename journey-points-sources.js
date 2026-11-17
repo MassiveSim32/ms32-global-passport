@@ -66,6 +66,15 @@ async function build(){
     x.overallPoints=Math.max(0,x.communityPoints+x.spontaneousPoints+x.triviaPoints);
     byUser.set(id,x);
   }
+  // Weekly challenge awards are a separate, one-time ledger (500 JP per Friday challenge).
+  const weekly=await db.query('SELECT user_id,username,COUNT(*)::int AS wins FROM ms32_weekly_challenges WHERE completed_at IS NOT NULL AND cancelled=false GROUP BY user_id,username');
+  for(const r of weekly.rows){
+    const id=String(r.user_id);
+    const x=byUser.get(id)||{userId:id,username:r.username||`Discord ${id}`,communityPoints:0,spontaneousPoints:0,overallPoints:0};
+    x.weeklyPoints=Number(r.wins||0)*500;
+    x.overallPoints=Math.max(0,x.communityPoints+x.spontaneousPoints+(x.triviaPoints||0)+x.weeklyPoints);
+    byUser.set(id,x);
+  }
   const users=[...byUser.values()];
   return {users,boards:{overall:ranked(users,'overallPoints'),community:ranked(users,'communityPoints'),spontaneous:ranked(users,'spontaneousPoints')}};
 }
