@@ -21,7 +21,7 @@
     '/home-active-community-flight.js?v=20261117-gridfix3',
     '/app-header-brand.js?v=20261014-2',
     '/discord-member-count.js?v=20261117-count1',
-    '/home-feature-tiles.js?v=20261117-landscape2',
+    '/home-feature-tiles.js?v=20261117-gridfix3',
     '/all-star-event-hub.js?v=20261117-three-tiles1',
     '/weekly-challenge.js?v=20261117-top1',
     '/honor-board.js?v=20261117-menu1',
