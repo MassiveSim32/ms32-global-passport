@@ -30,7 +30,6 @@
     '/flightfx-sponsor.js?v=20261117-flightfx-only1',
     '/passport-pages.js?v=20261115-cairns-route4',
     '/passport-history.js?v=20261017-live-metadata1',
-    '/globe-coming-soon.js?v=20261014-1',
     '/home-quick-colors.js?v=20261014-4',
     '/home-stat-links.js?v=20261014-4',
     '/home-quick-counts.js?v=20261019-live-total1',
