@@ -32,7 +32,7 @@
     const name=document.createElement('span');
     name.textContent=p.username+(mine?' (You)':'')+(mode==='overall'?' · '+tier(p.points):'');
     if(mode==='overall'){
-      const split=document.createElement('small');split.className='split';split.textContent=`Community ${Number(p.communityPoints||0).toLocaleString()} · Spontaneous ${Number(p.spontaneousPoints||0).toLocaleString()}`;name.appendChild(split);
+      const split=document.createElement('small');split.className='split';split.textContent=`Community ${Number(p.communityPoints||0).toLocaleString()} · Spontaneous ${Number(p.spontaneousPoints||0).toLocaleString()} · Weekly ${Number(p.weeklyPoints||0).toLocaleString()}`;name.appendChild(split);
     }
     const points=document.createElement('strong');points.textContent=Number(p.points).toLocaleString()+' JP';
     div.append(rank,name,points);return div;
@@ -57,7 +57,7 @@
       let mode='overall';
       const render=()=>{
         tabs.querySelectorAll('.tab').forEach(b=>b.classList.toggle('active',b.dataset.mode===mode));
-        sub.textContent=mode==='overall'?'All Journey Points · Community + Spontaneous':mode==='community'?'Scheduled MS32 community flights':'Flying Now · spontaneous flights';
+        sub.textContent=mode==='overall'?'All Journey Points · Community + Spontaneous + Weekly Challenges + Trivia':mode==='community'?'Scheduled MS32 community flights':'Flying Now · spontaneous flights';
         body.replaceChildren();
         const rows=Array.isArray(data.boards?.[mode])?data.boards[mode]:[];
         if(!rows.length){body.textContent='No qualifying Journey Points in this category yet.';return}
