@@ -5,7 +5,15 @@
 
   const style=document.createElement('style');
   style.textContent=`
-    .home-feature-tiles{display:grid;grid-template-columns:1fr;gap:10px;margin:11px 0}
+    .home-feature-tiles{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;margin:11px 0;align-items:stretch}
+    .home-feature-tiles>#nextFlight,.home-feature-tiles>.flying-now-card,.home-feature-tiles>.major-event-tile{height:100%;min-height:190px;min-width:0;margin:0;box-sizing:border-box}
+    .home-feature-tiles>#nextFlight{display:flex;flex-direction:column;justify-content:space-between;padding:14px}
+    .home-feature-tiles>#nextFlight h2{font-size:18px;overflow-wrap:anywhere}
+    .home-feature-tiles>.major-event-tile .major-event-title{font-size:18px}
+    .home-feature-tiles>.major-event-tile .major-event-action{font-size:11px}
+    @media(max-width:780px){.home-feature-tiles{grid-template-columns:repeat(2,minmax(0,1fr))}}
+    @media(max-width:520px){.home-feature-tiles{grid-template-columns:1fr}}
+    
     #home>.major-event-tile{min-height:0;margin:0 0 14px;padding:18px;border-color:#a28cf0;box-shadow:inset 0 0 28px #8f7cff18,0 8px 24px #1e174033}
     /* Soft rotating violet/gold light tracing the event card border. */
     #home>.major-event-tile{isolation:isolate}
@@ -86,7 +94,8 @@
   const wrap=document.createElement('div');
   wrap.id='homeFeatureTiles';
   wrap.className='home-feature-tiles';
-  flying.parentNode.insertBefore(wrap,flying);
+  home.insertBefore(wrap,document.getElementById('nextFlight'));
+  wrap.appendChild(document.getElementById('nextFlight'));
   wrap.appendChild(flying);
 
   // Retire the completed Broome event from Home and the Major Event Hub after its end time.
