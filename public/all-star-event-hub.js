@@ -2,6 +2,9 @@
   const home=document.getElementById('home');
   const app=document.getElementById('app');
   if(!home||!app||document.getElementById('majorEvent'))return;
+  const sponsorStyle=document.createElement('style');
+  sponsorStyle.textContent='#major-sponsors .event-sponsor-grid{display:grid;grid-template-columns:minmax(0,280px);gap:12px;margin:16px 0}#major-sponsors .event-sponsor-tile{min-height:145px;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:10px;border:1px solid #b49354;border-radius:15px;background:#102234;padding:18px}#major-sponsors .event-sponsor-tile img{display:block;max-width:100%;max-height:90px;object-fit:contain}#major-sponsors .event-sponsor-label{font-size:10px;letter-spacing:.1em;color:#d8c18a;text-transform:uppercase}';
+  document.head.appendChild(sponsorStyle);
   const tile=document.createElement('section');
   tile.className='major-event-tile';
   tile.setAttribute('aria-label','All Star Event 18 December 2026');
