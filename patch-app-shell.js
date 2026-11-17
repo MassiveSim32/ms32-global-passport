@@ -51,6 +51,9 @@ if (!html.includes('http-equiv="Cache-Control"')) {
 }
 
 const bootStyle = `<style id="ms32BootStyle">
+html:not(.ms32-ready) body::before{background:radial-gradient(circle at top,#12314c,#06101b 52%,#02070c),#06101b!important}
+html:not(.ms32-ready) body::after{background: url('/ms32-brand-192.png?v=20261117-brand1') center 16px / 90px 90px no-repeat, #0b1927e8!important;padding-top:116px!important}
+
 html:not(.ms32-ready) .phone{visibility:hidden!important}
 html:not(.ms32-ready) body::before{content:"";position:fixed;inset:0;z-index:2147483646;background:radial-gradient(circle at top,#12314c,#06101b 52%,#02070c)}
 html:not(.ms32-ready) body::after{content:"MS32 COMPANION APP  ·  V1.0.2\\A Loading latest app…";white-space:pre;position:fixed;z-index:2147483647;left:50%;top:50%;transform:translate(-50%,-50%);color:#f5f8fb;text-align:center;font:800 13px/1.8 system-ui,-apple-system,Segoe UI,sans-serif;letter-spacing:.08em;text-transform:uppercase;padding:18px 24px;border:1px solid #2b506d;border-radius:18px;background:#0b1927e8;box-shadow:0 22px 60px #0008}
