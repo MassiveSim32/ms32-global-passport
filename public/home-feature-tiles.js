@@ -5,14 +5,25 @@
 
   const style=document.createElement('style');
   style.textContent=`
-    .home-feature-tiles{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;margin:11px 0;align-items:stretch}
-    .home-feature-tiles>#nextFlight,.home-feature-tiles>.flying-now-card,.home-feature-tiles>.major-event-tile{height:100%;min-height:190px;min-width:0;margin:0;box-sizing:border-box}
+    .home-feature-tiles{display:grid;grid-template-columns:1fr;gap:12px;margin:11px 0;align-items:stretch}
+    /* The original app shell is fixed at 430px even on desktop.
+       Widen it only in tablet landscape / desktop so three cards actually fit. */
+    @media(min-width:740px){
+      body .phone{width:min(1120px,100%);max-width:none}
+      .home-feature-tiles{grid-template-columns:repeat(3,minmax(0,1fr))}
+    }
+    @media(min-width:740px) and (max-width:900px){
+      .home-feature-tiles{gap:9px}
+      .home-feature-tiles>#nextFlight,.home-feature-tiles>.flying-now-card,.home-feature-tiles>.major-event-tile{padding:11px}
+      .home-feature-tiles #nextFlight .route{font-size:20px}
+    }
+    .home-feature-tiles>#nextFlight,.home-feature-tiles>.flying-now-card,.home-feature-tiles>.major-event-tile{height:100%;min-height:210px;min-width:0;margin:0;box-sizing:border-box;align-self:stretch;border-radius:20px}
     .home-feature-tiles>#nextFlight{display:flex;flex-direction:column;justify-content:space-between;padding:14px}
     .home-feature-tiles>#nextFlight h2{font-size:18px;overflow-wrap:anywhere}
+    .home-feature-tiles #nextFlight .route{font-size:clamp(17px,2.6vw,27px);overflow-wrap:anywhere}
+    .home-feature-tiles>.major-event-tile{display:flex;flex-direction:column;justify-content:space-between}
     .home-feature-tiles>.major-event-tile .major-event-title{font-size:18px}
     .home-feature-tiles>.major-event-tile .major-event-action{font-size:11px}
-    @media(max-width:780px){.home-feature-tiles{grid-template-columns:repeat(2,minmax(0,1fr))}}
-    @media(max-width:520px){.home-feature-tiles{grid-template-columns:1fr}}
     
     #home>.major-event-tile{min-height:0;margin:0 0 14px;padding:18px;border-color:#a28cf0;box-shadow:inset 0 0 28px #8f7cff18,0 8px 24px #1e174033}
     /* Soft rotating violet/gold light tracing the event card border. */
