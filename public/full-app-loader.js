@@ -22,6 +22,7 @@
     '/app-header-brand.js?v=20261014-2',
     '/home-feature-tiles.js?v=20261115-retire-broome1',
     '/all-star-event-hub.js?v=20261117-flightfx-only1',
+    '/weekly-challenge.js?v=20261117-weekly1',
     '/honor-board.js?v=20261117-menu1',
     '/risk-for-reward.js?v=20261019-timer20s1',
     '/ybrm-airfield-weather.js?v=20261014-1',
