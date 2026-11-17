@@ -374,6 +374,34 @@ app.get('/api/me',(req,res)=>{
   res.json({user:user||null,botReady:gatewayReady,isAdmin:isAdminUser(user)});
 });
 app.get('/api/events',(req,res)=>res.json(cachedEvents.map(normalizeEvent)));
+// Public Home-only community count; Discord REST is cached to respect rate limits.
+let memberCountCache={count:null,checkedAt:0,pending:null};
+app.get('/api/discord-member-count',async(req,res)=>{
+  res.set('Cache-Control','public, max-age=120');
+  if(!cfg.botToken||!cfg.guildId)return res.status(503).json({error:'Discord membership count unavailable'});
+  const now=Date.now();
+  if(memberCountCache.count!==null&&now-memberCountCache.checkedAt<5*60_000)
+    return res.json({count:memberCountCache.count,updatedAt:new Date(memberCountCache.checkedAt).toISOString()});
+  if(!memberCountCache.pending){
+    memberCountCache.pending=(async()=>{
+      const response=await fetch('https://discord.com/api/v10/guilds/'+encodeURIComponent(cfg.guildId)+'?with_counts=true',{
+        headers:{Authorization:'Bot '+cfg.botToken},signal:AbortSignal.timeout(8000)
+      });
+      if(!response.ok)throw Error('Discord returned '+response.status);
+      const guild=await response.json();
+      const count=Number(guild.approximate_member_count??guild.member_count);
+      if(!Number.isSafeInteger(count)||count<0)throw Error('Discord did not return a member count');
+      memberCountCache={count,checkedAt:Date.now(),pending:null};
+      return count;
+    })().finally(()=>{memberCountCache.pending=null});
+  }
+  try{const count=await memberCountCache.pending;res.json({count,updatedAt:new Date(memberCountCache.checkedAt).toISOString()})}
+  catch(e){console.warn('Discord member count:',e.message);
+    if(memberCountCache.count!==null)return res.json({count:memberCountCache.count,updatedAt:new Date(memberCountCache.checkedAt).toISOString(),stale:true});
+    res.status(503).json({error:'Discord membership count temporarily unavailable'});
+  }
+});
+
 
 app.post('/api/events/:id/join',mustAuth,(req,res)=>{
   const e=cachedEvents.find(x=>x.id===req.params.id);
