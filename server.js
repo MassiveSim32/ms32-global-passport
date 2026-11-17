@@ -1,3 +1,4 @@
+import {installWeeklyChallenge} from './weekly-challenge-server.js';
 import 'dotenv/config';
 import crypto from 'node:crypto';
 import path from 'node:path';
@@ -266,6 +267,7 @@ function startGateway(){
   });
 }
 startGateway();
+installWeeklyChallenge(app,()=>voiceChannelsByUser);
 
 function simplePage(res,title,message,status=200){
   res.status(status).type('html').send(`<!doctype html><html><head><meta name="viewport" content="width=device-width,initial-scale=1"><title>${safeHtml(title)}</title><style>body{margin:0;background:#06101b;color:#fff;font-family:system-ui;display:grid;place-items:center;min-height:100vh}.card{width:min(440px,90vw);background:#0d1b2b;border:1px solid #26435e;border-radius:24px;padding:28px;text-align:center}.eyebrow{color:#4bb8ff;font-size:11px;font-weight:800;letter-spacing:.12em;text-transform:uppercase}.muted{color:#8ea7bb;line-height:1.55}.btn{display:block;padding:13px 16px;border-radius:14px;background:#5865f2;color:#fff;text-decoration:none;font-weight:800;margin-top:14px}.ms32-reg-dialog{width:min(540px,calc(100vw - 24px));max-height:85vh;overflow:auto;border:1px solid var(--line);border-radius:18px;padding:20px;background:#0d1b2b;color:var(--text);box-shadow:0 22px 80px #000a}.ms32-reg-dialog::backdrop{background:#000b}.ms32-reg-head{display:flex;align-items:flex-start;justify-content:space-between;gap:12px}.ms32-reg-head h2{margin:0 0 8px;font-size:19px}</style></head><body><div class="card"><div class="eyebrow">Massive Sim 32 · Global Passport</div><h1>${safeHtml(title)}</h1><p class="muted">${safeHtml(message)}</p><a class="btn" href="/auth/discord">Try Discord Again</a><a class="btn" href="/" style="background:#102439">Back to Passport</a></div></body></html>`);
