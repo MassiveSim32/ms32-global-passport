@@ -16,8 +16,8 @@ self.addEventListener('activate',event=>{
       const windows=await self.clients.matchAll({type:'window',includeUncontrolled:true});
       for(const client of windows){
         const url=new URL(client.url);
-        if(url.origin!==self.location.origin||url.searchParams.get('ms32app')==='20261115b')continue;
-        url.searchParams.set('ms32app','20261115b');
+        if(url.origin!==self.location.origin||url.searchParams.get('ms32app')==='20261117-gridfix4')continue;
+        url.searchParams.set('ms32app','20261117-gridfix4');
         await client.navigate(url.href);
       }
     }catch{}
