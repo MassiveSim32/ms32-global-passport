@@ -5,12 +5,19 @@
 
   const style=document.createElement('style');
   style.textContent=`
-    .home-feature-tiles{display:grid;grid-template-columns:1fr;gap:12px;margin:11px 0;align-items:stretch}
+    .home-feature-tiles{display:grid;grid-template-columns:minmax(0,1fr);gap:12px;margin:11px 0;align-items:stretch;width:100%;min-width:0}
+    .home-feature-tiles>*{min-width:0;max-width:100%;width:100%;box-sizing:border-box}
+    .home-feature-tiles>#nextFlight{grid-column:1}
+    .home-feature-tiles>.flying-now-card{grid-column:1}
+    .home-feature-tiles>.major-event-tile{grid-column:1}
     /* The original app shell is fixed at 430px even on desktop.
        Widen it only in tablet landscape / desktop so three cards actually fit. */
     @media(min-width:740px){
       body .phone{width:min(1120px,100%);max-width:none}
-      .home-feature-tiles{grid-template-columns:repeat(3,minmax(0,1fr))}
+      .home-feature-tiles{grid-template-columns:repeat(3,minmax(0,1fr));align-items:stretch}
+      .home-feature-tiles>#nextFlight{grid-column:1}
+      .home-feature-tiles>.flying-now-card{grid-column:2}
+      .home-feature-tiles>.major-event-tile{grid-column:3}
     }
     @media(min-width:740px) and (max-width:900px){
       .home-feature-tiles{gap:9px}
@@ -22,6 +29,8 @@
     .home-feature-tiles>#nextFlight h2{font-size:18px;overflow-wrap:anywhere}
     .home-feature-tiles #nextFlight .route{font-size:clamp(17px,2.6vw,27px);overflow-wrap:anywhere}
     .home-feature-tiles>.major-event-tile{display:flex;flex-direction:column;justify-content:space-between}
+    .home-feature-tiles>.major-event-tile .major-event-action{margin-top:auto}
+    .home-feature-tiles>.flying-now-card #flyingNowOpen{margin-top:auto}
     .home-feature-tiles>.major-event-tile .major-event-title{font-size:18px}
     .home-feature-tiles>.major-event-tile .major-event-action{font-size:11px}
     
@@ -108,6 +117,9 @@
   home.insertBefore(wrap,document.getElementById('nextFlight'));
   wrap.appendChild(document.getElementById('nextFlight'));
   wrap.appendChild(flying);
+  // If an active-flight panel was created before the grid, keep it full-width above the tiles.
+  const active=document.getElementById('activeCommunityFlight');
+  if(active&&active.parentNode===wrap)home.insertBefore(active,wrap);
 
   // Retire the completed Broome event from Home and the Major Event Hub after its end time.
   // Passport history and earned commemorative stamps remain untouched.
