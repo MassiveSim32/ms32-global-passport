@@ -20,7 +20,7 @@
     '/dynamic-home-flight-hero.js?v=20261014-1',
     '/home-active-community-flight.js?v=20261112-cancel-card1',
     '/app-header-brand.js?v=20261014-2',
-    '/home-feature-tiles.js?v=20261117-three-tiles1',
+    '/home-feature-tiles.js?v=20261117-landscape2',
     '/all-star-event-hub.js?v=20261117-three-tiles1',
     '/weekly-challenge.js?v=20261117-top1',
     '/honor-board.js?v=20261117-menu1',
