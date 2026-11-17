@@ -23,8 +23,7 @@
   `;
   document.head.appendChild(css);
   const card=document.createElement('section');card.id=ID;
-  const next=document.getElementById('nextFlight');
-  if(next?.parentNode===home)home.insertBefore(card,next);else home.insertBefore(card,home.firstChild);
+  home.insertBefore(card,home.firstElementChild);
   const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
   let busy=false,lastWeek='';
   async function request(path,method='GET'){
