@@ -9,7 +9,9 @@
   tile.className='major-event-tile';
   tile.setAttribute('aria-label','All Star Event 18 December 2026');
   tile.innerHTML='<div><div class="major-event-kicker">★ MAJOR EVENT HUB</div><div class="major-event-next">UPCOMING EVENT</div><div class="major-event-title">MS32 All Star Event</div><div class="major-event-date">Friday 18 December 2026</div><div class="major-event-copy">A special community event celebrating our MS32 pilots. More details coming soon.</div></div><button class="major-event-action" type="button">OPEN MAJOR EVENT HUB</button>';
-  home.insertBefore(tile,home.firstElementChild);
+  const flightTiles=document.getElementById('homeFeatureTiles');
+  if(flightTiles)flightTiles.appendChild(tile);
+  else home.appendChild(tile);
   const page=document.createElement('div');
   page.id='majorEvent';
   page.className='page major-event-page';
