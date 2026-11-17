@@ -16,8 +16,8 @@ self.addEventListener('activate',event=>{
       const windows=await self.clients.matchAll({type:'window',includeUncontrolled:true});
       for(const client of windows){
         const url=new URL(client.url);
-        if(url.origin!==self.location.origin||url.searchParams.get('ms32app')==='20261117-memberheader2')continue;
-        url.searchParams.set('ms32app','20261117-memberheader2');
+        if(url.origin!==self.location.origin||url.searchParams.get('ms32app')==='20261117-noglobe1')continue;
+        url.searchParams.set('ms32app','20261117-noglobe1');
         await client.navigate(url.href);
       }
     }catch{}
