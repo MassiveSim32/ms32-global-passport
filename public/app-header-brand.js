@@ -8,6 +8,8 @@
   title.innerHTML='<span class="ms32-brand-main">MASSIVE SIMULATIONS</span><span class="ms32-brand-32">32</span>';
   sub.textContent='COMPANION APP';
   brand.classList.add('ms32-brand-lockup');
+  const logo=brand.querySelector('.logo');
+  if(logo){logo.style.backgroundImage="url('/ms32-brand-192.png?v=20261117-brand1')";logo.setAttribute('aria-label','Official Massive Simulations 32 logo');}
 
   const style=document.createElement('style');
   style.textContent=`
